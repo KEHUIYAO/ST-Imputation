@@ -65,13 +65,13 @@ class SPINImputer(Imputer):
             p = p[torch.randint(len(p), p_size)].to(device=mask.device)
 
 
-        whiten_mask = torch.zeros(mask.size(), device=mask.device)
+        whiten_mask = torch.zeros(mask.size(), device=mask.device).bool()
         time_points_observed = torch.rand(mask.size(0), mask.size(1), 1, 1, device=mask.device) > p
 
         # repeat along the spatial dimensions
         time_points_observed = time_points_observed.repeat(1, 1, mask.size(2), mask.size(3))
 
-        whiten_mask[time_points_observed] = 1
+        whiten_mask[time_points_observed] = True
 
         batch.input.mask = mask & whiten_mask
         # whiten missing values
