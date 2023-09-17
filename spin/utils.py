@@ -7,6 +7,7 @@ from tsl.data import Batch
 from tsl.ops.connectivity import weighted_degree
 
 
+
 def k_hop_subgraph_sampler(batch: Batch, k: int, num_nodes: int,
                            max_edges: Optional[int] = None,
                            cut_edges_uniformly: bool = False):
@@ -38,3 +39,5 @@ def k_hop_subgraph_sampler(batch: Batch, k: int, num_nodes: int,
     batch.input.target_nodes = node_map  # index of roots in subgraph
     batch.edge_index = edge_index[:, keep_edges]
     return batch
+
+

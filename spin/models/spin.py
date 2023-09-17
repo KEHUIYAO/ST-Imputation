@@ -67,7 +67,8 @@ class SPINModel(nn.Module):
 
     def forward(self, x: Tensor, u: Tensor, mask: Tensor,
                 edge_index: Tensor, edge_weight: OptTensor = None,
-                node_index: OptTensor = None, target_nodes: OptTensor = None):
+                node_index: OptTensor = None, target_nodes: OptTensor = None,
+                **kwargs):
         if target_nodes is None:
             target_nodes = slice(None)
 

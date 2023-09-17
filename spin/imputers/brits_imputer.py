@@ -24,3 +24,10 @@ class BRITSImputer(Imputer):
         loss += BRITS.consistency_loss(imp_fwd, imp_bwd)
 
         return y_hat.detach(), y, loss
+
+    def predict_step(self, batch, batch_idx, dataloader_idx=None):
+        output = super().predict_step(batch, batch_idx, dataloader_idx)
+        output['eval_mask'] = output['mask']
+        output['observed_mask'] = batch.input.mask
+        del output['mask']
+        return output

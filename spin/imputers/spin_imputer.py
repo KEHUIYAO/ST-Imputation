@@ -92,6 +92,16 @@ class SPINImputer(Imputer):
         self.log_loss('test', test_loss, batch_size=batch.batch_size)
         return test_loss
 
+    def predict_step(self, batch, batch_idx, dataloader_idx=None):
+        output = super().predict_step(batch, batch_idx, dataloader_idx)
+        output['eval_mask'] = output['mask']
+        output['observed_mask'] = batch.input.mask
+        del output['mask']
+        if 'st_coords' in batch:
+            output['st_coords'] = batch.st_coords
+
+        return output
+
     @staticmethod
     def add_argparse_args(parser, **kwargs):
         parser = Predictor.add_argparse_args(parser)
