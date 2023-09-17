@@ -6,6 +6,7 @@ from tsl.imputers import Imputer
 from tsl.predictors import Predictor
 
 from ..utils import k_hop_subgraph_sampler
+from torch import Tensor
 
 
 class SPINImputer(Imputer):
@@ -49,6 +50,33 @@ class SPINImputer(Imputer):
                                            cut_edges_uniformly=self.cut_edges_uniformly)
         return super(SPINImputer, self).on_after_batch_transfer(batch,
                                                                 dataloader_idx)
+
+    def on_train_batch_start(self, batch, batch_idx: int,
+                             unused: Optional[int] = 0) -> None:
+        r"""For every training batch, randomly mask out value with probability
+        :math:`p = \texttt{self.whiten\_prob}`. Then, whiten missing values in
+         :obj:`batch.input.x`"""
+        super(Imputer, self).on_train_batch_start(batch, batch_idx, unused)
+        # randomly mask out value with probability p = whiten_prob
+        batch.original_mask = mask = batch.input.mask
+        p = self.whiten_prob
+        if isinstance(p, Tensor):
+            p_size = [mask.size(0)] + [1] * (mask.ndim - 1)
+            p = p[torch.randint(len(p), p_size)].to(device=mask.device)
+
+
+        whiten_mask = torch.zeros(mask.size(), device=mask.device)
+        time_points_observed = torch.rand(mask.size(0), mask.size(1), 1, 1, device=mask.device) > p
+
+        # repeat along the spatial dimensions
+        time_points_observed = time_points_observed.repeat(1, 1, mask.size(2), mask.size(3))
+
+        whiten_mask[time_points_observed] = 1
+
+        batch.input.mask = mask & whiten_mask
+        # whiten missing values
+        if 'x' in batch.input:
+            batch.input.x = batch.input.x * batch.input.mask
 
     def training_step(self, batch, batch_idx):
         injected_missing = (batch.original_mask - batch.mask)
