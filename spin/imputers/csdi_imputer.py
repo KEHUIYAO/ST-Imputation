@@ -6,6 +6,7 @@ from tsl.imputers import Imputer
 from tsl.predictors import Predictor
 import numpy as np
 import random
+from torch import Tensor
 
 class CsdiImputer(Imputer):
     def __init__(self,
@@ -62,18 +63,27 @@ class CsdiImputer(Imputer):
         batch['noise'] = noise
         batch.input['noisy_data'] = noisy_data
         batch.input['diffusion_step'] = t.to(device)
+
+        super(Imputer, self).on_train_batch_start(batch, batch_idx, unused)
         # randomly mask out value with probability p = whiten_prob
         batch.original_mask = mask = batch.input.mask
+        p = self.whiten_prob
+        if isinstance(p, Tensor):
+            p_size = [mask.size(0)] + [1] * (mask.ndim - 1)
+            p = p[torch.randint(len(p), p_size)].to(device=mask.device)
 
-        p = random.random()
-        whiten_mask = torch.rand(mask.size(), device=mask.device) > p
+        whiten_mask = torch.zeros(mask.size(), device=mask.device).bool()
+        time_points_observed = torch.rand(mask.size(0), mask.size(1), 1, 1, device=mask.device) > p
+
+        # repeat along the spatial dimensions
+        time_points_observed = time_points_observed.repeat(1, 1, mask.size(2), mask.size(3))
+
+        whiten_mask[time_points_observed] = True
+
         batch.input.mask = mask & whiten_mask
         # whiten missing values
         if 'x' in batch.input:
             batch.input.x = batch.input.x * batch.input.mask
-
-        # # run parent method
-        # super().on_train_batch_start(batch, batch_idx, unused)
 
 
 
