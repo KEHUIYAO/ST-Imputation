@@ -34,14 +34,14 @@ log_dir = 'log/soil_moisture_sparse_point/interpolation/20230915T144759_10802151
 
 log_dir = 'log/soil_moisture_sparse_point/csdi/20230915T055142_757620585/output.npz'
 
-log_dir = 'log/soil_moisture_sparse_point/spin_h/20230915T055128_618607692/output.npz'
+log_dir = 'log/soil_moisture_sparse_point/spin_h/20230917T221847_9760443/output.npz'
 
 # log_dir = 'log/soil_moisture_sparse_point/spin_h/20230917T173058_522756964/output.npz'
 
-# log_dir = 'log/soil_moisture_sparse_point/interpolation/20230917T122607_485269053/output.npz'
+log_dir = 'log/soil_moisture_sparse_point/interpolation/20230917T122607_485269053/output.npz'
 
 
-log_dir = 'log/soil_moisture_sparse_point/spin_h/20230917T174517_394416681/output.npz'
+# log_dir = 'log/soil_moisture_sparse_point/spin_h/20230918T025242_589438871/output.npz'
 
 output = np.load(log_dir)
 
