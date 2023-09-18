@@ -63,7 +63,7 @@ def parse_args():
     parser.add_argument('--batch-inference', type=int, default=32)
     # parser.add_argument('--load-from-pretrained', type=str,
     #                     default=None)
-    parser.add_argument('--load_from_pretrained', type=str,
+    parser.add_argument('--load-from-pretrained', type=str,
                         default='./log/soil_moisture_sparse_point/spin_h/20230915T055128_618607692/epoch=199-step=59999.ckpt')
 
     ########################################
@@ -86,7 +86,7 @@ def parse_args():
     parser.add_argument("--adj-threshold", type=float, default=0.1)
 
     parser.add_argument('--p-fault', type=float, default=0.0)
-    parser.add_argument('--p-noise', type=float, default=0.2)
+    parser.add_argument('--p-noise', type=float, default=0.0)
 
     known_args, _ = parser.parse_known_args()
     model_cls, imputer_cls = get_model_classes(known_args.model_name)
