@@ -64,7 +64,7 @@ def parse_args():
     parser.add_argument('--load-from-pretrained', type=str,
                         default=None)
     # parser.add_argument('--load-from-pretrained', type=str,
-    #                     default='./log/soil_moisture_sparse_point/spin_h/20230915T055128_618607692/epoch=199-step=59999.ckpt')
+    #                     default='./log/soil_moisture_sparse_point/spin_h/20230917T221847_9760443/epoch=79-step=23999.ckpt')
 
     ########################################
 

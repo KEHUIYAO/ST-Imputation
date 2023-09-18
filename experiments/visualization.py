@@ -3,45 +3,11 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from tsl.utils import numpy_metrics
 
-# log_dir = 'log/gp_point/diffgrin/20230905T112029_455519236/output.npz'
-# log_dir = 'log/gp_point/diffgrin/20230905T121230_345791943/output.npz'
-# log_dir = 'log/gp_point/diffgrin/20230905T140644_801483104/output.npz'
-# log_dir = 'log/air36/diffgrin/20230906T151301_772579956/output.npz'
-# log_dir = 'log/descriptive_point/diffgrin/20230907T160243_801791294/output.npz'
 
-#log_dir = 'log/gp_point/mean/20230904T120758_203730871/output.npz'
-#log_dir = 'log/gp_point/interpolation/20230904T133532_834789790/output.npz'
-# log_dir = 'log/gp_point/grin/20230908T123714_666920856/output.npz'
-# log_dir = 'log/gp_point/diffgrin/20230908T143312_924613142/output.npz'
+log_dir = 'log/soil_moisture_sparse_point/interpolation/20230918T164007_727343612/output.npz'
 
-# log_dir = 'log/air36/diffgrin/20230908T154234_230789540/output.npz'
-# log_dir = 'log/air36/grin/20230908T210723_211066964/output.npz'
+# log_dir = 'log/soil_moisture_sparse_point/spin_h/20230918T162211_999170715/output.npz'
 
-log_dir = 'log/soil_moisture_point/diffgrin/20230912T163638_202025312/output.npz'
-
-log_dir = 'log/soil_moisture_point/interpolation/20230912T221617_447206417/output.npz'
-
-log_dir = 'log/soil_moisture_point/spin_h/20230913T152648_613511213/output.npz'
-log_dir = 'log/soil_moisture_point/grin/20230913T165400_783353967/output.npz'
-
-log_dir = 'log/soil_moisture_point/csdi/20230914T051816_921699308/output.npz'
-
-log_dir = 'log/air36/csdi/20230914T051347_308853642/output.npz'
-
-log_dir = 'log/soil_moisture_sparse_point/interpolation/20230914T164411_237582339/output.npz'
-
-log_dir = 'log/soil_moisture_sparse_point/interpolation/20230915T144759_108021515/output.npz'
-
-log_dir = 'log/soil_moisture_sparse_point/csdi/20230915T055142_757620585/output.npz'
-
-log_dir = 'log/soil_moisture_sparse_point/spin_h/20230917T221847_9760443/output.npz'
-
-# log_dir = 'log/soil_moisture_sparse_point/spin_h/20230917T173058_522756964/output.npz'
-
-log_dir = 'log/soil_moisture_sparse_point/interpolation/20230917T122607_485269053/output.npz'
-
-
-# log_dir = 'log/soil_moisture_sparse_point/spin_h/20230918T025242_589438871/output.npz'
 
 output = np.load(log_dir)
 
