@@ -13,6 +13,7 @@ class InterpolationModel(nn.Module):
         # x: [batch, steps, nodes, channels]
         device = x.device
         x = x.detach().cpu().numpy()
+        mask = mask.detach().cpu().numpy()
         x[mask==0] = np.nan
         B = x.shape[0]
         K = x.shape[2]
