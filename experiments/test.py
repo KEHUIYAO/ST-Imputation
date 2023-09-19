@@ -61,10 +61,10 @@ def parse_args():
     parser.add_argument('--epochs', type=int, default=200)
     parser.add_argument('--check-val-every-n-epoch', type=int, default=1)
     parser.add_argument('--batch-inference', type=int, default=32)
-    parser.add_argument('--load-from-pretrained', type=str,
-                        default=None)
     # parser.add_argument('--load-from-pretrained', type=str,
-    #                     default='./log/soil_moisture_sparse_point/spin_h/20230917T221847_9760443/epoch=79-step=23999.ckpt')
+    #                     default=None)
+    parser.add_argument('--load-from-pretrained', type=str,
+                        default='~/ST-Imputation/experiments/log/soil_moisture_sparse_point/spin_h/20230919T001449_573490823/epoch=129-step=8709.ckpt')
 
     ########################################
 
@@ -439,23 +439,58 @@ def run_experiment(args):
         imputer.load_model(checkpoint_callback.best_model_path)
         imputer.freeze()
 
-    # trainer.test(imputer, dataloaders=dm.test_dataloader(
-    #     batch_size=args.batch_inference))
+    y_hat = []
+    y_true = []
+    eval_mask = []
+    observed_mask = []
+    st_coords = []
 
+    for batch_id, batch in enumerate(tqdm(dm.test_dataloader(batch_size=16), desc="Processing", leave=True)):
 
-    output = trainer.predict(imputer, dataloaders=dm.test_dataloader(
-        batch_size=args.batch_inference))
+        # move eval_mask from batch.input to batch
+        batch.eval_mask = batch.input.pop('eval_mask')
+        # move mask from batch to batch.input
+        batch.input.mask = batch.pop('mask')
+        # whiten missing values
+        if 'x' in batch.input:
+            batch.input.x = batch.input.x * batch.input.mask
 
-    output = casting.numpy(output)
+        output = imputer.predict_step(batch, batch_id)
 
-    y_hat, y_true, eval_mask, observed_mask = output['y_hat'].squeeze(-1), \
-                          output['y'].squeeze(-1), \
-                          output['eval_mask'].squeeze(-1), \
-                          output['observed_mask'].squeeze(-1)
+        y_hat.append(output['y_hat'])
+        y_true.append(output['y'])
+        eval_mask.append(output['eval_mask'])
+        observed_mask.append(output['observed_mask'])
+        st_coords.append(output['st_coords'])
 
-    if 'st_coords' in output:
-        st_coords = output['st_coords']
+        # y_hat.append(output['y_hat'].detach().cpu().numpy())
+        # y_true.append(output['y'].detach().cpu().numpy())
+        # eval_mask.append(output['eval_mask'].detach().cpu().numpy())
+        # observed_mask.append(output['observed_mask'].detach().cpu().numpy())
+        # st_coords.append(output['st_coords'].detach().cpu().numpy())
 
+    y_hat = torch.concat(y_hat, dim=0)
+    y_true = torch.concat(y_true, dim=0)
+    eval_mask = torch.concat(eval_mask, dim=0)
+    observed_mask = torch.concat(observed_mask, dim=0)
+    st_coords = torch.concat(st_coords, dim=0)
+
+    # y_hat = np.concatenate(y_hat, axis=0)
+    # y_true = np.concatenate(y_true, axis=0)
+    # eval_mask = np.concatenate(eval_mask, axis=0)
+    # observed_mask = np.concatenate(observed_mask, axis=0)
+    # st_coords = np.concatenate(st_coords, axis=0)
+
+    y_hat = y_hat.detach().cpu().numpy()
+    y_true = y_true.detach().cpu().numpy()
+    eval_mask = eval_mask.detach().cpu().numpy()
+    observed_mask = observed_mask.detach().cpu().numpy()
+    st_coords = st_coords.detach().cpu().numpy()
+
+    y_hat = y_hat.squeeze(-1)
+    y_true = y_true.squeeze(-1)
+    eval_mask = eval_mask.squeeze(-1)
+    observed_mask = observed_mask.squeeze(-1)
 
     check_mae = numpy_metrics.masked_mae(y_hat, y_true, eval_mask)
     print(f'Test MAE: {check_mae:.2f}')
@@ -467,8 +502,6 @@ def run_experiment(args):
     observed_mask_original = np.zeros([seq_len, num_nodes])
     eval_mask_original = np.zeros([seq_len, num_nodes])
 
-
-
     B, L, K = y_hat.shape
     for b in range(B):
         for l in range(L):
@@ -479,11 +512,8 @@ def run_experiment(args):
                 observed_mask_original[ts_pos[0], ts_pos[1]] = observed_mask[b, l, k]
                 eval_mask_original[ts_pos[0], ts_pos[1]] = eval_mask[b, l, k]
 
-
-
     check_mae = numpy_metrics.masked_mae(y_hat_original, y_true_original, eval_mask_original)
     print(f'Test MAE: {check_mae:.2f}')
-
 
     # save output to file
     output['y_hat'] = y_hat_original[np.newaxis, :, :, np.newaxis]
@@ -491,9 +521,6 @@ def run_experiment(args):
     output['eval_mask'] = eval_mask_original[np.newaxis, :, :, np.newaxis]
     output['observed_mask'] = observed_mask_original[np.newaxis, :, :, np.newaxis]
     np.savez(os.path.join(logdir, 'output.npz'), **output)
-
-
-
 
 
 if __name__ == '__main__':
