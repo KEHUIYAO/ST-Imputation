@@ -414,23 +414,23 @@ def run_experiment(args):
         batch_size=args.batch_inference))
 
 
-    output = trainer.predict(imputer, dataloaders=dm.test_dataloader(
-        batch_size=args.batch_inference))
-
-    output = casting.numpy(output)
-
-    # save output to file
-    np.savez(os.path.join(logdir, 'output.npz'), **output)
-
-    y_hat, y_true, eval_mask, observed_mask = output['y_hat'].squeeze(-1), \
-                          output['y'].squeeze(-1), \
-                          output['eval_mask'].squeeze(-1), \
-                          output['observed_mask'].squeeze(-1)
-
-
-    check_mae = numpy_metrics.masked_mae(y_hat, y_true, eval_mask)
-    print(f'Test MAE: {check_mae:.2f}')
-    return y_hat
+    # output = trainer.predict(imputer, dataloaders=dm.test_dataloader(
+    #     batch_size=args.batch_inference))
+    #
+    # output = casting.numpy(output)
+    #
+    # # save output to file
+    # np.savez(os.path.join(logdir, 'output.npz'), **output)
+    #
+    # y_hat, y_true, eval_mask, observed_mask = output['y_hat'].squeeze(-1), \
+    #                       output['y'].squeeze(-1), \
+    #                       output['eval_mask'].squeeze(-1), \
+    #                       output['observed_mask'].squeeze(-1)
+    #
+    #
+    # check_mae = numpy_metrics.masked_mae(y_hat, y_true, eval_mask)
+    # print(f'Test MAE: {check_mae:.2f}')
+    # return y_hat
 
 
 if __name__ == '__main__':
