@@ -23,22 +23,15 @@ class SoilMoistureSparse(PandasDataset, MissingValuesMixin):
     similarity_options = {'distance'}
 
     def __init__(self, mode='train', seed=42):
-        df, dist, mask, st_coords_new, temporal_encoding = self.load(mode=mode)
+        self.seed = seed
+        df, dist, mask, st_coords_new, temporal_encoding, eval_mask_new = self.load(mode=mode)
         super().__init__(dataframe=df,
                          similarity_score="distance",
                          mask=mask,
                          attributes=dict(dist=dist, temporal_encoding=temporal_encoding,
                           st_coords=st_coords_new))
 
-        rng = np.random.RandomState(seed)
-
-        seq_len = mask.shape[0]
-        p_missing = 0.2
-        time_points_to_eval = rng.choice(seq_len, int(p_missing*seq_len), replace=False)
-        eval_mask = np.zeros_like(mask)
-        eval_mask[time_points_to_eval, :] = 1
-
-        self.set_eval_mask(eval_mask)
+        self.set_eval_mask(eval_mask_new)
 
 
     def load(self, mode):
@@ -62,6 +55,14 @@ class SoilMoistureSparse(PandasDataset, MissingValuesMixin):
         rows, cols = y.shape
         space_coords, time_coords = np.meshgrid(np.arange(cols), np.arange(rows))
         st_coords = np.stack([space_coords, time_coords], axis=-1)
+
+        rng = np.random.RandomState(self.seed)
+
+        p_missing = 0.2
+        time_points_to_eval = rng.choice(rows, int(p_missing * rows), replace=False)
+        eval_mask = np.zeros((rows, cols))
+        eval_mask[time_points_to_eval, :] = 1
+
 
         plt.figure()
         plt.plot(np.arange(0, y.shape[0]), y.values, marker='o', linestyle='-')
@@ -91,6 +92,7 @@ class SoilMoistureSparse(PandasDataset, MissingValuesMixin):
 
         df_new = []
         st_coords_new = []
+        eval_mask_new = []
         for i in range(complete_split.shape[0]):
             # select all columns in the split
             cur_split = complete_split[i]
@@ -99,6 +101,7 @@ class SoilMoistureSparse(PandasDataset, MissingValuesMixin):
 
             ind = [list(y.columns).index(col) for col in cur_split]
             st_coords_new.append(st_coords[:, ind, :])
+            eval_mask_new.append(eval_mask[:, ind])
 
 
         df_array = [cur_df.values for cur_df in df_new]
@@ -108,6 +111,7 @@ class SoilMoistureSparse(PandasDataset, MissingValuesMixin):
         df_new.index = pd.to_datetime(df_new.index)
 
         st_coords_new = np.concatenate(st_coords_new, axis=0)
+        eval_mask_new = np.concatenate(eval_mask_new, axis=0)
 
         mask = df_new.notnull().astype(int).values
         df_new = df_new.fillna(0)
@@ -119,7 +123,7 @@ class SoilMoistureSparse(PandasDataset, MissingValuesMixin):
         dist = np.array(dist)
         dist = cdist(dist, dist)
 
-        return df_new, dist, mask, st_coords_new, temporal_encoding
+        return df_new, dist, mask, st_coords_new, temporal_encoding, eval_mask_new
 
     def compute_similarity(self, method: str, **kwargs):
         if method == "distance":
