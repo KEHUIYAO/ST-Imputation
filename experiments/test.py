@@ -447,7 +447,7 @@ def run_experiment(args):
     observed_mask = []
     st_coords = []
 
-    for batch_id, batch in enumerate(tqdm(dm.test_dataloader(batch_size=16), desc="Processing", leave=True)):
+    for batch_id, batch in enumerate(tqdm(dm.test_dataloader(batch_size=args.batch_inference), desc="Processing", leave=True)):
 
         # move eval_mask from batch.input to batch
         batch.eval_mask = batch.input.pop('eval_mask')
