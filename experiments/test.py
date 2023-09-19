@@ -34,6 +34,8 @@ from spin.imputers import SPINImputer, SAITSImputer, BRITSImputer, MeanImputer, 
 from spin.models import SPINModel, SPINHierarchicalModel, DiffGrinModel, CsdiModel
 from spin.scheduler import CosineSchedulerWithRestarts
 
+from tqdm import tqdm
+
 
 
 @staticmethod
