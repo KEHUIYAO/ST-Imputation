@@ -1,7 +1,10 @@
 import os
 import pandas as pd
 import numpy as np
-from sklearn.ensemble import RandomForestRegressor
+from fancyimpute import IterativeImputer
+from sklearn.preprocessing import StandardScaler
+from tqdm import tqdm
+
 
 
 current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -20,12 +23,16 @@ y = y.pivot(index='Date', columns='POINTID', values='SMAP_1km').values
 covariates = ['prcp', 'srad', 'tmax', 'tmin', 'vp', 'SMAP_36km']
 X = []
 for cov in covariates:
-    x = df[df['Date'].dt.year == 2016].pivot(index='Date', columns='POINTID', values=cov).values
+    x = df[df['Date'].dt.year == 2017].pivot(index='Date', columns='POINTID', values=cov).values
     # impute missing values with mean
     x[np.isnan(x)] = np.nanmean(x)
     X.append(x)
 
 X = np.stack(X, axis=-1)
+L, K, C = X.shape
+X = X.reshape((L*K, C))
+X = StandardScaler().fit_transform(X)
+X = X.reshape((L, K, C))
 
 # randomly mask out rows with probability p = 0.2
 p = 0.2
@@ -44,27 +51,18 @@ y_val = y.copy()
 y_val[eval_mask == 0] = np.nan
 
 
-y_train = y_train[training_mask == 1]
-X_train = X[training_mask == 1].copy()
-y_val = y_val[eval_mask == 1]
-X_val = X[eval_mask == 1].copy()
 
-# Train a random forest regressor
-regressor = RandomForestRegressor(n_estimators=100, max_depth=5, random_state=42)
-regressor.fit(X_train, y_train)
+y_imputed = y_train.copy()
+
+for i in tqdm(range(y_train.shape[1])):
+    mice_imputer = IterativeImputer()
+    tmp = np.concatenate([y_train[:, i][:, np.newaxis], X[:, i, :]], axis=-1)
+    tmp_imputed = mice_imputer.fit_transform(tmp)
+    y_imputed[:, i] = tmp_imputed[:, 0]
 
 
-y_val_pred = regressor.predict(X_val)
 
-# mae
-mae = np.nanmean(np.abs(y_val_pred - y_val))
+
+mae = np.mean(np.abs(y_val - y_imputed)[eval_mask == 1])
+
 print(f'MAE: {mae:.5f}')
-
-
-
-
-
-
-
-
-
