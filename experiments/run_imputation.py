@@ -31,7 +31,7 @@ from tsl.utils import parser_utils, numpy_metrics
 
 from spin.baselines import SAITS, TransformerModel, BRITS, MeanModel, InterpolationModel
 from spin.imputers import SPINImputer, SAITSImputer, BRITSImputer, MeanImputer, InterpolationImputer, DiffgrinImputer, CsdiImputer, GrinImputer
-from spin.models import SPINModel, SPINHierarchicalModel, DiffGrinModel, CsdiModel
+from spin.models import SPINModel, SPINHierarchicalModel, DiffGrinModel, CsdiModel, GrinModel
 from spin.scheduler import CosineSchedulerWithRestarts
 def parse_args():
     # Argument parser
@@ -97,7 +97,7 @@ def get_model_classes(model_str):
     elif model_str == 'spin_h':
         model, filler = SPINHierarchicalModel, SPINImputer
     elif model_str == 'grin':
-        model, filler = GRINModel, GrinImputer
+        model, filler = GrinModel, GrinImputer
     elif model_str == 'saits':
         model, filler = SAITS, SAITSImputer
     elif model_str == 'transformer':
