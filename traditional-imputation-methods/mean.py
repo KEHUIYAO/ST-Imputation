@@ -1,9 +1,8 @@
 import os
 import pandas as pd
 import numpy as np
-from fancyimpute import IterativeImputer
 from sklearn.preprocessing import StandardScaler
-from tqdm import tqdm
+from fancyimpute import SimpleFill
 
 
 
@@ -50,19 +49,50 @@ y_train[training_mask == 0] = np.nan
 y_val = y.copy()
 y_val[eval_mask == 0] = np.nan
 
-
-
-y_imputed = y_train.copy()
-
-for i in tqdm(range(y_train.shape[1])):
-    mice_imputer = IterativeImputer()
-    tmp = np.concatenate([y_train[:, i][:, np.newaxis], X[:, i, :]], axis=-1)
-    tmp_imputed = mice_imputer.fit_transform(tmp)
-    y_imputed[:, i] = tmp_imputed[:, 0]
-
-
+y_imputed = SimpleFill().fit_transform(y_train)
 
 
 mae = np.mean(np.abs(y_val - y_imputed)[eval_mask == 1])
+# number of eval points
+n_eval = np.sum(eval_mask)
 
+print(n_eval)
 print(f'MAE: {mae:.5f}')
+
+# in-situ data
+data_path = os.path.join(current_dir, '../data/Insitu_gap_filling_data.csv')
+df = pd.read_csv(data_path)
+df['Date'] = pd.to_datetime(df['Date'], format='%Y%m%d')
+
+
+y2 = df[df['Date'].dt.year == 2017].copy()
+y2 = y2.pivot(index='Date', columns='POINTID', values='SMAP_1km').values
+observed_mask2 = np.ones_like(y2)
+observed_mask2[np.isnan(y2)] = 0
+
+
+# calculate ubrmse
+bias = np.mean((y2 - y)[observed_mask*observed_mask2 == 1])
+tmp = (y2-y)**2
+tmp = np.mean(tmp[observed_mask*observed_mask2==1])
+ubrmse = np.sqrt(tmp - bias**2)
+
+print(f'UBRMSE: {ubrmse:.5f}')
+
+# calculate correlation
+corr = np.corrcoef(y2[observed_mask*observed_mask2 == 1], y[observed_mask*observed_mask2 == 1])[0, 1]
+print(f'Correlation: {corr:.5f}')
+
+
+# calculate ubrmse
+bias = np.mean((y2 - y_imputed)[observed_mask2 == 1])
+tmp = (y2-y_imputed)**2
+tmp = np.mean(tmp[observed_mask2==1])
+ubrmse = np.sqrt(tmp - bias**2)
+
+print(f'UBRMSE: {ubrmse:.5f}')
+
+# calculate correlation
+corr = np.corrcoef(y2[observed_mask2 == 1], y_imputed[observed_mask2 == 1])[0, 1]
+print(f'Correlation: {corr:.5f}')
+

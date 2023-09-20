@@ -14,13 +14,13 @@ df = pd.read_csv(data_path)
 df['Date'] = pd.to_datetime(df['Date'], format='%Y%m%d')
 
 # training data
-y = df[df['Date'].dt.year == 2016].copy()
+y = df[df['Date'].dt.year == 2017].copy()
 y = y.pivot(index='Date', columns='POINTID', values='SMAP_1km').values
 
 covariates = ['prcp', 'srad', 'tmax', 'tmin', 'vp', 'SMAP_36km']
 X = []
 for cov in covariates:
-    x = df[df['Date'].dt.year == 2016].pivot(index='Date', columns='POINTID', values=cov).values
+    x = df[df['Date'].dt.year == 2017].pivot(index='Date', columns='POINTID', values=cov).values
     # impute missing values with mean
     x[np.isnan(x)] = np.nanmean(x)
     X.append(x)
