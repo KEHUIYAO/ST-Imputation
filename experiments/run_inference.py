@@ -31,7 +31,7 @@ from tsl.utils import parser_utils, numpy_metrics
 
 from spin.baselines import SAITS, TransformerModel, BRITS, MeanModel, InterpolationModel
 from spin.imputers import SPINImputer, SAITSImputer, BRITSImputer, MeanImputer, InterpolationImputer, DiffgrinImputer, CsdiImputer, GrinImputer
-from spin.models import SPINModel, SPINHierarchicalModel, DiffGrinModel, CsdiModel
+from spin.models import SPINModel, SPINHierarchicalModel, DiffGrinModel, CsdiModel, GrinModel
 from spin.scheduler import CosineSchedulerWithRestarts
 
 from tqdm import tqdm
@@ -53,23 +53,23 @@ def parse_args():
     # Argument parser
     ########################################
     parser = ArgParser()
-    parser.add_argument("--model-name", type=str, default='csdi')
+    parser.add_argument("--model-name", type=str, default='grin')
     #parser.add_argument("--model-name", type=str, default='interpolation')
     #parser.add_argument("--model-name", type=str, default='spin_h')
     parser.add_argument("--dataset-name", type=str, default='soil_moisture_sparse_point')
     #parser.add_argument("--config", type=str, default=None)
     # parser.add_argument("--config", type=str, default='imputation/interpolation_soil_moisture.yaml')
     # parser.add_argument("--config", type=str, default='imputation/spin_h_soil_moisture.yaml')
-    parser.add_argument("--config", type=str, default='imputation/csdi_soil_moisture.yaml')
+    parser.add_argument("--config", type=str, default='imputation/grin_soil_moisture.yaml')
     parser.add_argument('--epochs', type=int, default=200)
     parser.add_argument('--check-val-every-n-epoch', type=int, default=1)
     parser.add_argument('--batch-inference', type=int, default=32)
-    # parser.add_argument('--load-from-pretrained', type=str,
-    #                     default=None)
+    parser.add_argument('--load-from-pretrained', type=str,
+                        default=None)
     # parser.add_argument('--load-from-pretrained', type=str,
     #                     default='~/ST-Imputation/experiments/log/soil_moisture_sparse_point/spin_h/20230919T001449_573490823/epoch=129-step=8709.ckpt')
-    parser.add_argument('--load-from-pretrained', type=str,
-                        default='~/ST-Imputation/experiments/log/soil_moisture_sparse_point/csdi/20230919T181957_854647109/epoch=159-step=8639.ckpt')
+    # parser.add_argument('--load-from-pretrained', type=str,
+    #                     default='~/ST-Imputation/experiments/log/soil_moisture_sparse_point/csdi/20230919T181957_854647109/epoch=159-step=8639.ckpt')
     ########################################
 
     parser.add_argument('--seed', type=int, default=-1)
@@ -116,7 +116,7 @@ def get_model_classes(model_str):
     elif model_str == 'spin_h':
         model, filler = SPINHierarchicalModel, SPINImputer
     elif model_str == 'grin':
-        model, filler = GRINModel, GrinImputer
+        model, filler = GrinModel, GrinImputer
     elif model_str == 'saits':
         model, filler = SAITS, SAITSImputer
     elif model_str == 'transformer':
