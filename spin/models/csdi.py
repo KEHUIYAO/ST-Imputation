@@ -200,5 +200,6 @@ class CsdiModel(nn.Module):
         parser.add_argument('--covariate_dim', type=int, default=0)
         parser.add_argument('--input_dim', type=int, default=1)
         parser.add_argument('--hidden_dim', type=int, default=64)
+        parser.add_argument('--diffusion_embedding_dim', type=int, default=128)
 
         return parser
