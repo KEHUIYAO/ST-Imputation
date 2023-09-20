@@ -456,6 +456,14 @@ def run_experiment(args):
     observed_mask = []
     st_coords = []
 
+    if args.model_name in ['csdi', 'diffgrin']:
+        enable_multiple_imputation = True
+    else:
+        enable_multiple_imputation = False
+
+    if enable_multiple_imputation:
+        multiple_imputations = []
+
     for batch_id, batch in enumerate(tqdm(dm.test_dataloader(batch_size=args.batch_inference), desc="Processing", leave=True)):
 
         # move eval_mask from batch.input to batch
@@ -480,6 +488,9 @@ def run_experiment(args):
         observed_mask.append(output['observed_mask'].detach().cpu().numpy())
         st_coords.append(output['st_coords'].detach().cpu().numpy())
 
+        if enable_multiple_imputation:
+            multiple_imputations.append(output['imputed_samples'].detach().cpu().numpy())
+
     # y_hat = torch.concat(y_hat, dim=0)
     # y_true = torch.concat(y_true, dim=0)
     # eval_mask = torch.concat(eval_mask, dim=0)
@@ -492,6 +503,7 @@ def run_experiment(args):
     observed_mask = np.concatenate(observed_mask, axis=0)
     st_coords = np.concatenate(st_coords, axis=0)
 
+
     # y_hat = y_hat.detach().cpu().numpy()
     # y_true = y_true.detach().cpu().numpy()
     # eval_mask = eval_mask.detach().cpu().numpy()
@@ -503,6 +515,10 @@ def run_experiment(args):
     eval_mask = eval_mask.squeeze(-1)
     observed_mask = observed_mask.squeeze(-1)
 
+    if enable_multiple_imputation:
+        multiple_imputations = np.concatenate(multiple_imputations, axis=0)
+        multiple_imputations = multiple_imputations.squeeze(-1)
+
     check_mae = numpy_metrics.masked_mae(y_hat, y_true, eval_mask)
     print(f'Test MAE: {check_mae:.2f}')
 
@@ -510,6 +526,8 @@ def run_experiment(args):
     num_nodes = 1296
     y_true_original = np.zeros([seq_len, num_nodes])
     y_hat_original = np.zeros([seq_len, num_nodes])
+    if enable_multiple_imputation:
+        y_hat_multiple_imputation = np.zeros([multiple_imputations.shape[1], seq_len, num_nodes])
     observed_mask_original = np.zeros([seq_len, num_nodes])
     eval_mask_original = np.zeros([seq_len, num_nodes])
 
@@ -523,6 +541,9 @@ def run_experiment(args):
                 observed_mask_original[ts_pos[0], ts_pos[1]] = observed_mask[b, l, k]
                 eval_mask_original[ts_pos[0], ts_pos[1]] = eval_mask[b, l, k]
 
+                if enable_multiple_imputation:
+                    y_hat_multiple_imputation[:, ts_pos[0], ts_pos[1]] = multiple_imputations[b, :, l, k]
+
     check_mae = numpy_metrics.masked_mae(y_hat_original, y_true_original, eval_mask_original)
     print(f'Test MAE: {check_mae:.2f}')
 
@@ -531,6 +552,10 @@ def run_experiment(args):
     output['y'] = y_true_original[np.newaxis, :, :, np.newaxis]
     output['eval_mask'] = eval_mask_original[np.newaxis, :, :, np.newaxis]
     output['observed_mask'] = observed_mask_original[np.newaxis, :, :, np.newaxis]
+
+    if enable_multiple_imputation:
+        output['imputed_samples'] = y_hat_multiple_imputation[np.newaxis, :, :, :, np.newaxis]
+
     np.savez(os.path.join(logdir, 'output.npz'), **output)
 
 
