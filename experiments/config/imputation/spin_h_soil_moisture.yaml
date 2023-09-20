@@ -6,10 +6,10 @@ val_len: 0.1
 test_len: 0.1
 
 window: 72  # [24, 36]
-stride: 72
+stride: 12
 
 #### Training params ##########################################################
-whiten_prob: [0.2, 0.5, 0.8]
+whiten_prob: [1]
 scale_target: True
 epochs: 200
 batch_size: 16
