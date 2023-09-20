@@ -6,7 +6,7 @@ from tsl.utils import numpy_metrics
 
 log_dir = 'log/soil_moisture_sparse_point/interpolation/20230918T164007_727343612/output.npz'
 
-# log_dir = 'log/soil_moisture_sparse_point/spin_h/20230918T162211_999170715/output.npz'
+# log_dir = 'log/soil_moisture_sparse_point/spin_h/20230919T034448_769252367/output.npz'
 
 
 output = np.load(log_dir)
