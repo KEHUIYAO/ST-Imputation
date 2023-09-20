@@ -258,6 +258,13 @@ def run_experiment(args):
             'x': 'data'
         }
 
+    elif args.model_name == 'grin' and 'covariates' in dataset.attributes:
+        exog_map = {'covariates': dataset.attributes['covariates']}
+        input_map = {
+            'u': 'covariates',
+            'x': 'data'
+        }
+
 
     elif args.model_name == 'diffgrin' and 'covariates' in dataset.attributes:
 

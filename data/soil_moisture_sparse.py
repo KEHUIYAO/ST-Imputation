@@ -5,7 +5,7 @@ from tsl.datasets.prototypes.mixin import MissingValuesMixin
 
 from tsl.ops.similarities import gaussian_kernel
 
-from tsl.data.datamodule.splitters import Splitter, FixedIndicesSplitter
+from tsl.data.datamodule.splitters import Splitter
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -13,6 +13,7 @@ from .utils import positional_encoding
 
 from scipy.spatial.distance import cdist
 import os
+from sklearn.preprocessing import StandardScaler
 
 
 current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -24,12 +25,12 @@ class SoilMoistureSparse(PandasDataset, MissingValuesMixin):
 
     def __init__(self, mode='train', seed=42):
         self.seed = seed
-        df, dist, mask, st_coords_new, temporal_encoding, eval_mask_new = self.load(mode=mode)
+        df, dist, mask, st_coords_new, temporal_encoding, eval_mask_new, X_new = self.load(mode=mode)
         super().__init__(dataframe=df,
                          similarity_score="distance",
                          mask=mask,
                          attributes=dict(dist=dist, temporal_encoding=temporal_encoding,
-                          st_coords=st_coords_new))
+                          st_coords=st_coords_new, covariates=X_new))
 
         self.set_eval_mask(eval_mask_new)
 
@@ -48,6 +49,25 @@ class SoilMoistureSparse(PandasDataset, MissingValuesMixin):
             df = df[df['Date'].dt.year == 2017]
 
         y = df.pivot(index='Date', columns='POINTID', values='SMAP_1km')
+
+        covariates = ['prcp', 'srad', 'tmax', 'tmin', 'vp', 'SMAP_36km']
+        X = []
+        for cov in covariates:
+            x = df.pivot(index='Date', columns='POINTID', values=cov).values
+            # impute missing values with mean
+            x[np.isnan(x)] = np.nanmean(x)
+            X.append(x)
+
+        X = np.stack(X, axis=-1)
+        L, K, C = X.shape
+        X = X.reshape((L * K, C))
+        X = StandardScaler().fit_transform(X)
+        X = X.reshape((L, K, C))
+
+
+
+
+
 
         temporal_encoding = positional_encoding(365, 1, 4).squeeze(1)
         temporal_encoding = np.tile(temporal_encoding, (36, 1))
@@ -93,6 +113,7 @@ class SoilMoistureSparse(PandasDataset, MissingValuesMixin):
         df_new = []
         st_coords_new = []
         eval_mask_new = []
+        X_new = []
         for i in range(complete_split.shape[0]):
             # select all columns in the split
             cur_split = complete_split[i]
@@ -102,6 +123,7 @@ class SoilMoistureSparse(PandasDataset, MissingValuesMixin):
             ind = [list(y.columns).index(col) for col in cur_split]
             st_coords_new.append(st_coords[:, ind, :])
             eval_mask_new.append(eval_mask[:, ind])
+            X_new.append(X[:, ind, :])
 
 
         df_array = [cur_df.values for cur_df in df_new]
@@ -112,6 +134,7 @@ class SoilMoistureSparse(PandasDataset, MissingValuesMixin):
 
         st_coords_new = np.concatenate(st_coords_new, axis=0)
         eval_mask_new = np.concatenate(eval_mask_new, axis=0)
+        X_new = np.concatenate(X_new, axis=0)
 
         mask = df_new.notnull().astype(int).values
         df_new = df_new.fillna(0)
@@ -123,7 +146,7 @@ class SoilMoistureSparse(PandasDataset, MissingValuesMixin):
         dist = np.array(dist)
         dist = cdist(dist, dist)
 
-        return df_new, dist, mask, st_coords_new, temporal_encoding, eval_mask_new
+        return df_new, dist, mask, st_coords_new, temporal_encoding, eval_mask_new, X_new
 
     def compute_similarity(self, method: str, **kwargs):
         if method == "distance":
