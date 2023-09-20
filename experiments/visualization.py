@@ -6,8 +6,9 @@ from tsl.utils import numpy_metrics
 
 log_dir = 'log/soil_moisture_sparse_point/interpolation/20230918T164007_727343612/output.npz'
 
-# log_dir = 'log/soil_moisture_sparse_point/spin_h/20230919T034448_769252367/output.npz'
+log_dir = 'log/soil_moisture_sparse_point/spin_h/20230919T034448_769252367/output.npz'
 
+log_dir = 'log/soil_moisture_sparse_point/grin/20230920T200001_144194526/output.npz'
 
 output = np.load(log_dir)
 
@@ -16,10 +17,31 @@ y_hat, y_true, observed_mask, eval_mask = output['y_hat'].squeeze(-1), \
                           output['observed_mask'].squeeze(-1), \
                           output['eval_mask'].squeeze(-1)
 
-
-
 check_mae = numpy_metrics.masked_mae(y_hat, y_true, eval_mask)
+
+n_eval = np.sum(eval_mask)
+print(f'Evalpoint: {n_eval}')
 print(f'Test MAE: {check_mae:.5f}')
+
+# in-situ data
+df = pd.read_csv('../data/Insitu_gap_filling_data.csv')
+df['Date'] = pd.to_datetime(df['Date'], format='%Y%m%d')
+y2 = df[df['Date'].dt.year == 2017].copy()
+y2 = y2.pivot(index='Date', columns='POINTID', values='SMAP_1km').values
+y2 = y2[np.newaxis, ...]
+mask = np.ones_like(y2)
+mask[np.isnan(y2)] = 0
+
+# calculate ubrmse
+bias = np.mean((y2 - y_hat)[mask == 1])
+tmp = (y2-y_hat)**2
+tmp = np.mean(tmp[mask==1])
+ubrmse = np.sqrt(tmp - bias**2)
+print(f'UBRMSE: {ubrmse:.5f}')
+
+# calculate correlation
+corr = np.corrcoef(y2[mask == 1], y_hat[mask == 1])[0, 1]
+print(f'Correlation: {corr:.5f}')
 
 
 
