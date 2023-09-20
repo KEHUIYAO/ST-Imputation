@@ -9,7 +9,7 @@ class GrinModel(GRINModel):
     def forward(self, x: Tensor, edge_index: LongTensor,
                 edge_weight: OptTensor = None, mask: OptTensor = None,
                 u: OptTensor = None, **kwargs):
-        super().forward(x, edge_index, edge_weight, mask, u)
+        return super().forward(x, edge_index, edge_weight, mask, u)
 
     @staticmethod
     def add_model_specific_args(parser):
