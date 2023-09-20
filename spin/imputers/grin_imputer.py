@@ -37,4 +37,8 @@ class GrinImputer(Imputer):
         output['eval_mask'] = output['mask']
         output['observed_mask'] = batch.input.mask
         del output['mask']
+
+        if 'st_coords' in batch:
+            output['st_coords'] = batch.st_coords
+
         return output
