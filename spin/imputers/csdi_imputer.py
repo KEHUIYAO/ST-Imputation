@@ -73,12 +73,12 @@ class CsdiImputer(Imputer):
             p = p[torch.randint(len(p), p_size)].to(device=mask.device)
 
         whiten_mask = torch.zeros(mask.size(), device=mask.device).bool()
-        time_points_observed = torch.rand(mask.size(0), mask.size(1), 1, 1, device=mask.device) > p
-
-        # repeat along the spatial dimensions
-        time_points_observed = time_points_observed.repeat(1, 1, mask.size(2), mask.size(3))
-
-        whiten_mask[time_points_observed] = True
+        # time_points_observed = torch.rand(mask.size(0), mask.size(1), 1, 1, device=mask.device) > p
+        #
+        # # repeat along the spatial dimensions
+        # time_points_observed = time_points_observed.repeat(1, 1, mask.size(2), mask.size(3))
+        #
+        # whiten_mask[time_points_observed] = True
 
         batch.input.mask = mask & whiten_mask
         # whiten missing values
@@ -110,10 +110,8 @@ class CsdiImputer(Imputer):
         return loss
 
     def validation_step(self, batch, batch_idx):
-        observed_data = batch.y
-        # scale target
-        if not self.scale_target:
-            observed_data = batch.transform['y'].transform(observed_data)
+        observed_data = torch.zeros_like(batch.input.x)
+
         B, L, K, C = observed_data.shape  # [batch, steps, nodes, channels]
         device = self.device
         val_loss_sum = 0
@@ -139,7 +137,7 @@ class CsdiImputer(Imputer):
     def test_step(self, batch, batch_idx):
         # batch.input.target_mask = batch.eval_mask
         # Compute outputs and rescale
-        observed_data = batch.input.x
+        observed_data = torch.zeros_like(batch.input.x)
         B, L, K, C = observed_data.shape  # [batch, steps, nodes, channels]
         device = self.device
         n_samples = self.n_samples
@@ -188,7 +186,7 @@ class CsdiImputer(Imputer):
     def predict_step(self, batch, batch_idx, dataloader_idx=None):
         # batch.input.target_mask = batch.eval_mask
         # Compute outputs and rescale
-        observed_data = batch.input.x
+        observed_data = torch.zeros_like(batch.input.x)
         B, L, K, C = observed_data.shape  # [batch, steps, nodes, channels]
         device = self.device
         n_samples = self.n_samples
