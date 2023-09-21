@@ -477,6 +477,8 @@ def run_experiment(args):
 
         output = imputer.predict_step(batch, batch_id)
 
+        print(output['y_hat'])
+
         # y_hat.append(output['y_hat'])
         # y_true.append(output['y'])
         # eval_mask.append(output['eval_mask'])
