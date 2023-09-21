@@ -16,13 +16,13 @@ df = pd.read_csv(data_path)
 df['Date'] = pd.to_datetime(df['Date'], format='%Y%m%d')
 
 # training data
-y = df[df['Date'].dt.year == 2017].copy()
+y = df[df['Date'].dt.year == 2016].copy()
 y = y.pivot(index='Date', columns='POINTID', values='SMAP_1km').values
 
 covariates = ['prcp', 'srad', 'tmax', 'tmin', 'vp', 'SMAP_36km']
 X = []
 for cov in covariates:
-    x = df[df['Date'].dt.year == 2017].pivot(index='Date', columns='POINTID', values=cov).values
+    x = df[df['Date'].dt.year == 2016].pivot(index='Date', columns='POINTID', values=cov).values
     # impute missing values with mean
     x[np.isnan(x)] = np.nanmean(x)
     X.append(x)
@@ -65,8 +65,9 @@ df = pd.read_csv(data_path)
 df['Date'] = pd.to_datetime(df['Date'], format='%Y%m%d')
 
 
-y2 = df[df['Date'].dt.year == 2017].copy()
+y2 = df[df['Date'].dt.year == 2016].copy()
 y2 = y2.pivot(index='Date', columns='POINTID', values='SMAP_1km').values
+
 observed_mask2 = np.ones_like(y2)
 observed_mask2[np.isnan(y2)] = 0
 
@@ -96,3 +97,18 @@ print(f'UBRMSE: {ubrmse:.5f}')
 corr = np.corrcoef(y2[observed_mask2 == 1], y_imputed[observed_mask2 == 1])[0, 1]
 print(f'Correlation: {corr:.5f}')
 
+y3 = df[df['Date'].dt.year == 2016].copy()
+y3 = y3.pivot(index='Date', columns='POINTID', values='SMAP_36km').values
+
+observed_mask3 = np.ones_like(y3)
+observed_mask3[np.isnan(y3)] = 0
+
+bias = np.mean((y2 - y3)[observed_mask2 * observed_mask3 == 1])
+tmp = (y2-y_imputed)**2
+tmp = np.mean(tmp[observed_mask2*observed_mask3==1])
+ubrmse = np.sqrt(tmp - bias**2)
+
+print(f'UBRMSE: {ubrmse:.5f}')
+
+corr = np.corrcoef(y3[observed_mask2 * observed_mask3 == 1], y2[observed_mask2 * observed_mask3== 1])[0, 1]
+print(f'Correlation: {corr:.5f}')
