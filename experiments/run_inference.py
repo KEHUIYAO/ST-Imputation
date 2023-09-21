@@ -552,6 +552,7 @@ def run_experiment(args):
     print(f'Test MAE: {check_mae:.2f}')
 
     # save output to file
+    output = {}
     output['y_hat'] = y_hat_original[np.newaxis, :, :, np.newaxis]
     output['y'] = y_true_original[np.newaxis, :, :, np.newaxis]
     output['eval_mask'] = eval_mask_original[np.newaxis, :, :, np.newaxis]
