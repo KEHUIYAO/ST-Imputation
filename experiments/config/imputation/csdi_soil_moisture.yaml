@@ -2,7 +2,7 @@ epochs: 200
 val_len: 0.1
 test_len: 0.1
 window: 72  # [24, 36]
-stride: 12
+stride: 72
 lr_scheduler: multi_step
 loss_fn: mse_loss
 n_samples: 10
@@ -13,3 +13,4 @@ batch_inference: 16
 check_val_every_n_epoch: 20
 covariate_dim: 10
 diffusion_embedding_dim: 128
+load_from_pretrained: ~/ST-Imputation/experiments/log/soil_moisture_sparse_point/csdi/20230921T013743_650285676/epoch=59-step=3239.ckpt
