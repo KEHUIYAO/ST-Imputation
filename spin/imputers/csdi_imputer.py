@@ -110,8 +110,8 @@ class CsdiImputer(Imputer):
         return loss
 
     def validation_step(self, batch, batch_idx):
-        batch.input.x = torch.zeros(batch.input.x)
-        observed_data = torch.zeros(batch.input.x)
+        batch.input.x = torch.zeros_like(batch.input.x)
+        observed_data = batch.input.x
 
         B, L, K, C = observed_data.shape  # [batch, steps, nodes, channels]
         device = self.device
@@ -138,7 +138,7 @@ class CsdiImputer(Imputer):
     def test_step(self, batch, batch_idx):
         # batch.input.target_mask = batch.eval_mask
         # Compute outputs and rescale
-        batch.input.x = torch.zeros(batch.input.x)
+        batch.input.x = torch.zeros_like(batch.input.x)
         observed_data = batch.input.x
 
         B, L, K, C = observed_data.shape  # [batch, steps, nodes, channels]
@@ -189,7 +189,7 @@ class CsdiImputer(Imputer):
     def predict_step(self, batch, batch_idx, dataloader_idx=None):
         # batch.input.target_mask = batch.eval_mask
         # Compute outputs and rescale
-        batch.input.x = torch.zeros(batch.input.x)
+        batch.input.x = torch.zeros_like(batch.input.x)
         observed_data = batch.input.x
         B, L, K, C = observed_data.shape  # [batch, steps, nodes, channels]
         device = self.device
