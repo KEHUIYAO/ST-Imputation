@@ -318,7 +318,7 @@ def run_experiment(args):
 
 
     scaler = StandardScaler(axis=(0, 1))
-    scaler.fit(dataset.numpy(), dataset.training_mask)
+    scaler.fit(dataset.numpy(), dataset.eval_mask)
     scaler.bias = torch.tensor(scaler.bias)
     scaler.scale = torch.tensor(scaler.scale)
     scalers = {'data': scaler}
