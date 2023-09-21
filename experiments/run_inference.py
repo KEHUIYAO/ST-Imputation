@@ -64,8 +64,8 @@ def parse_args():
     parser.add_argument('--epochs', type=int, default=200)
     parser.add_argument('--check-val-every-n-epoch', type=int, default=1)
     parser.add_argument('--batch-inference', type=int, default=32)
-    parser.add_argument('--load-from-pretrained', type=str,
-                        default=None)
+    # parser.add_argument('--load-from-pretrained', type=str,
+    #                     default=None)
     parser.add_argument('--load-from-pretrained', type=str,
                         default='~/ST-Imputation/experiments/log/soil_moisture_sparse_point/csdi/20230920T224443_184448715/epoch=19-step=1079.ckpt')
     # parser.add_argument('--load-from-pretrained', type=str,
