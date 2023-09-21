@@ -47,7 +47,7 @@ class SoilMoistureSparse(PandasDataset, MissingValuesMixin):
             df = df[df['Date'].dt.year == 2016]
         elif mode == 'test':
             # select data from year 2017
-            df = df[df['Date'].dt.year == 2017]
+            df = df[df['Date'].dt.year == 2016]
 
         y = df.pivot(index='Date', columns='POINTID', values='SMAP_1km')
 
