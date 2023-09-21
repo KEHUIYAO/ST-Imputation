@@ -464,7 +464,11 @@ def run_experiment(args):
     if enable_multiple_imputation:
         multiple_imputations = []
 
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     for batch_id, batch in enumerate(tqdm(dm.test_dataloader(batch_size=args.batch_inference), desc="Processing", leave=True)):
+
+        batch = batch.to(device)
+        imputer = imputer.to(device)
 
         # move eval_mask from batch.input to batch
         batch.eval_mask = batch.input.pop('eval_mask')

@@ -223,6 +223,10 @@ class CsdiImputer(Imputer):
         y_hat = imputed_samples.median(dim=0).values
         imputed_samples = imputed_samples.permute(1, 0, 2, 3, 4)  # B, n_samples, L, K, C
         output = dict(y=batch.y, y_hat=y_hat, eval_mask=batch.eval_mask, observed_mask=batch.input.mask, imputed_samples=imputed_samples)
+
+        if 'st_coords' in batch:
+            output['st_coords'] = batch.st_coords
+
         return output
 
     @staticmethod
