@@ -17,8 +17,10 @@ from sklearn.preprocessing import StandardScaler
 
 
 current_dir = os.path.dirname(os.path.abspath(__file__))
-data_path = os.path.join(current_dir, 'SMAP_Climate_In_Situ_TxSON.csv')
+#data_path = os.path.join(current_dir, 'SMAP_Climate_In_Situ_TxSON.csv')
 #data_path = os.path.join(current_dir, 'SMAP_Climate_In_Situ_Kenaston.csv')
+
+data_path = os.path.join(current_dir, 'Insitu_gap_filling_data.csv')
 
 
 class SoilMoistureSparse(PandasDataset, MissingValuesMixin):
