@@ -53,14 +53,14 @@ def parse_args():
     # Argument parser
     ########################################
     parser = ArgParser()
-    #parser.add_argument("--model-name", type=str, default='csdi')
-    parser.add_argument("--model-name", type=str, default='interpolation')
+    parser.add_argument("--model-name", type=str, default='csdi')
+    #parser.add_argument("--model-name", type=str, default='interpolation')
     #parser.add_argument("--model-name", type=str, default='spin_h')
     parser.add_argument("--dataset-name", type=str, default='soil_moisture_sparse_point')
     #parser.add_argument("--config", type=str, default=None)
     # parser.add_argument("--config", type=str, default='imputation/interpolation_soil_moisture.yaml')
     # parser.add_argument("--config", type=str, default='imputation/spin_h_soil_moisture.yaml')
-    parser.add_argument("--config", type=str, default='imputation/interpolation_soil_moisture.yaml')
+    parser.add_argument("--config", type=str, default='imputation/csdi_soil_moisture.yaml')
     parser.add_argument('--epochs', type=int, default=200)
     parser.add_argument('--check-val-every-n-epoch', type=int, default=1)
     parser.add_argument('--batch-inference', type=int, default=32)
@@ -429,10 +429,7 @@ def run_experiment(args):
                          check_val_every_n_epoch=args.check_val_every_n_epoch,
                          callbacks=[early_stop_callback, checkpoint_callback])
     if require_training:
-        trainer.fit(imputer,
-                    train_dataloaders=dm.train_dataloader(),
-                    val_dataloaders=dm.val_dataloader(
-                        batch_size=args.batch_inference))
+        pass
     elif args.load_from_pretrained is not None:
         imputer = imputer_class.load_from_checkpoint(args.load_from_pretrained, model_class=model_cls,
          model_kwargs=model_kwargs,
