@@ -8,7 +8,17 @@ log_dir = 'log/soil_moisture_sparse_point/interpolation/20230918T164007_72734361
 
 log_dir = 'log/soil_moisture_sparse_point/spin_h/20230919T034448_769252367/output.npz'
 
-log_dir = 'log/soil_moisture_sparse_point/grin/20230920T200001_144194526/output.npz'
+log_dir = 'log/soil_moisture_sparse_point/grin/20230921T031017_968938493/output.npz'
+
+# log_dir = 'log/soil_moisture_sparse_point/csdi/20230921T025841_774017230/output.npz'
+#
+# log_dir = 'log/soil_moisture_sparse_point/interpolation/20230920T224810_88924231/output.npz'
+#
+# log_dir = 'log/soil_moisture_sparse_point/spin_h/20230921T041518_997739772/output.npz'
+
+log_dir = 'log/soil_moisture_sparse_point/interpolation/20230921T131602_38016970/output.npz'
+
+
 
 output = np.load(log_dir)
 
@@ -26,7 +36,7 @@ print(f'Test MAE: {check_mae:.5f}')
 # in-situ data
 df = pd.read_csv('../data/Insitu_gap_filling_data.csv')
 df['Date'] = pd.to_datetime(df['Date'], format='%Y%m%d')
-y2 = df[df['Date'].dt.year == 2017].copy()
+y2 = df[df['Date'].dt.year == 2016].copy()
 y2 = y2.pivot(index='Date', columns='POINTID', values='SMAP_1km').values
 y2 = y2[np.newaxis, ...]
 mask = np.ones_like(y2)
@@ -63,8 +73,8 @@ qlist =[0.05,0.25,0.5,0.75,0.95]
 quantiles_imp= []
 for q in qlist:
     tmp = np.quantile(samples, q, axis=1)
-    # quantiles_imp.append(tmp*(1-all_observed_np) + all_target_np * all_observed_np)
-    quantiles_imp.append(tmp)
+    quantiles_imp.append(tmp*(1-all_observed_np) + all_target_np * all_observed_np)
+    # quantiles_imp.append(tmp)
 
 
 
