@@ -88,7 +88,7 @@ class SoilMoistureSparse(PandasDataset, MissingValuesMixin):
             eval_mask[time_points_to_eval, :] = 1
 
         if mode == 'test':
-            eval_mask = np.zeros((rows, cols))
+            eval_mask = np.ones((rows, cols))
 
 
         plt.figure()
