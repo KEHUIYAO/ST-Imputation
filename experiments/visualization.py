@@ -4,11 +4,15 @@ import matplotlib.pyplot as plt
 from tsl.utils import numpy_metrics
 
 
-log_dir = 'log/soil_moisture_sparse_point/interpolation/20230918T164007_727343612/output.npz'
-
-log_dir = 'log/soil_moisture_sparse_point/spin_h/20230919T034448_769252367/output.npz'
-
-log_dir = 'log/soil_moisture_sparse_point/grin/20230920T200001_144194526/output.npz'
+log_dir = 'log/soil_moisture_sparse_point/interpolation/20230922T105905_4501766/output.npz'
+#
+# log_dir = 'log/soil_moisture_sparse_point/spin_h/20230919T034448_769252367/output.npz'
+#
+# log_dir = 'log/soil_moisture_sparse_point/grin/20230920T200001_144194526/output.npz'
+#
+log_dir = 'log/soil_moisture_sparse_point/grin/20230922T014011_968527606/output.npz'
+#
+# log_dir = 'log/soil_moisture_sparse_point/spin_h/20230922T041452_741390810/output.npz'
 
 output = np.load(log_dir)
 
@@ -26,7 +30,7 @@ print(f'Test MAE: {check_mae:.5f}')
 # in-situ data
 df = pd.read_csv('../data/Insitu_gap_filling_data.csv')
 df['Date'] = pd.to_datetime(df['Date'], format='%Y%m%d')
-y2 = df[df['Date'].dt.year == 2017].copy()
+y2 = df[df['Date'].dt.year == 2016].copy()
 y2 = y2.pivot(index='Date', columns='POINTID', values='SMAP_1km').values
 y2 = y2[np.newaxis, ...]
 mask = np.ones_like(y2)
