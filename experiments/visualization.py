@@ -18,6 +18,8 @@ log_dir = 'log/soil_moisture_sparse_point/grin/20230921T031017_968938493/output.
 
 log_dir = 'log/soil_moisture_sparse_point/interpolation/20230921T131602_38016970/output.npz'
 
+log_dir = 'log/soil_moisture_sparse_point/csdi/20230921T214251_284367313/output.npz'
+
 
 
 output = np.load(log_dir)

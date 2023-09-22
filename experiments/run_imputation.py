@@ -37,11 +37,11 @@ def parse_args():
     # Argument parser
     ########################################
     parser = ArgParser()
-    parser.add_argument("--model-name", type=str, default='grin')
+    parser.add_argument("--model-name", type=str, default='csdi')
     #parser.add_argument("--model-name", type=str, default='interpolation')
     parser.add_argument("--dataset-name", type=str, default='soil_moisture_sparse_point')
     #parser.add_argument("--config", type=str, default=None)
-    parser.add_argument("--config", type=str, default='imputation/grin_soil_moisture.yaml')
+    parser.add_argument("--config", type=str, default='imputation/csdi_soil_moisture.yaml')
     parser.add_argument('--epochs', type=int, default=200)
     parser.add_argument('--check-val-every-n-epoch', type=int, default=1)
     parser.add_argument('--batch-inference', type=int, default=32)
@@ -141,8 +141,7 @@ def get_dataset(dataset_name: str):
                                   min_seq=12, max_seq=12 * 4, seed=56789)
 
     if dataset_name == 'soil_moisture_sparse':
-        return add_missing_values(SoilMoistureSparse(), p_fault=p_fault, p_noise=p_noise,
-                                  min_seq=12, max_seq=12 * 4, seed=56789)
+        return SoilMoistureSparse(mode='train')
 
 
     if dataset_name == 'gp':
