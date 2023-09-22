@@ -14,6 +14,8 @@ log_dir = 'log/soil_moisture_sparse_point/grin/20230922T014011_968527606/output.
 #
 # log_dir = 'log/soil_moisture_sparse_point/spin_h/20230922T041452_741390810/output.npz'
 
+log_dir = 'log/soil_moisture_sparse_point/csdi/20230922T173052_894526334/output.npz'
+
 output = np.load(log_dir)
 
 y_hat, y_true, observed_mask, eval_mask = output['y_hat'].squeeze(-1), \
@@ -67,8 +69,8 @@ qlist =[0.05,0.25,0.5,0.75,0.95]
 quantiles_imp= []
 for q in qlist:
     tmp = np.quantile(samples, q, axis=1)
-    # quantiles_imp.append(tmp*(1-all_observed_np) + all_target_np * all_observed_np)
-    quantiles_imp.append(tmp)
+    quantiles_imp.append(tmp*(1-all_observed_np) + all_target_np * all_observed_np)
+    #quantiles_imp.append(tmp)
 
 
 
