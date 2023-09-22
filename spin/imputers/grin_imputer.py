@@ -20,19 +20,19 @@ class GrinImputer(Imputer):
 
 
         whiten_mask = torch.zeros(mask.size(), device=mask.device).bool()
-        time_points_observed = torch.rand(mask.size(0), mask.size(1), 1, 1, device=mask.device) > p
-
-        # repeat along the spatial dimensions
-        time_points_observed = time_points_observed.repeat(1, 1, mask.size(2), mask.size(3))
-
-        whiten_mask[time_points_observed] = True
 
         batch.input.mask = mask & whiten_mask
         # whiten missing values
         if 'x' in batch.input:
             batch.input.x = batch.input.x * batch.input.mask
 
+
+    def validation_step(self, batch, batch_idx):
+        batch.input.x = torch.zeros_like(batch.input.x)
+        super().validation_step(batch, batch_idx)
+
     def predict_step(self, batch, batch_idx, dataloader_idx=None):
+        batch.input.x = torch.zeros_like(batch.input.x)
         output = super().predict_step(batch, batch_idx, dataloader_idx)
         output['eval_mask'] = output['mask']
         output['observed_mask'] = batch.input.mask
