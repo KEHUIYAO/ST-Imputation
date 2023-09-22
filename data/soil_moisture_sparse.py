@@ -20,7 +20,8 @@ current_dir = os.path.dirname(os.path.abspath(__file__))
 #data_path = os.path.join(current_dir, 'SMAP_Climate_In_Situ_TxSON.csv')
 #data_path = os.path.join(current_dir, 'SMAP_Climate_In_Situ_Kenaston.csv')
 
-data_path = os.path.join(current_dir, 'Insitu_gap_filling_data.csv')
+data_path = os.path.join(current_dir, 'SMAP_Climate_In_Situ_TxSON.csv')
+data_path_insitu = os.path.join(current_dir, 'Insitu_gap_filling_data.csv')
 
 
 class SoilMoistureSparse(PandasDataset, MissingValuesMixin):
@@ -40,20 +41,26 @@ class SoilMoistureSparse(PandasDataset, MissingValuesMixin):
 
     def load(self, mode):
         df = pd.read_csv(data_path)
+        df_insitu = pd.read_csv(data_path_insitu)
 
         df['Date'] = pd.to_datetime(df['Date'], format='%Y%m%d')
+        df_insitu['Date'] = pd.to_datetime(df_insitu['Date'], format='%Y%m%d')
 
 
         if mode == 'train':
             # select data from year 2016
             df = df[df['Date'].dt.year == 2016]
+            df_insitu = df_insitu[df_insitu['Date'].dt.year == 2016]
         elif mode == 'test':
             # select data from year 2017
             df = df[df['Date'].dt.year == 2017]
+            df_insitu = df_insitu[df_insitu['Date'].dt.year == 2017]
 
-        y = df.pivot(index='Date', columns='POINTID', values='SMAP_1km')
+        df['insitu'] = df_insitu['SMAP_1km']
 
-        covariates = ['prcp', 'srad', 'tmax', 'tmin', 'vp', 'SMAP_36km']
+        y = df.pivot(index='Date', columns='POINTID', values='insitu')
+
+        covariates = ['prcp', 'srad', 'tmax', 'tmin', 'vp', 'SMAP_36km', 'SMAP_1km']
         X = []
         for cov in covariates:
             x = df.pivot(index='Date', columns='POINTID', values=cov).values
