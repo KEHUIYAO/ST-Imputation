@@ -18,8 +18,9 @@ log_dir = 'log/soil_moisture_sparse_point/grin/20230921T031017_968938493/output.
 
 log_dir = 'log/soil_moisture_sparse_point/interpolation/20230921T131602_38016970/output.npz'
 
-log_dir = 'log/soil_moisture_sparse_point/csdi/20230921T214251_284367313/output.npz'
+log_dir = 'log/soil_moisture_sparse_point/csdi/20230922T182258_340133324/output.npz'
 
+log_dir = 'log/soil_moisture_sparse_point/grin/20230922T193138_273556635/output.npz'
 
 
 output = np.load(log_dir)
@@ -38,7 +39,7 @@ print(f'Test MAE: {check_mae:.5f}')
 # in-situ data
 df = pd.read_csv('../data/Insitu_gap_filling_data.csv')
 df['Date'] = pd.to_datetime(df['Date'], format='%Y%m%d')
-y2 = df[df['Date'].dt.year == 2016].copy()
+y2 = df[df['Date'].dt.year == 2017].copy()
 y2 = y2.pivot(index='Date', columns='POINTID', values='SMAP_1km').values
 y2 = y2[np.newaxis, ...]
 mask = np.ones_like(y2)
