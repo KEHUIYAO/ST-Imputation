@@ -32,8 +32,8 @@ class SoilMoistureSparse(PandasDataset, MissingValuesMixin):
                          mask=mask,
                          attributes=dict(dist=dist, temporal_encoding=temporal_encoding,
                           st_coords=st_coords_new, covariates=X_new))
-
-        self.set_eval_mask(eval_mask_new)
+        if mode == 'test':
+            self.set_eval_mask(eval_mask_new)
 
 
     def load(self, mode):
