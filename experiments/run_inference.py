@@ -256,20 +256,10 @@ def run_experiment(args):
 
 
     elif args.model_name == 'csdi':
-        temporal_encoding = dataset.attributes['temporal_encoding']
-        temporal_encoding = temporal_encoding[np.newaxis, :, :]
-        temporal_encoding = np.tile(temporal_encoding, (dataset.shape[1], 1, 1))
-        temporal_encoding = np.transpose(temporal_encoding, (1, 0, 2))
-
         if 'covariates' in dataset.attributes:
-            external_covariates = dataset.attributes['covariates']
+            covariates = dataset.attributes['covariates']
         else:
-            external_covariates = None
-
-        if external_covariates is not None:
-            covariates = np.concatenate([temporal_encoding, external_covariates], axis=2)
-        else:
-            covariates = temporal_encoding
+            covariates = None
 
         exog_map = {'covariates': covariates}
         input_map = {
