@@ -68,8 +68,9 @@ class SPINImputer(Imputer):
         time_embedding = positional_encoding(batch['u'].shape[1], 1, batch['u'].shape[2]).squeeze(1)
         time_embedding = time_embedding[np.newaxis, ...]
         time_embedding = np.tile(time_embedding, (batch['u'].shape[0], 1, 1))
-        time_embedding = torch.tensor(time_embedding, device=batch['u'].device)
+        time_embedding = torch.tensor(time_embedding, device=batch['u'].device, dtype=batch['u'].dtype)
         batch['u'] = time_embedding
+        batch.input['u'] = time_embedding
 
 
 
