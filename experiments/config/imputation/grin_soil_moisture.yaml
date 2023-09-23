@@ -24,7 +24,7 @@ check_val_every_n_epoch: 1
 
 #### Model params #############################################################
 model_name: 'grin'
-exog_size: 5
+exog_size: 6
 hidden_size: 64
 ff_size: 64
 embedding_size: 8
