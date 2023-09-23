@@ -11,6 +11,6 @@ whiten_prob: [0.2, 0.5, 0.8]
 batch_size: 16
 batch_inference: 16
 check_val_every_n_epoch: 20
-covariate_dim: 10
+covariate_dim: 70
 diffusion_embedding_dim: 128
 load_from_pretrained: ~/ST-Imputation/experiments/log/soil_moisture_sparse_point/csdi/20230921T013743_650285676/epoch=59-step=3239.ckpt

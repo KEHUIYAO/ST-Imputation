@@ -37,11 +37,11 @@ def parse_args():
     # Argument parser
     ########################################
     parser = ArgParser()
-    parser.add_argument("--model-name", type=str, default='grin')
+    parser.add_argument("--model-name", type=str, default='spin_h')
     #parser.add_argument("--model-name", type=str, default='interpolation')
     parser.add_argument("--dataset-name", type=str, default='soil_moisture_sparse_point')
     #parser.add_argument("--config", type=str, default=None)
-    parser.add_argument("--config", type=str, default='imputation/grin_soil_moisture.yaml')
+    parser.add_argument("--config", type=str, default='imputation/spin_h_soil_moisture.yaml')
     parser.add_argument('--epochs', type=int, default=200)
     parser.add_argument('--check-val-every-n-epoch', type=int, default=1)
     parser.add_argument('--batch-inference', type=int, default=32)
@@ -236,20 +236,10 @@ def run_experiment(args):
 
 
     elif args.model_name == 'csdi':
-        temporal_encoding = dataset.attributes['temporal_encoding']
-        temporal_encoding = temporal_encoding[np.newaxis, :, :]
-        temporal_encoding = np.tile(temporal_encoding, (dataset.shape[1], 1, 1))
-        temporal_encoding = np.transpose(temporal_encoding, (1, 0, 2))
-
         if 'covariates' in dataset.attributes:
-            external_covariates = dataset.attributes['covariates']
+            covariates = dataset.attributes['covariates']
         else:
-            external_covariates = None
-
-        if external_covariates is not None:
-            covariates = np.concatenate([temporal_encoding, external_covariates], axis=2)
-        else:
-            covariates = temporal_encoding
+            covariates = None
 
         exog_map = {'covariates': covariates}
         input_map = {
