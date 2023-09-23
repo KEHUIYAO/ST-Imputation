@@ -67,7 +67,7 @@ class SPINImputer(Imputer):
     def on_after_batch_transfer(self, batch, dataloader_idx):
         time_embedding = np.arange(batch['u'].shape[1])
         time_embedding = time_embedding[np.newaxis, :, np.newaxis]
-        time_embedding = np.tile(time_embedding, (batch['u'].shape[0], 4, 1))
+        time_embedding = np.tile(time_embedding, (batch['u'].shape[0], 1, 4))
         time_embedding = torch.tensor(time_embedding, device=batch['u'].device, dtype=batch['u'].dtype)
         batch['u'] = time_embedding
         batch.input['u'] = time_embedding
