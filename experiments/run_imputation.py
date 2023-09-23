@@ -141,8 +141,7 @@ def get_dataset(dataset_name: str):
                                   min_seq=12, max_seq=12 * 4, seed=56789)
 
     if dataset_name == 'soil_moisture_sparse':
-        return add_missing_values(SoilMoistureSparse(mode='train'), p_fault=p_fault, p_noise=p_noise,
-                                  min_seq=12, max_seq=12 * 4, seed=56789)
+        return SoilMoistureSparse(mode='train')
 
 
     if dataset_name == 'gp':
