@@ -76,6 +76,8 @@ class CsdiImputer(Imputer):
         else:
             batch['side_info'] = time_embedding
 
+        return super().on_after_batch_transfer(batch, dataloader_idx)
+
     def on_train_batch_start(self, batch, batch_idx: int,
                              unused: Optional[int] = 0) -> None:
 
