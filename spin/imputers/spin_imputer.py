@@ -1,5 +1,6 @@
 from typing import Type, Mapping, Callable, Optional, Union, List
 
+import numpy as np
 import torch
 from torchmetrics import Metric
 from tsl.imputers import Imputer
@@ -7,6 +8,7 @@ from tsl.predictors import Predictor
 
 from ..utils import k_hop_subgraph_sampler
 from torch import Tensor
+from ...data.utils import positional_encoding
 
 
 class SPINImputer(Imputer):
@@ -44,10 +46,20 @@ class SPINImputer(Imputer):
         self.cut_edges_uniformly = cut_edges_uniformly
 
     def on_after_batch_transfer(self, batch, dataloader_idx):
+        time_embedding = positional_encoding(batch['u'].shape[1], 1, batch['u'].shape[2]).squeeze(1)
+        time_embedding = time_embedding[np.newaxis, ...]
+        time_embedding = np.tile(time_embedding, (batch['u'].shape[0], 1, 1))
+        time_embedding = torch.tensor(time_embedding, device=batch['u'].device)
+        batch['u'] = time_embedding
+
+
+
         if self.training and self.n_roots is not None:
             batch = k_hop_subgraph_sampler(batch, self.n_hops, self.n_roots,
                                            max_edges=self.max_edges_subgraph,
                                            cut_edges_uniformly=self.cut_edges_uniformly)
+
+
         return super(SPINImputer, self).on_after_batch_transfer(batch,
                                                                 dataloader_idx)
 
