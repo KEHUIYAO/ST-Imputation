@@ -8,8 +8,27 @@ from tsl.predictors import Predictor
 
 from ..utils import k_hop_subgraph_sampler
 from torch import Tensor
-from ...data.utils import positional_encoding
 
+def positional_encoding(seq_len, num_nodes, d_model):
+    # Create a position array for seq_len
+    angle_rads = get_angles(np.arange(seq_len)[:, np.newaxis, np.newaxis],
+                            np.arange(d_model)[np.newaxis, np.newaxis, :],
+                            d_model)
+
+    # Apply the sin to even indices in the array; 2i
+    angle_rads[:, :, 0::2] = np.sin(angle_rads[:, :, 0::2])
+
+    # Apply the cos to odd indices in the array; 2i+1
+    angle_rads[:, :, 1::2] = np.cos(angle_rads[:, :, 1::2])
+
+    pos_encoding = np.tile(angle_rads, (1, num_nodes, 1))
+
+    return pos_encoding
+
+
+def get_angles(pos, i, d_model):
+    angle_rates = 1 / np.power(10000, (2 * (i // 2)) / np.float32(d_model))
+    return pos * angle_rates
 
 class SPINImputer(Imputer):
 
