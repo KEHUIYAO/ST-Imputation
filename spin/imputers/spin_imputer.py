@@ -65,8 +65,8 @@ class SPINImputer(Imputer):
         self.cut_edges_uniformly = cut_edges_uniformly
 
     def on_after_batch_transfer(self, batch, dataloader_idx):
-        time_embedding = positional_encoding(batch['u'].shape[1], 1, batch['u'].shape[2]).squeeze(1)
-        time_embedding = time_embedding[np.newaxis, ...]
+        time_embedding = np.arange(batch['u'].shape[1])
+        time_embedding = time_embedding[np.newaxis, :, np.newaxis]
         time_embedding = np.tile(time_embedding, (batch['u'].shape[0], 1, 1))
         time_embedding = torch.tensor(time_embedding, device=batch['u'].device, dtype=batch['u'].dtype)
         batch['u'] = time_embedding
