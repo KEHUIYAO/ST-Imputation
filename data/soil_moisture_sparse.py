@@ -26,11 +26,17 @@ class SoilMoistureSparse(PandasDataset, MissingValuesMixin):
 
     def __init__(self, mode='train', seed=42):
         df, dist, mask, st_coords_new, temporal_encoding, X_new = self.load(mode=mode)
+        # super().__init__(dataframe=df,
+        #                  similarity_score="distance",
+        #                  mask=mask,
+        #                  attributes=dict(dist=dist, temporal_encoding=temporal_encoding,
+        #                   st_coords=st_coords_new, covariates=X_new))
+
         super().__init__(dataframe=df,
                          similarity_score="distance",
                          mask=mask,
                          attributes=dict(dist=dist, temporal_encoding=temporal_encoding,
-                          st_coords=st_coords_new, covariates=X_new))
+                          st_coords=st_coords_new))
 
         rng = np.random.RandomState(seed)
 
@@ -155,8 +161,6 @@ class SoilMoistureSparse(PandasDataset, MissingValuesMixin):
                 dist.append([sorted_x[i], sorted_y[j]])
         dist = np.array(dist)
         dist = cdist(dist, dist)
-
-        X_new = None
 
         return df_new, dist, mask, st_coords_new, temporal_encoding, X_new
 
