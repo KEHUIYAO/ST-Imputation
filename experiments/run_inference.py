@@ -37,6 +37,13 @@ from spin.scheduler import CosineSchedulerWithRestarts
 from tqdm import tqdm
 
 
+def positional_encoding(max_length, d_model):
+    pos = np.arange(max_length)[:, np.newaxis]
+    div = np.exp(np.arange(0, d_model, 2) * -(np.log(10000.0) / d_model))
+    pos_encoding = np.zeros((max_length, d_model))
+    pos_encoding[:, 0::2] = np.sin(pos * div)
+    pos_encoding[:, 1::2] = np.cos(pos * div)
+    return pos_encoding
 
 @staticmethod
 def add_argparse_args(parser, **kwargs):
@@ -467,6 +474,27 @@ def run_experiment(args):
         # whiten missing values
         if 'x' in batch.input:
             batch.input.x = batch.input.x * batch.input.mask
+
+        if args.model_name in ['spin', 'spin_h']:
+            time_embedding = np.arange(batch['u'].shape[1])
+            time_embedding = time_embedding[np.newaxis, :, np.newaxis]
+            time_embedding = np.tile(time_embedding, (batch['u'].shape[0], 1, 4))
+            time_embedding = torch.tensor(time_embedding, device=batch['u'].device, dtype=batch['u'].dtype)
+            batch['u'] = time_embedding
+            batch.input['u'] = time_embedding
+
+        elif args.model_name == 'csdi':
+            time_embedding = positional_encoding(batch['x'].shape[1], 64)  # (L, d_model)
+            time_embedding = time_embedding[np.newaxis, np.newaxis, ...]  # (1, 1, L, d_model)
+            time_embedding = np.tile(time_embedding,
+                                     (batch['x'].shape[0], batch['x'].shape[2], 1, 1))  # (B, K, L, d_model)
+            time_embedding = time_embedding.transpose(0, 2, 1, 3)
+            time_embedding = torch.tensor(time_embedding, device=batch['x'].device, dtype=batch['x'].dtype)
+
+            if batch['side_info'] is not None:
+                batch['side_info'] = torch.cat([batch['side_info'], time_embedding], dim=-1)
+            else:
+                batch['side_info'] = time_embedding
 
         output = imputer.predict_step(batch, batch_id)
 
