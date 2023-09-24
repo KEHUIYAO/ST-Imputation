@@ -2,12 +2,12 @@ epochs: 200
 val_len: 0.1
 test_len: 0.1
 window: 36  # [24, 36]
-stride: 12
+stride: 5
 lr_scheduler: multi_step
 loss_fn: mse_loss
 n_samples: 10
 d_hidden: 64
-whiten_prob: [0.2, 0.5, 0.8]
+whiten_prob: [1]
 batch_size: 16
 batch_inference: 16
 check_val_every_n_epoch: 10
