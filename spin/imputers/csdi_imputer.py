@@ -126,6 +126,12 @@ class CsdiImputer(Imputer):
 
 
     def training_step(self, batch, batch_idx):
+
+        ########################################################
+        batch.input.x = torch.zeros_like(batch.input.x)
+        batch.input.mask = torch.zeros_like(batch.input.mask)
+        ########################################################
+
         injected_missing = (batch.original_mask - batch.mask)
         epsilon_hat, epsilon, loss = self.shared_step(batch, mask=injected_missing)
         # epsilon_hat, epsilon, loss = self.shared_step(batch, mask=batch.original_mask)
@@ -138,7 +144,13 @@ class CsdiImputer(Imputer):
         return loss
 
     def validation_step(self, batch, batch_idx):
+        ########################################################
+        batch.input.x = torch.zeros_like(batch.input.x)
+        batch.input.mask = torch.zeros_like(batch.input.mask)
+        ########################################################
+
         observed_data = batch.y
+
         # scale target
         if not self.scale_target:
             observed_data = batch.transform['y'].transform(observed_data)
@@ -165,6 +177,12 @@ class CsdiImputer(Imputer):
         return val_loss_sum
 
     def test_step(self, batch, batch_idx):
+
+        ########################################################
+        batch.input.x = torch.zeros_like(batch.input.x)
+        batch.input.mask = torch.zeros_like(batch.input.mask)
+        ########################################################
+
         # batch.input.target_mask = batch.eval_mask
         # Compute outputs and rescale
         observed_data = batch.input.x
@@ -214,6 +232,13 @@ class CsdiImputer(Imputer):
         return test_loss
 
     def predict_step(self, batch, batch_idx, dataloader_idx=None):
+
+        ########################################################
+        batch.input.x = torch.zeros_like(batch.input.x)
+        batch.input.mask = torch.zeros_like(batch.input.mask)
+        ########################################################
+
+
         # batch.input.target_mask = batch.eval_mask
         # Compute outputs and rescale
         observed_data = batch.input.x
