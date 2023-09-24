@@ -63,9 +63,9 @@ class SoilMoistureSparse(PandasDataset, MissingValuesMixin):
 
         y = df.pivot(index='Date', columns='POINTID', values='SMAP_1km')
 
-        # covariates = ['prcp', 'srad', 'tmax', 'tmin', 'vp', 'SMAP_36km']
+        covariates = ['prcp', 'srad', 'tmax', 'tmin', 'vp', 'SMAP_36km']
         # covariates = ['prcp', 'srad', 'tmax', 'tmin', 'vp']
-        covariates = None
+
 
 
         X = []
@@ -155,6 +155,8 @@ class SoilMoistureSparse(PandasDataset, MissingValuesMixin):
                 dist.append([sorted_x[i], sorted_y[j]])
         dist = np.array(dist)
         dist = cdist(dist, dist)
+
+        X_new = None
 
         return df_new, dist, mask, st_coords_new, temporal_encoding, X_new
 
