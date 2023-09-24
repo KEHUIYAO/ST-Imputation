@@ -475,6 +475,7 @@ def run_experiment(args):
         if 'x' in batch.input:
             batch.input.x = batch.input.x * batch.input.mask
 
+
         if args.model_name in ['spin', 'spin_h']:
             time_embedding = np.arange(batch['u'].shape[1])
             time_embedding = time_embedding[np.newaxis, :, np.newaxis]
@@ -495,6 +496,11 @@ def run_experiment(args):
                 batch['side_info'] = torch.cat([batch['side_info'], time_embedding], dim=-1)
             else:
                 batch['side_info'] = time_embedding
+
+            ########################################################
+            batch.input.x = torch.zeros_like(batch.input.x)
+            batch.input.mask = torch.zeros_like(batch.input.mask)
+            ########################################################
 
         output = imputer.predict_step(batch, batch_id)
 
