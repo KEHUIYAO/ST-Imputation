@@ -65,17 +65,22 @@ class SoilMoistureSparse(PandasDataset, MissingValuesMixin):
 
         y = df.pivot(index='Date', columns='POINTID', values='SMAP_1km')
 
-        # covariates = ['prcp', 'srad', 'tmax', 'tmin', 'vp', 'SMAP_36km']
-        covariates = ['prcp']
+        covariates = ['prcp', 'srad', 'tmax', 'tmin', 'vp', 'SMAP_36km']
+        # covariates = ['prcp']
 
 
 
         X = []
         for cov in covariates:
             x = df.pivot(index='Date', columns='POINTID', values=cov).values
-            # impute missing values with mean
-            x[np.isnan(x)] = np.nanmean(x)
+
+            # missing mask of x
+            x_mask = ~np.isnan(x)
+            # impute missing values with 0
+            x[~x_mask] = 0
+
             X.append(x)
+            X.append(x_mask)
 
         X = np.stack(X, axis=-1)
         L, K, C = X.shape
