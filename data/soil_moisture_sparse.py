@@ -67,7 +67,7 @@ class SoilMoistureSparse(PandasDataset, MissingValuesMixin):
 
         # covariates = ['prcp', 'srad', 'tmax', 'tmin', 'vp', 'SMAP_36km']
         # covariates = ['prcp']
-        covariates = ['prcp', 'srad', 'tmax', 'tmin', 'vp', 'SMAP_36km', 'elevation', 'slope', 'aspect', 'hillshade' 'clay', 'sand', 	'bd', 'soc', 'LC']
+        covariates = ['prcp', 'srad', 'tmax', 'tmin', 'vp', 'SMAP_36km', 'elevation', 'slope', 'aspect', 'hill', 'shade', 'clay', 'sand', 'bd', 'soc', 'LC']
 
 
 
