@@ -467,41 +467,7 @@ def run_experiment(args):
         batch = batch.to(device)
         imputer = imputer.to(device)
 
-        # move eval_mask from batch.input to batch
-        batch.eval_mask = batch.input.pop('eval_mask')
-        # move mask from batch to batch.input
-        batch.input.mask = batch.pop('mask')
-        # whiten missing values
-        if 'x' in batch.input:
-            batch.input.x = batch.input.x * batch.input.mask
-
-
-        if args.model_name in ['spin', 'spin_h']:
-            time_embedding = np.arange(batch['u'].shape[1])
-            time_embedding = time_embedding[np.newaxis, :, np.newaxis]
-            time_embedding = np.tile(time_embedding, (batch['u'].shape[0], 1, 4))
-            time_embedding = torch.tensor(time_embedding, device=batch['u'].device, dtype=batch['u'].dtype)
-            batch['u'] = time_embedding
-            batch.input['u'] = time_embedding
-
-        elif args.model_name == 'csdi':
-            time_embedding = positional_encoding(batch['x'].shape[1], 64)  # (L, d_model)
-            time_embedding = time_embedding[np.newaxis, np.newaxis, ...]  # (1, 1, L, d_model)
-            time_embedding = np.tile(time_embedding,
-                                     (batch['x'].shape[0], batch['x'].shape[2], 1, 1))  # (B, K, L, d_model)
-            time_embedding = time_embedding.transpose(0, 2, 1, 3)
-            time_embedding = torch.tensor(time_embedding, device=batch['x'].device, dtype=batch['x'].dtype)
-
-            if batch['side_info'] is not None:
-                batch['side_info'] = torch.cat([batch['side_info'], time_embedding], dim=-1)
-            else:
-                batch['side_info'] = time_embedding
-
-            ########################################################
-            batch.input.x = torch.zeros_like(batch.input.x)
-            batch.input.mask = torch.zeros_like(batch.input.mask)
-            ########################################################
-
+        batch = imputer.on_after_batch_transfer(batch)
         output = imputer.predict_step(batch, batch_id)
 
         # y_hat.append(output['y_hat'])

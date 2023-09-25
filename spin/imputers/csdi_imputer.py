@@ -71,7 +71,7 @@ class CsdiImputer(Imputer):
         time_embedding = time_embedding.transpose(0, 2, 1, 3)
         time_embedding = torch.tensor(time_embedding, device=batch['x'].device, dtype=batch['x'].dtype)
 
-        if batch['side_info'] is not None:
+        if 'side_info' in batch:
             batch['side_info'] = torch.cat([batch['side_info'], time_embedding], dim=-1)
         else:
             batch['side_info'] = time_embedding
