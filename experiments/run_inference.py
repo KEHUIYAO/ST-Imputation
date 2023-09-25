@@ -467,7 +467,7 @@ def run_experiment(args):
         batch = batch.to(device)
         imputer = imputer.to(device)
 
-        batch = imputer.on_after_batch_transfer(batch)
+        batch = imputer.on_after_batch_transfer(batch, 0)
         output = imputer.predict_step(batch, batch_id)
 
         # y_hat.append(output['y_hat'])

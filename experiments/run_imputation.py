@@ -238,14 +238,12 @@ def run_experiment(args):
     elif args.model_name == 'csdi':
         if 'covariates' in dataset.attributes:
             covariates = dataset.attributes['covariates']
-        else:
-            covariates = None
 
-        exog_map = {'covariates': covariates}
-        input_map = {
-            'side_info': 'covariates',
-            'x': 'data'
-        }
+            exog_map = {'covariates': covariates}
+            input_map = {
+                'side_info': 'covariates',
+                'x': 'data'
+            }
 
     elif args.model_name == 'grin' and 'covariates' in dataset.attributes:
         exog_map = {'covariates': dataset.attributes['covariates']}
