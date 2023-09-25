@@ -66,7 +66,7 @@ class SoilMoistureSparse(PandasDataset, MissingValuesMixin):
         y = df.pivot(index='Date', columns='POINTID', values='SMAP_1km')
 
         # covariates = ['prcp', 'srad', 'tmax', 'tmin', 'vp', 'SMAP_36km']
-        covariates = ['srad', 'tmax', 'tmin', 'vp']
+        covariates = ['prcp']
 
 
 
