@@ -1,6 +1,6 @@
 epochs: 200
-window: 73  # [24, 36]
-stride: 73
+window: 72  # [24, 36]
+stride: 5
 lr_scheduler: multi_step
 loss_fn: mse_loss
 n_samples: 10
@@ -9,4 +9,4 @@ whiten_prob: 0.05
 batch_size: 16
 batch_inference: 16
 check_val_every_n_epoch: 20
-covariate_size: 0
+covariate_size: 12

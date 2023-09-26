@@ -246,29 +246,8 @@ def run_experiment(args):
         # data module                          #
         ########################################
 
-        # time embedding
-    if args.dataset_name == 'air36':
-        temporal_encoding = dataset.datetime_encoded(['day', 'week']).values
-        dataset.attributes['temporal_encoding'] = temporal_encoding
-
-    if args.model_name in ['spin', 'spin_h', 'transformer']:
-        temporal_encoding = dataset.attributes['temporal_encoding']
-
-        exog_map = {'global_temporal_encoding': temporal_encoding}
-        input_map = {
-            'u': 'temporal_encoding',
-            'x': 'data'
-        }
-
-
-
-    elif args.model_name == 'csdi':
-        if 'covariates' in dataset.attributes:
-            covariates = dataset.attributes['covariates']
-        else:
-            covariates = None
-
-        exog_map = {'covariates': covariates}
+    if args.model_name == 'csdi' and 'covariates' in dataset.attributes:
+        exog_map = {'covariates':  dataset.attributes['covariates']}
         input_map = {
             'side_info': 'covariates',
             'x': 'data'
