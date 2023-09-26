@@ -10,11 +10,11 @@ log_dir = 'log/soil_moisture_sparse_point/interpolation/20230922T105905_4501766/
 #
 # log_dir = 'log/soil_moisture_sparse_point/grin/20230920T200001_144194526/output.npz'
 #
-log_dir = 'log/soil_moisture_sparse_point/grin/20230923T000643_74458988/output.npz'
+log_dir = 'log/soil_moisture_sparse_point/grin/20230926T181808_532941873/output.npz'
 #
 # log_dir = 'log/soil_moisture_sparse_point/spin_h/20230922T041452_741390810/output.npz'
 
-log_dir = 'log/soil_moisture_sparse_point/csdi/20230925T230637_200785135/output.npz'
+# log_dir = 'log/soil_moisture_sparse_point/csdi/20230925T230637_200785135/output.npz'
 
 
 
