@@ -5,7 +5,24 @@ import math
 import numpy as np
 import torch
 import torch.nn as nn
+from positional_encodings.torch_encodings import PositionalEncoding1D
 
+
+def positional_encoding(max_len, hidden_dim):
+    position = torch.arange(max_len).unsqueeze(1)
+    div_term = torch.exp(torch.arange(0, hidden_dim, 2) * (-math.log(10000.0) / hidden_dim))
+    pe = torch.zeros(max_len, hidden_dim)
+    pe[:, 0::2] = torch.sin(position * div_term)
+    pe[:, 1::2] = torch.cos(position * div_term)
+    return pe
+
+
+def generate_positional_encoding(B, hidden_dim, K, L):
+    pe = positional_encoding(L, hidden_dim)  # (L, hidden_dim)
+    pe = pe.permute(1, 0)  # (hidden_dim, L)
+    pe = pe.unsqueeze(0).unsqueeze(2)  # (1, hidden_dim, 1, L)
+    pe = pe.expand(B, hidden_dim, K, L)  # (B, hidden_dim, K, L)
+    return pe
 
 def get_torch_trans(heads=8, layers=1, channels=64):
     encoder_layer = nn.TransformerEncoderLayer(
@@ -49,7 +66,24 @@ class DiffusionEmbedding(nn.Module):
         return table
 
 
+class SpatialEmbedding(nn.Module):
+    def __init__(self, K, channel):
+        super(SpatialEmbedding, self).__init__()
 
+        self.K = K
+        self.channel = channel
+
+        # Trainable embedding layer
+        self.embedding = nn.Embedding(K, channel)
+
+    def forward(self, B, L):
+        # Generate embeddings for [0, 1, ..., K-1]
+        x = torch.arange(self.K).to(self.embedding.weight.device)
+        embed = self.embedding(x)  # (K, channel)
+        embed = embed.permute(1, 0)  # (channel, K)
+        embed = embed.unsqueeze(0).unsqueeze(3)  # (1, channel, K, 1)
+        embed = embed.expand(B, self.channel, self.K, L)  # (B, channel, K, L)
+        return embed
 
 
 class ResidualBlock(nn.Module):
@@ -62,6 +96,8 @@ class ResidualBlock(nn.Module):
 
         self.time_layer = get_torch_trans(heads=nheads, layers=1, channels=hidden_dim)
         self.feature_layer = get_torch_trans(heads=nheads, layers=1, channels=hidden_dim)
+
+
 
 
 
@@ -87,10 +123,14 @@ class ResidualBlock(nn.Module):
     def forward(self, x, cond_info, diffusion_emb):
 
         B, channel, K, L = x.shape
+
+
+
         base_shape = x.shape
         x = x.reshape(B, channel, K * L)
 
         diffusion_emb = self.diffusion_projection(diffusion_emb).unsqueeze(-1)  # (B,channel,1)
+
         y = x + diffusion_emb
 
         y = self.forward_time(y, base_shape)
@@ -121,13 +161,16 @@ class CsdiModel(nn.Module):
                  diffusion_embedding_dim=128,
                  num_steps=50,
                  nheads=8,
-                 nlayers=4
+                 nlayers=4,
+                 spatial_dim=36
                  ):
 
 
         super().__init__()
 
         self.hidden_dim = hidden_dim
+
+        self.spatial_embedding_layer = SpatialEmbedding(spatial_dim, hidden_dim)
 
         self.input_projection = Conv1d_with_init(input_dim*2, hidden_dim, 1)
         self.output_projection1 = Conv1d_with_init(hidden_dim, hidden_dim, 1)
@@ -164,6 +207,8 @@ class CsdiModel(nn.Module):
             cond_info = torch.cat([cond_mask, side_info], dim=3)  # (B,L,K,cond_dim+input_dim)
         else:
             cond_info = cond_mask.float()
+
+
         cond_info = cond_info.permute(0, 3, 2, 1)  # (B,cond_dim,K,L)
         return cond_info
 
@@ -178,6 +223,14 @@ class CsdiModel(nn.Module):
         x = self.input_projection(x)
         x = F.relu(x)
         x = x.reshape(B, hidden_dim, K, L)
+
+        # time encoding
+        time_emb = generate_positional_encoding(B, hidden_dim, K, L).to(x.device)
+        x = x + time_emb
+
+        # space encoding
+        spatial_emb = self.spatial_embedding_layer(B, L)
+        x = x + spatial_emb
 
         diffusion_emb = self.diffusion_embedding(diffusion_step)
 
@@ -201,5 +254,6 @@ class CsdiModel(nn.Module):
         parser.add_argument('--input_dim', type=int, default=1)
         parser.add_argument('--hidden_dim', type=int, default=64)
         parser.add_argument('--diffusion_embedding_dim', type=int, default=128)
+        parser.add_argument('--spatial_dim', type=int, default=36)
 
         return parser
