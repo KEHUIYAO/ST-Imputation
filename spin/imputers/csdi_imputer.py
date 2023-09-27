@@ -113,6 +113,10 @@ class CsdiImputer(Imputer):
             batch.input.x = batch.input.x * batch.input.mask
 
 
+    def on_validation_batch_start(self, batch, batch_idx: int,
+                             unused: Optional[int] = 0) -> None:
+        self.on_train_batch_start(batch, batch_idx, unused)
+
 
 
     def shared_step(self, batch, mask):

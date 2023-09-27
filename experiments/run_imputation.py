@@ -37,11 +37,11 @@ def parse_args():
     # Argument parser
     ########################################
     parser = ArgParser()
-    parser.add_argument("--model-name", type=str, default='csdi')
+    parser.add_argument("--model-name", type=str, default='diffgrin')
     #parser.add_argument("--model-name", type=str, default='interpolation')
     parser.add_argument("--dataset-name", type=str, default='soil_moisture_sparse_point')
     #parser.add_argument("--config", type=str, default=None)
-    parser.add_argument("--config", type=str, default='imputation/csdi_soil_moisture.yaml')
+    parser.add_argument("--config", type=str, default='imputation/diffgrin_soil_moisture.yaml')
     parser.add_argument('--epochs', type=int, default=200)
     parser.add_argument('--check-val-every-n-epoch', type=int, default=1)
     parser.add_argument('--batch-inference', type=int, default=32)
@@ -61,7 +61,7 @@ def parse_args():
     # Training params
     parser.add_argument('--lr', type=float, default=0.001)
     parser.add_argument('--patience', type=int, default=40)
-    parser.add_argument('--l2-reg', type=float, default=0.)
+    parser.add_argument('--l2-reg', type=float, default=0)
     parser.add_argument('--batches-epoch', type=int, default=300)
     parser.add_argument('--split-batch-in', type=int, default=1)
     parser.add_argument('--grad-clip-val', type=float, default=5.)
