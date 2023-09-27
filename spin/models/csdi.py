@@ -5,7 +5,7 @@ import math
 import numpy as np
 import torch
 import torch.nn as nn
-from positional_encodings.torch_encodings import PositionalEncoding1D
+
 
 
 def positional_encoding(max_len, hidden_dim):
