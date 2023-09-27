@@ -1,11 +1,14 @@
 from typing import Type, Mapping, Callable, Optional, Union, List
 
+import numpy as np
 import torch
 from torchmetrics import Metric
 from tsl.imputers import Imputer
 from tsl.predictors import Predictor
 
 from ..utils import k_hop_subgraph_sampler
+from torch import Tensor
+
 
 
 class SPINImputer(Imputer):
@@ -43,12 +46,49 @@ class SPINImputer(Imputer):
         self.cut_edges_uniformly = cut_edges_uniformly
 
     def on_after_batch_transfer(self, batch, dataloader_idx):
+        time_embedding = np.arange(batch['x'].shape[1])
+        time_embedding = time_embedding[np.newaxis, :, np.newaxis]
+        time_embedding = np.tile(time_embedding, (batch['x'].shape[0], 1, 4))
+        time_embedding = torch.tensor(time_embedding, device=batch['x'].device, dtype=batch['x'].dtype)
+        batch['u'] = time_embedding
+        batch.input['u'] = time_embedding
+
+
+
         if self.training and self.n_roots is not None:
             batch = k_hop_subgraph_sampler(batch, self.n_hops, self.n_roots,
                                            max_edges=self.max_edges_subgraph,
                                            cut_edges_uniformly=self.cut_edges_uniformly)
+
+
         return super(SPINImputer, self).on_after_batch_transfer(batch,
                                                                 dataloader_idx)
+
+    def on_train_batch_start(self, batch, batch_idx: int,
+                             unused: Optional[int] = 0) -> None:
+        r"""For every training batch, randomly mask out value with probability
+        :math:`p = \texttt{self.whiten\_prob}`. Then, whiten missing values in
+         :obj:`batch.input.x`"""
+        # randomly mask out value with probability p = whiten_prob
+        batch.original_mask = mask = batch.input.mask
+        p = self.whiten_prob
+        if isinstance(p, Tensor):
+            p_size = [mask.size(0)] + [1] * (mask.ndim - 1)
+            p = p[torch.randint(len(p), p_size)].to(device=mask.device)
+
+
+        whiten_mask = torch.zeros(mask.size(), device=mask.device).bool()
+        time_points_observed = torch.rand(mask.size(0), mask.size(1), 1, 1, device=mask.device) > p
+
+        # repeat along the spatial dimensions
+        time_points_observed = time_points_observed.repeat(1, 1, mask.size(2), mask.size(3))
+
+        whiten_mask[time_points_observed] = True
+
+        batch.input.mask = mask & whiten_mask
+        # whiten missing values
+        if 'x' in batch.input:
+            batch.input.x = batch.input.x * batch.input.mask
 
     def training_step(self, batch, batch_idx):
         injected_missing = (batch.original_mask - batch.mask)

@@ -77,17 +77,17 @@ python run_imputation.py --model-name='mean' --dataset-name='soil_moisture_spars
 
 Run GRIN model.
 ```bash
-python run_imputation.py --model-name='grin' --dataset-name='soil_moisture_sparse_point' --config='imputation/grin_soil_moisture.yaml' --p-noise=0.2
+python run_imputation.py --model-name='grin' --dataset-name='soil_moisture_sparse_point' --config='imputation/grin_soil_moisture.yaml'
 ```
 
 Run Spin model.
 ```bash
-python run_imputation.py --model-name='spin_h' --dataset-name='soil_moisture_sparse_point' --config='imputation/spin_h_soil_moisture.yaml' --p-noise=0.2
+python run_imputation.py --model-name='spin_h' --dataset-name='soil_moisture_sparse_point' --config='imputation/spin_h_soil_moisture.yaml' 
 ```
 
 Run CSDI model.
 ```bash
-python run_imputation.py --model-name='csdi' --dataset-name='soil_moisture_sparse_point' --config='imputation/csdi_soil_moisture.yaml' --p-noise=0.2
+python run_imputation.py --model-name='csdi' --dataset-name='soil_moisture_sparse_point' --config='imputation/csdi_soil_moisture.yaml' 
 ```
 
 

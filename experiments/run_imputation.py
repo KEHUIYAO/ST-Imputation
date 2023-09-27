@@ -31,17 +31,17 @@ from tsl.utils import parser_utils, numpy_metrics
 
 from spin.baselines import SAITS, TransformerModel, BRITS, MeanModel, InterpolationModel
 from spin.imputers import SPINImputer, SAITSImputer, BRITSImputer, MeanImputer, InterpolationImputer, DiffgrinImputer, CsdiImputer, GrinImputer
-from spin.models import SPINModel, SPINHierarchicalModel, DiffGrinModel, CsdiModel
+from spin.models import SPINModel, SPINHierarchicalModel, DiffGrinModel, CsdiModel, GrinModel
 from spin.scheduler import CosineSchedulerWithRestarts
 def parse_args():
     # Argument parser
     ########################################
     parser = ArgParser()
-    #parser.add_argument("--model-name", type=str, default='spin_h')
-    parser.add_argument("--model-name", type=str, default='interpolation')
+    parser.add_argument("--model-name", type=str, default='csdi')
+    #parser.add_argument("--model-name", type=str, default='interpolation')
     parser.add_argument("--dataset-name", type=str, default='soil_moisture_sparse_point')
     #parser.add_argument("--config", type=str, default=None)
-    parser.add_argument("--config", type=str, default='imputation/interpolation_soil_moisture.yaml')
+    parser.add_argument("--config", type=str, default='imputation/csdi_soil_moisture.yaml')
     parser.add_argument('--epochs', type=int, default=200)
     parser.add_argument('--check-val-every-n-epoch', type=int, default=1)
     parser.add_argument('--batch-inference', type=int, default=32)
@@ -61,7 +61,7 @@ def parse_args():
     # Training params
     parser.add_argument('--lr', type=float, default=0.001)
     parser.add_argument('--patience', type=int, default=40)
-    parser.add_argument('--l2-reg', type=float, default=0.)
+    parser.add_argument('--l2-reg', type=float, default=0)
     parser.add_argument('--batches-epoch', type=int, default=300)
     parser.add_argument('--split-batch-in', type=int, default=1)
     parser.add_argument('--grad-clip-val', type=float, default=5.)
@@ -71,7 +71,7 @@ def parse_args():
     parser.add_argument("--adj-threshold", type=float, default=0.1)
 
     parser.add_argument('--p-fault', type=float, default=0.0)
-    parser.add_argument('--p-noise', type=float, default=0.0)
+    parser.add_argument('--p-noise', type=float, default=0.2)
 
     known_args, _ = parser.parse_known_args()
     model_cls, imputer_cls = get_model_classes(known_args.model_name)
@@ -97,7 +97,7 @@ def get_model_classes(model_str):
     elif model_str == 'spin_h':
         model, filler = SPINHierarchicalModel, SPINImputer
     elif model_str == 'grin':
-        model, filler = GRINModel, GrinImputer
+        model, filler = GrinModel, GrinImputer
     elif model_str == 'saits':
         model, filler = SAITS, SAITSImputer
     elif model_str == 'transformer':
@@ -141,8 +141,7 @@ def get_dataset(dataset_name: str):
                                   min_seq=12, max_seq=12 * 4, seed=56789)
 
     if dataset_name == 'soil_moisture_sparse':
-        return add_missing_values(SoilMoistureSparse(), p_fault=p_fault, p_noise=p_noise,
-                                  min_seq=12, max_seq=12 * 4, seed=56789)
+        return SoilMoistureSparse(mode='train')
 
 
     if dataset_name == 'gp':
@@ -220,41 +219,17 @@ def run_experiment(args):
     # data module                          #
     ########################################
 
-    # time embedding
-    if args.dataset_name == 'air36':
-        temporal_encoding = dataset.datetime_encoded(['day', 'week']).values
-        dataset.attributes['temporal_encoding'] = temporal_encoding
-
-    if args.model_name in ['spin', 'spin_h', 'transformer']:
-        temporal_encoding = dataset.attributes['temporal_encoding']
-
-        exog_map = {'global_temporal_encoding': temporal_encoding}
+    if args.model_name == 'csdi' and 'covariates' in dataset.attributes:
+        exog_map = {'covariates': dataset.attributes['covariates']}
         input_map = {
-            'u': 'temporal_encoding',
+            'side_info': 'covariates',
             'x': 'data'
         }
 
-
-
-    elif args.model_name == 'csdi':
-        temporal_encoding = dataset.attributes['temporal_encoding']
-        temporal_encoding = temporal_encoding[np.newaxis, :, :]
-        temporal_encoding = np.tile(temporal_encoding, (dataset.shape[1], 1, 1))
-        temporal_encoding = np.transpose(temporal_encoding, (1, 0, 2))
-
-        if 'covariates' in dataset.attributes:
-            external_covariates = dataset.attributes['covariates']
-        else:
-            external_covariates = None
-
-        if external_covariates is not None:
-            covariates = np.concatenate([temporal_encoding, external_covariates], axis=2)
-        else:
-            covariates = temporal_encoding
-
-        exog_map = {'covariates': covariates}
+    elif args.model_name == 'grin' and 'covariates' in dataset.attributes:
+        exog_map = {'covariates': dataset.attributes['covariates']}
         input_map = {
-            'side_info': 'covariates',
+            'u': 'covariates',
             'x': 'data'
         }
 
@@ -414,23 +389,23 @@ def run_experiment(args):
         batch_size=args.batch_inference))
 
 
-    output = trainer.predict(imputer, dataloaders=dm.test_dataloader(
-        batch_size=args.batch_inference))
-
-    output = casting.numpy(output)
-
-    # save output to file
-    np.savez(os.path.join(logdir, 'output.npz'), **output)
-
-    y_hat, y_true, eval_mask, observed_mask = output['y_hat'].squeeze(-1), \
-                          output['y'].squeeze(-1), \
-                          output['eval_mask'].squeeze(-1), \
-                          output['observed_mask'].squeeze(-1)
-
-
-    check_mae = numpy_metrics.masked_mae(y_hat, y_true, eval_mask)
-    print(f'Test MAE: {check_mae:.2f}')
-    return y_hat
+    # output = trainer.predict(imputer, dataloaders=dm.test_dataloader(
+    #     batch_size=args.batch_inference))
+    #
+    # output = casting.numpy(output)
+    #
+    # # save output to file
+    # np.savez(os.path.join(logdir, 'output.npz'), **output)
+    #
+    # y_hat, y_true, eval_mask, observed_mask = output['y_hat'].squeeze(-1), \
+    #                       output['y'].squeeze(-1), \
+    #                       output['eval_mask'].squeeze(-1), \
+    #                       output['observed_mask'].squeeze(-1)
+    #
+    #
+    # check_mae = numpy_metrics.masked_mae(y_hat, y_true, eval_mask)
+    # print(f'Test MAE: {check_mae:.2f}')
+    # return y_hat
 
 
 if __name__ == '__main__':

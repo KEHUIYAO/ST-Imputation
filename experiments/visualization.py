@@ -3,45 +3,20 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from tsl.utils import numpy_metrics
 
-# log_dir = 'log/gp_point/diffgrin/20230905T112029_455519236/output.npz'
-# log_dir = 'log/gp_point/diffgrin/20230905T121230_345791943/output.npz'
-# log_dir = 'log/gp_point/diffgrin/20230905T140644_801483104/output.npz'
-# log_dir = 'log/air36/diffgrin/20230906T151301_772579956/output.npz'
-# log_dir = 'log/descriptive_point/diffgrin/20230907T160243_801791294/output.npz'
 
-#log_dir = 'log/gp_point/mean/20230904T120758_203730871/output.npz'
-#log_dir = 'log/gp_point/interpolation/20230904T133532_834789790/output.npz'
-# log_dir = 'log/gp_point/grin/20230908T123714_666920856/output.npz'
-# log_dir = 'log/gp_point/diffgrin/20230908T143312_924613142/output.npz'
+log_dir = 'log/soil_moisture_sparse_point/interpolation/20230922T105905_4501766/output.npz'
+#
+# log_dir = 'log/soil_moisture_sparse_point/spin_h/20230919T034448_769252367/output.npz'
+#
+# log_dir = 'log/soil_moisture_sparse_point/grin/20230920T200001_144194526/output.npz'
+#
+log_dir = 'log/soil_moisture_sparse_point/grin/20230926T181808_532941873/output.npz'
+#
+# log_dir = 'log/soil_moisture_sparse_point/spin_h/20230922T041452_741390810/output.npz'
 
-# log_dir = 'log/air36/diffgrin/20230908T154234_230789540/output.npz'
-# log_dir = 'log/air36/grin/20230908T210723_211066964/output.npz'
-
-log_dir = 'log/soil_moisture_point/diffgrin/20230912T163638_202025312/output.npz'
-
-log_dir = 'log/soil_moisture_point/interpolation/20230912T221617_447206417/output.npz'
-
-log_dir = 'log/soil_moisture_point/spin_h/20230913T152648_613511213/output.npz'
-log_dir = 'log/soil_moisture_point/grin/20230913T165400_783353967/output.npz'
-
-log_dir = 'log/soil_moisture_point/csdi/20230914T051816_921699308/output.npz'
-
-log_dir = 'log/air36/csdi/20230914T051347_308853642/output.npz'
-
-log_dir = 'log/soil_moisture_sparse_point/interpolation/20230914T164411_237582339/output.npz'
-
-log_dir = 'log/soil_moisture_sparse_point/interpolation/20230915T144759_108021515/output.npz'
-
-log_dir = 'log/soil_moisture_sparse_point/csdi/20230915T055142_757620585/output.npz'
-
-log_dir = 'log/soil_moisture_sparse_point/spin_h/20230915T055128_618607692/output.npz'
-
-# log_dir = 'log/soil_moisture_sparse_point/spin_h/20230917T173058_522756964/output.npz'
-
-# log_dir = 'log/soil_moisture_sparse_point/interpolation/20230917T122607_485269053/output.npz'
+# log_dir = 'log/soil_moisture_sparse_point/csdi/20230925T230637_200785135/output.npz'
 
 
-log_dir = 'log/soil_moisture_sparse_point/spin_h/20230917T174517_394416681/output.npz'
 
 output = np.load(log_dir)
 
@@ -50,10 +25,31 @@ y_hat, y_true, observed_mask, eval_mask = output['y_hat'].squeeze(-1), \
                           output['observed_mask'].squeeze(-1), \
                           output['eval_mask'].squeeze(-1)
 
-
-
 check_mae = numpy_metrics.masked_mae(y_hat, y_true, eval_mask)
+
+n_eval = np.sum(eval_mask)
+print(f'Evalpoint: {n_eval}')
 print(f'Test MAE: {check_mae:.5f}')
+
+# in-situ data
+df = pd.read_csv('../data/Insitu_gap_filling_data.csv')
+df['Date'] = pd.to_datetime(df['Date'], format='%Y%m%d')
+y2 = df[df['Date'].dt.year == 2016].copy()
+y2 = y2.pivot(index='Date', columns='POINTID', values='SMAP_1km').values
+y2 = y2[np.newaxis, ...]
+mask = np.ones_like(y2)
+mask[np.isnan(y2)] = 0
+
+# calculate ubrmse
+bias = np.mean((y2 - y_hat)[mask == 1])
+tmp = (y2-y_hat)**2
+tmp = np.mean(tmp[mask==1])
+ubrmse = np.sqrt(tmp - bias**2)
+print(f'UBRMSE: {ubrmse:.5f}')
+
+# calculate correlation
+corr = np.corrcoef(y2[mask == 1], y_hat[mask == 1])[0, 1]
+print(f'Correlation: {corr:.5f}')
 
 
 
@@ -75,8 +71,8 @@ qlist =[0.05,0.25,0.5,0.75,0.95]
 quantiles_imp= []
 for q in qlist:
     tmp = np.quantile(samples, q, axis=1)
-    # quantiles_imp.append(tmp*(1-all_observed_np) + all_target_np * all_observed_np)
-    quantiles_imp.append(tmp)
+    quantiles_imp.append(tmp*(1-all_observed_np) + all_target_np * all_observed_np)
+    # quantiles_imp.append(tmp)
 
 
 
