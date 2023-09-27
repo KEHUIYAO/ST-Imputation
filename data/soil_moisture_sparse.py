@@ -1,4 +1,5 @@
 import pandas as pd
+import torch
 
 from tsl.datasets.prototypes import PandasDataset
 from tsl.datasets.prototypes.mixin import MissingValuesMixin
@@ -14,6 +15,7 @@ from .utils import positional_encoding
 from scipy.spatial.distance import cdist
 import os
 from sklearn.preprocessing import StandardScaler
+
 
 
 current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -167,6 +169,7 @@ class SoilMoistureSparse(PandasDataset, MissingValuesMixin):
                 dist.append([sorted_x[i], sorted_y[j]])
         dist = np.array(dist)
         dist = cdist(dist, dist)
+
 
         return df_new, dist, mask, st_coords_new, temporal_encoding, X_new
 
