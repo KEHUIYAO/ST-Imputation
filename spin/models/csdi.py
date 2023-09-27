@@ -228,9 +228,9 @@ class CsdiModel(nn.Module):
         time_emb = generate_positional_encoding(B, hidden_dim, K, L).to(x.device)
         x = x + time_emb
 
-        # space encoding
-        spatial_emb = self.spatial_embedding_layer(B, L)
-        x = x + spatial_emb
+        # # space encoding
+        # spatial_emb = self.spatial_embedding_layer(B, L)
+        # x = x + spatial_emb
 
         diffusion_emb = self.diffusion_embedding(diffusion_step)
 
