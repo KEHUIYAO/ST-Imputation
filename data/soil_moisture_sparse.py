@@ -28,17 +28,7 @@ class SoilMoistureSparse(PandasDataset, MissingValuesMixin):
     def __init__(self, mode='train', seed=42):
         df, dist, mask, st_coords_new, X_new = self.load(mode=mode)
 
-        if mode == 'train':
-            df = df.iloc[:-365, :]
-            mask = mask[:-365, :]
-            st_coords_new = st_coords_new[:-365, :, :]
-            X_new = X_new[:-365, :, :]
 
-        elif mode == 'test':
-            df = df.iloc[-365:, :]
-            mask = mask[-365:, :]
-            st_coords_new = st_coords_new[-365:, :, :]
-            X_new = X_new[-365:, :, :]
 
 
 
@@ -118,6 +108,14 @@ class SoilMoistureSparse(PandasDataset, MissingValuesMixin):
         X = X.reshape((L * K, C))
         X = StandardScaler().fit_transform(X)
         X = X.reshape((L, K, C))
+
+        if mode == 'train':
+            y = y.iloc[:-365, :]
+            X = X[:-365, :, :]
+
+        elif mode == 'test':
+            y = y.iloc[-365:, :]
+            X = X[-365:, :, :]
 
 
         rows, cols = y.shape
