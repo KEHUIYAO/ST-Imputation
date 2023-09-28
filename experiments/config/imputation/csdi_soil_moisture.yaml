@@ -13,4 +13,4 @@ batch_inference: 16
 check_val_every_n_epoch: 10
 covariate_dim: 12
 diffusion_embedding_dim: 128
-l2_reg: 1e-3
+l2_reg: 0.001
