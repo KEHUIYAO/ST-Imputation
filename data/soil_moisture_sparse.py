@@ -197,8 +197,8 @@ class SoilMoistureSparse(PandasDataset, MissingValuesMixin):
             return gaussian_kernel(self.dist, theta=theta)
 
 
-    def get_splitter(self, method=None, **kwargs):
-        return SoilMoistureSplitter(kwargs.get('val_len'), kwargs.get('test_len')   )
+    # def get_splitter(self, method=None, **kwargs):
+    #     return SoilMoistureSplitter(kwargs.get('val_len'), kwargs.get('test_len'))
 
 
 # class SoilMoistureSplitter(FixedIndicesSplitter):
