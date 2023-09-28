@@ -178,6 +178,7 @@ class CsdiImputer(Imputer):
             val_loss_sum += val_loss.detach()
 
         val_loss_sum /= self.num_steps
+        print(val_loss_sum)
         # Logging
         # self.val_metrics.update(epsilon_hat, epsilon, batch.eval_mask)
         # self.log_metrics(self.val_metrics, batch_size=batch.batch_size)
@@ -230,6 +231,7 @@ class CsdiImputer(Imputer):
 
 
         test_loss = self.loss_fn(y_hat, y, eval_mask)
+        print(test_loss)
 
         # Logging
         # self.test_metrics.update(y_hat.detach(), y, eval_mask)
