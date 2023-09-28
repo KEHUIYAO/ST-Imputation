@@ -158,33 +158,6 @@ class CsdiImputer(Imputer):
 
     def test_step(self, batch, batch_idx):
 
-        observed_data = batch.y
-
-        # scale target
-        if not self.scale_target:
-            observed_data = batch.transform['y'].transform(observed_data)
-        B, L, K, C = observed_data.shape  # [batch, steps, nodes, channels]
-        device = self.device
-        val_loss_sum = 0
-        for t in range(self.num_steps):
-            t = torch.tensor([t] * B)
-            current_alpha = self.alpha_torch[t].to(device)  # (B,1,1)
-            noise = torch.randn_like(observed_data)
-            noisy_data = (current_alpha ** 0.5) * observed_data + (1.0 - current_alpha) ** 0.5 * noise
-            batch['noise'] = noise
-            batch.input['noisy_data'] = noisy_data
-            batch.input['diffusion_step'] = t.to(device)
-            epsilon_hat, epsilon, val_loss = self.shared_step(batch, batch.eval_mask)
-            val_loss_sum += val_loss.detach()
-
-        val_loss_sum /= self.num_steps
-        print(val_loss_sum)
-        # Logging
-        # self.val_metrics.update(epsilon_hat, epsilon, batch.eval_mask)
-        # self.log_metrics(self.val_metrics, batch_size=batch.batch_size)
-        # self.log_loss('val', val_loss, batch_size=batch.batch_size)
-        self.log('test_mse', val_loss_sum, on_step=True, on_epoch=True, prog_bar=True)
-
         # ########################################################
         # batch.input.x = torch.zeros_like(batch.input.x)
         # batch.input.mask = torch.zeros_like(batch.input.mask)
@@ -231,13 +204,11 @@ class CsdiImputer(Imputer):
 
 
         test_loss = self.loss_fn(y_hat, y, eval_mask)
-        print(test_loss)
 
         # Logging
-        # self.test_metrics.update(y_hat.detach(), y, eval_mask)
-        # self.log_metrics(self.test_metrics, batch_size=batch.batch_size)
-        # self.log_loss('test', test_loss, batch_size=batch.batch_size)
-        self.log('test_mae', test_loss, on_step=True, on_epoch=True, prog_bar=True)
+        self.test_metrics.update(y_hat.detach(), y, eval_mask)
+        self.log_metrics(self.test_metrics, batch_size=batch.batch_size)
+        self.log_loss('test', test_loss, batch_size=batch.batch_size)
         return test_loss
 
     def predict_step(self, batch, batch_idx, dataloader_idx=None):
