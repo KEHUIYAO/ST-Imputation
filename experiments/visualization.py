@@ -14,7 +14,7 @@ log_dir = 'log/soil_moisture_sparse_point/grin/20230926T181808_532941873/output.
 #
 # log_dir = 'log/soil_moisture_sparse_point/spin_h/20230922T041452_741390810/output.npz'
 
-# log_dir = 'log/soil_moisture_sparse_point/csdi/20230925T230637_200785135/output.npz'
+log_dir = 'log/soil_moisture_sparse_point/csdi/20230928T000101_259491669/output.npz'
 
 
 
