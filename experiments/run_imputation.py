@@ -373,18 +373,18 @@ def run_experiment(args):
          scheduler_kwargs=scheduler_kwargs,
          **imputer_kwargs)
 
-        trainer.fit(imputer,
-                    train_dataloaders=dm.train_dataloader(),
-                    val_dataloaders=dm.val_dataloader(
-                        batch_size=args.batch_inference))
+        # trainer.fit(imputer,
+        #             train_dataloaders=dm.train_dataloader(),
+        #             val_dataloaders=dm.val_dataloader(
+        #                 batch_size=args.batch_inference))
 
     ########################################
     # testing                              #
     ########################################
     if require_training:
         imputer.load_model(checkpoint_callback.best_model_path)
-        imputer.freeze()
 
+    imputer.freeze()
     trainer.test(imputer, dataloaders=dm.test_dataloader(
         batch_size=args.batch_inference))
 
