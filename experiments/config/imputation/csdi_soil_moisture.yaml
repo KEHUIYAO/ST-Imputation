@@ -2,7 +2,7 @@ epochs: 400
 val_len: 0.2
 test_len: 0.2
 window: 36  # [24, 36]
-stride: 12
+stride: 36
 lr_scheduler: multi_step
 loss_fn: mse_loss
 n_samples: 10

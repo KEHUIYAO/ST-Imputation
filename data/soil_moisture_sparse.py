@@ -27,6 +27,23 @@ class SoilMoistureSparse(PandasDataset, MissingValuesMixin):
 
     def __init__(self, mode='train', seed=42):
         df, dist, mask, st_coords_new, X_new = self.load(mode=mode)
+
+        if mode == 'train':
+            df = df.iloc[:-365, :]
+            mask = mask[:-365, :]
+            st_coords_new = st_coords_new[:-365, :, :]
+            X_new = X_new[:-365, :, :]
+
+        elif mode == 'test':
+            df = df.iloc[-365:, :]
+            mask = mask[-365:, :]
+            st_coords_new = st_coords_new[-365:, :, :]
+            X_new = X_new[-365:, :, :]
+
+
+
+
+
         super().__init__(dataframe=df,
                          similarity_score="distance",
                          mask=mask,
@@ -45,7 +62,7 @@ class SoilMoistureSparse(PandasDataset, MissingValuesMixin):
         if mode == 'train':
             p_missing = 0.2
         elif mode == 'test':
-            p_missing = 0.5
+            p_missing = 0.2
 
         time_points_to_eval = rng.choice(mask.shape[0], int(p_missing * mask.shape[0]), replace=False)
         eval_mask = np.zeros_like(mask)
