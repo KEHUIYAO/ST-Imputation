@@ -10,6 +10,7 @@ from torch import Tensor
 
 
 import numpy as np
+from tsl.nn.metrics import MaskedMAE
 
 
 
@@ -230,8 +231,8 @@ class CsdiImputer(Imputer):
         y, eval_mask = batch.y, batch.eval_mask
         y_hat = imputed_samples.median(dim=0).values
 
-
-        test_loss = self.test_metrics['mae'](y_hat, y, eval_mask)
+        loss_fn = MaskedMAE(compute_on_step=False)
+        test_loss = loss_fn(y_hat, y, eval_mask)
         print(test_loss)
 
 
