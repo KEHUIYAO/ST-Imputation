@@ -232,7 +232,7 @@ class CsdiImputer(Imputer):
         y_hat = imputed_samples.median(dim=0).values
 
         loss_fn = MaskedMAE(compute_on_step=False)
-        test_loss = loss_fn(y_hat.detach(), y, eval_mask)
+        test_loss = loss_fn(y_hat.detach().cpu(), y.detach().cpu(), eval_mask.detach().cpu())
         print(test_loss)
 
 
