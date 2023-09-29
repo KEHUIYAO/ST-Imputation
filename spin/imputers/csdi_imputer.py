@@ -183,7 +183,7 @@ class CsdiImputer(Imputer):
         # self.log_metrics(self.val_metrics, batch_size=batch.batch_size)
         # self.log_loss('val', val_loss, batch_size=batch.batch_size)
         print(val_loss_sum)
-        self.log('test_mse', val_loss_sum, on_step=True, on_epoch=True, prog_bar=True)
+        self.log('test_loss', val_loss_sum, on_step=True, on_epoch=True, prog_bar=True)
 
 
         # ########################################################
