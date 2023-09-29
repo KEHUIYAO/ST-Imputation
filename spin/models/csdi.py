@@ -227,12 +227,12 @@ class CsdiModel(nn.Module):
         # time encoding
         time_emb = generate_positional_encoding(B, hidden_dim, K, L).to(x.device)
 
-        p = 0.15
-
-        if self.training:
-            # shuffle the time_emb across time with probability p
-            if np.random.rand() < p:
-                time_emb = time_emb[:, :, :, torch.randperm(L)]
+        # p = 0.15
+        #
+        # if self.training:
+        #     # shuffle the time_emb across time with probability p
+        #     if np.random.rand() < p:
+        #         time_emb = time_emb[:, :, :, torch.randperm(L)]
 
         x = x + time_emb
 
