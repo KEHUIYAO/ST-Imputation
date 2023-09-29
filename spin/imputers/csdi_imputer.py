@@ -231,15 +231,14 @@ class CsdiImputer(Imputer):
         y_hat = imputed_samples.median(dim=0).values
 
 
-        test_loss = self.loss_fn(y_hat, y, eval_mask)
+        test_loss = self.test_metrics['MaskedMAE'](y_hat, y, eval_mask)
+        print(test_loss)
 
 
 
         # Logging
         self.test_metrics.update(y_hat.detach(), y, eval_mask)
         self.log_metrics(self.test_metrics, batch_size=batch.batch_size)
-        print(self.test_metrics(y_hat.detach(), y, eval_mask))
-        # self.log_loss('test', test_loss, batch_size=batch.batch_size)
         return test_loss
 
     def predict_step(self, batch, batch_idx, dataloader_idx=None):
