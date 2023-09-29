@@ -1,96 +1,64 @@
 import pandas as pd
-
 from tsl.datasets.prototypes import PandasDataset
 from tsl.ops.similarities import gaussian_kernel
 import matplotlib.pyplot as plt
 import numpy as np
-
-from .utils import positional_encoding
-
 from scipy.spatial.distance import cdist
-import os
-
-
-current_dir = os.path.dirname(os.path.abspath(__file__))
-data_path = os.path.join(current_dir, 'Insitu_gap_filling_data.csv')
+from sklearn.datasets import make_regression
+from sklearn.preprocessing import StandardScaler
 
 
 class SoilMoisture(PandasDataset):
     similarity_options = {'distance'}
 
-    def __init__(self):
-        df, dist, mask, temporal_encoding = self.load()
+    def __init__(self,
+                 num_nodes,
+                 seq_len,
+                 seed=42):
+        df, dist, covariates = self.load(num_nodes, seq_len, seed)
+
+        super().__init__(dataframe=df, similarity_score="distance", attributes=dict(dist=dist, covariates=covariates))
 
 
-        super().__init__(dataframe=df,
-                         similarity_score="distance",
-                         mask=mask,
-                         attributes=dict(dist=dist, temporal_encoding=temporal_encoding))
+    def load(self, num_nodes, seq_len, seed):
+        rng = np.random.RandomState(seed)
+        time_coords = np.arange(0, seq_len)
+        space_coords = rng.rand(num_nodes, 2)
+        self.time_coords = time_coords
+        self.space_coords = space_coords
+        dist = cdist(space_coords, space_coords)
 
-    def load(self):
-        df = pd.read_csv(data_path)
+        y = np.zeros((seq_len, num_nodes))
 
-        df['Date'] = pd.to_datetime(df['Date'], format='%Y%m%d')
+        prcp = rng.uniform(0, 1, size=(seq_len, num_nodes))
+        prcp_obs = prcp + rng.normal(0, 0.1, size=(seq_len, num_nodes))
+        mask = rng.uniform(0, 1, size=(seq_len, num_nodes))
+        prcp[mask > 0.1] = 0
+        prcp_obs[mask > 0.1] = 0
 
-        y = df.pivot(index='Date', columns='POINTID', values='SMAP_1km')
+
+        vp = rng.uniform(0, 0.1, size=(seq_len, num_nodes))
+        vp_obs = vp + rng.normal(0, 0.01, size=(seq_len, num_nodes))
 
 
+        y[0, :] = rng.uniform(0, 1, size=(num_nodes))
+        for t in range(1, seq_len):
+            y[t, :] = y[t-1, :] * 0.8 + prcp_obs[t-1, :] - vp_obs[t-1, :]
 
-        time_coords = np.arange(0, y.shape[0])
+        y = y + rng.normal(0, 0.1, size=(seq_len, num_nodes))
+
+
         plt.figure()
-        plt.plot(time_coords, y.values)
+        plt.plot(time_coords, y)
         plt.show()
 
-        temporal_encoding = positional_encoding(730, 1, 4).squeeze(1)
-        temporal_encoding = np.tile(temporal_encoding, (36, 1))
+        df = pd.DataFrame(y)
+        df.index = pd.to_datetime(df.index)
 
-        unique_points = df.drop_duplicates(subset='POINTID')[['x', 'y', 'POINTID']]
+        covariates = np.stack([prcp_obs, vp_obs], axis=2)
 
-        sorted_x = np.sort(unique_points['x'].unique())
-        sorted_y = np.sort(unique_points['y'].unique())
+        return df, dist, covariates
 
-        pointid_dict = {}
-        for i, row in unique_points.iterrows():
-            pointid_dict[(row['x'], row['y'])] = row['POINTID']
-
-        i = 0
-        j = 0
-        complete_split = []
-        for j in range(0, 36, 6):
-            for i in range(0, 36, 6):
-                cur_split = []
-                for jj in range(j, j+6):
-                    for ii in range(i, i+6):
-                        cur_split.append(pointid_dict[(sorted_x[ii], sorted_y[jj])])
-                complete_split.append(cur_split)
-
-        complete_split = np.array(complete_split)
-
-        df_new = []
-        for i in range(complete_split.shape[0]):
-            # select all columns in the split
-            cur_split = complete_split[i]
-            cur_df = y[cur_split]
-            df_new.append(cur_df)
-
-        df_array = [cur_df.values for cur_df in df_new]
-        df_array = np.concatenate(df_array, axis=0)
-
-        df_new = pd.DataFrame(df_array)
-        df_new.index = pd.to_datetime(df_new.index)
-
-        mask = df_new.notnull().astype(int).values
-
-        df_new = df_new.fillna(0)
-
-        dist = []
-        for j in range(6):
-            for i in range(6):
-                dist.append([sorted_x[i], sorted_y[j]])
-        dist = np.array(dist)
-        dist = cdist(dist, dist)
-
-        return df_new, dist, mask, temporal_encoding
 
     def compute_similarity(self, method: str, **kwargs):
         if method == "distance":
@@ -100,10 +68,11 @@ class SoilMoisture(PandasDataset):
 
 
 
-
 if __name__ == '__main__':
     from tsl.ops.imputation import add_missing_values
-    dataset = SoilMoisture()
+
+    num_nodes, seq_len = 36, 1200
+    dataset = SoilMoisture(num_nodes, seq_len, seed=42)
     add_missing_values(dataset, p_fault=0, p_noise=0.25, min_seq=12,
                        max_seq=12 * 4, seed=56789)
 
@@ -114,3 +83,7 @@ if __name__ == '__main__':
                                    include_self=False)
 
     print(adj)
+
+
+
+
