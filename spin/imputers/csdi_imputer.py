@@ -183,8 +183,15 @@ class CsdiImputer(Imputer):
         # self.val_metrics.update(epsilon_hat, epsilon, batch.eval_mask)
         # self.log_metrics(self.val_metrics, batch_size=batch.batch_size)
         # self.log_loss('val', val_loss, batch_size=batch.batch_size)
+
+
+        print((batch.input.mask==1).sum())
+        print(batch.eval_mask.sum())
+
         print(val_loss_sum)
         self.log('test_loss', val_loss_sum, on_step=True, on_epoch=True, prog_bar=True)
+
+
 
 
         # ########################################################
