@@ -238,7 +238,7 @@ class CsdiImputer(Imputer):
         # Logging
         self.test_metrics.update(y_hat.detach(), y, eval_mask)
         self.log_metrics(self.test_metrics, batch_size=batch.batch_size)
-        print(self.test_metrics)
+        print(self.test_metrics(y_hat.detach(), y, eval_mask))
         # self.log_loss('test', test_loss, batch_size=batch.batch_size)
         return test_loss
 
