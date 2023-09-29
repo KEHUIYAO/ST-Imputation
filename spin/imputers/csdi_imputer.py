@@ -231,8 +231,12 @@ class CsdiImputer(Imputer):
         y, eval_mask = batch.y, batch.eval_mask
         y_hat = imputed_samples.median(dim=0).values
 
-        loss_fn = MaskedMAE(compute_on_step=False)
-        test_loss = loss_fn(y_hat.detach().cpu(), y.detach().cpu(), eval_mask.detach().cpu())
+        eval_points = (eval_mask==1).sum()
+        if eval_points == 0:
+            test_loss = 0
+        else:
+            test_loss = torch.abs((y_hat - y)[eval_mask==1]) / eval_points
+
         print(test_loss)
 
 
