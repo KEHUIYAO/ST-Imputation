@@ -1,4 +1,4 @@
-epochs: 200
+epochs: 400
 val_len: 0.2
 test_len: 0.2
 window: 36  # [24, 36]
