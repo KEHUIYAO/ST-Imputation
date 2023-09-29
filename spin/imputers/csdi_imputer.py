@@ -235,7 +235,7 @@ class CsdiImputer(Imputer):
         if eval_points == 0:
             test_loss = 0
         else:
-            test_loss = torch.abs((y_hat - y)[eval_mask==1]) / eval_points
+            test_loss = torch.sum(torch.abs((y_hat - y)[eval_mask==1])) / eval_points
 
         print(test_loss)
 
