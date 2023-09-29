@@ -231,7 +231,7 @@ class CsdiImputer(Imputer):
         y_hat = imputed_samples.median(dim=0).values
 
 
-        test_loss = self.test_metrics['MaskedMAE'](y_hat, y, eval_mask)
+        test_loss = self.test_metrics['mae'](y_hat, y, eval_mask)
         print(test_loss)
 
 
