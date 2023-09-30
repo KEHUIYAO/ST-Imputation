@@ -173,7 +173,7 @@ def get_scheduler(scheduler_name: str = None, args=None):
 
     elif scheduler_name == 'multi_step':
         scheduler_class = torch.optim.lr_scheduler.MultiStepLR
-        p1 = int(0.75 * args.epochs)
+        p1 = int(0.6 * args.epochs)
         p2 = int(0.9 * args.epochs)
         scheduler_kwargs = dict(milestones=[p1, p2], gamma=0.1)
     else:

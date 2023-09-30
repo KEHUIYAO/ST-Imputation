@@ -26,13 +26,8 @@ class SoilMoistureSparse(PandasDataset, MissingValuesMixin):
     similarity_options = {'distance'}
 
     def __init__(self, mode='train', seed=42):
-        df, dist, mask, st_coords_new, X_new = self.load(mode=mode)
-
-
-
-
-
-
+        self.rng = np.random.RandomState(seed)
+        df, dist, mask, st_coords_new, X_new, eval_mask_new = self.load(mode=mode)
 
         super().__init__(dataframe=df,
                          similarity_score="distance",
@@ -46,23 +41,12 @@ class SoilMoistureSparse(PandasDataset, MissingValuesMixin):
         #                  attributes=dict(dist=dist, temporal_encoding=temporal_encoding,
         #                   st_coords=st_coords_new))
 
-        rng = np.random.RandomState(seed)
-
-
-        if mode == 'train':
-            p_missing = 0.2
-        elif mode == 'test':
-            p_missing = 0.2
-
-        time_points_to_eval = rng.choice(mask.shape[0], int(p_missing * mask.shape[0]), replace=False)
-        eval_mask = np.zeros_like(mask)
-        eval_mask[time_points_to_eval, :] = 1
-
-
-        self.set_eval_mask(eval_mask)
+        self.set_eval_mask(eval_mask_new)
 
 
     def load(self, mode):
+
+        rng = np.random.RandomState(42)
 
 
         df = pd.read_csv(os.path.join(current_dir, 'smap_1km.csv'))
@@ -109,20 +93,27 @@ class SoilMoistureSparse(PandasDataset, MissingValuesMixin):
         X = StandardScaler().fit_transform(X)
         X = X.reshape((L, K, C))
 
-        if mode == 'train':
-            y = y.iloc[:-365, :]
-            X = X[:-365, :, :]
-
-        elif mode == 'test':
-            y = y.iloc[-365:, :]
-            X = X[-365:, :, :]
+        # if mode == 'train':
+        #     y = y.iloc[:-365, :]
+        #     X = X[:-365, :, :]
+        #
+        # elif mode == 'test':
+        #     y = y.iloc[-365:, :]
+        #     X = X[-365:, :, :]
 
 
         rows, cols = y.shape
         space_coords, time_coords = np.meshgrid(np.arange(cols), np.arange(rows))
         st_coords = np.stack([space_coords, time_coords], axis=-1)
 
+        if mode == 'train':
+            p_missing = 0.2
+        elif mode == 'test':
+            p_missing = 0.2
 
+        time_points_to_eval = self.rng.choice(rows, int(p_missing * rows), replace=False)
+        eval_mask = np.zeros_like(y)
+        eval_mask[time_points_to_eval, :] = 1
 
         #
         # plt.figure()
@@ -167,6 +158,7 @@ class SoilMoistureSparse(PandasDataset, MissingValuesMixin):
 
             st_coords_new.append(st_coords[:, ind, :])
             X_new.append(X[:, ind, :])
+            eval_mask_new.append(eval_mask[:, ind])
 
 
         df_array = [cur_df.values for cur_df in df_new]
@@ -177,6 +169,7 @@ class SoilMoistureSparse(PandasDataset, MissingValuesMixin):
 
         st_coords_new = np.concatenate(st_coords_new, axis=0)
         X_new = np.concatenate(X_new, axis=0)
+        eval_mask_new = np.concatenate(eval_mask_new, axis=0)
 
         mask = df_new.notnull().astype(int).values
         df_new = df_new.fillna(0)
@@ -189,7 +182,7 @@ class SoilMoistureSparse(PandasDataset, MissingValuesMixin):
         dist = cdist(dist, dist)
 
 
-        return df_new, dist, mask, st_coords_new, X_new
+        return df_new, dist, mask, st_coords_new, X_new, eval_mask_new
 
     def compute_similarity(self, method: str, **kwargs):
         if method == "distance":
@@ -197,8 +190,8 @@ class SoilMoistureSparse(PandasDataset, MissingValuesMixin):
             return gaussian_kernel(self.dist, theta=theta)
 
 
-    # def get_splitter(self, method=None, **kwargs):
-    #     return SoilMoistureSplitter(kwargs.get('val_len'), kwargs.get('test_len'))
+    def get_splitter(self, method=None, **kwargs):
+        return SoilMoistureSplitter(kwargs.get('val_len'), kwargs.get('test_len'))
 
 
 # class SoilMoistureSplitter(FixedIndicesSplitter):
@@ -255,7 +248,7 @@ class SoilMoistureSplitter(Splitter):
 
     @staticmethod
     def add_argparse_args(parser):
-        parser.add_argument('--val-len', type=float or int, default=0.1)
+        parser.add_argument('--val-len', type=float or int, default=0.2)
         parser.add_argument('--test-len', type=float or int, default=0.2)
         return parser
 
