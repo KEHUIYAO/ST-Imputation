@@ -6,6 +6,25 @@ import numpy as np
 import torch
 import torch.nn as nn
 
+class BiLSTM(nn.Module):
+    def __init__(self, input_size, hidden_size, num_layers=1):
+        super(BiLSTM, self).__init__()
+        self.lstm = nn.LSTM(input_size=input_size, hidden_size=hidden_size, num_layers=num_layers, bidirectional=True)
+        # self.mlp = nn.Conv1d(in_channels=2*hidden_size, out_channels=input_size, kernel_size=1)
+        self.mlp = nn.Sequential(
+            nn.Conv1d(in_channels=2*hidden_size,
+                      out_channels=hidden_size, kernel_size=1),
+            nn.ReLU(),
+            nn.Conv1d(in_channels=hidden_size, out_channels=input_size, kernel_size=1)
+        )
+
+    def forward(self, x):
+        # x: [seq_len, batch_size, input_size]
+        output, _ = self.lstm(x)  # output: [seq_len, batch_size, 2*hidden_size]
+        output = self.mlp(output.permute(1,2,0))  # output: [batch_size, input_size, seq_len]
+        # reshape output to [seq_len, batch_size, input_size]
+        output = output.permute(2,0,1)
+        return output
 
 
 def positional_encoding(max_len, hidden_dim):
@@ -94,7 +113,8 @@ class ResidualBlock(nn.Module):
         self.mid_projection = Conv1d_with_init(hidden_dim, 2 * hidden_dim, 1)
         self.output_projection = Conv1d_with_init(hidden_dim, 2 * hidden_dim, 1)
 
-        self.time_layer = get_torch_trans(heads=nheads, layers=1, channels=hidden_dim)
+        # self.time_layer = get_torch_trans(heads=nheads, layers=1, channels=hidden_dim)
+        self.time_layer = BiLSTM(input_size=hidden_dim, hidden_size=hidden_dim, num_layers=1)
         self.feature_layer = get_torch_trans(heads=nheads, layers=1, channels=hidden_dim)
 
 
