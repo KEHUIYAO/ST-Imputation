@@ -113,8 +113,8 @@ class ResidualBlock(nn.Module):
         self.mid_projection = Conv1d_with_init(hidden_dim, 2 * hidden_dim, 1)
         self.output_projection = Conv1d_with_init(hidden_dim, 2 * hidden_dim, 1)
 
-        # self.time_layer = get_torch_trans(heads=nheads, layers=1, channels=hidden_dim)
-        self.time_layer = BiLSTM(input_size=hidden_dim, hidden_size=hidden_dim, num_layers=1)
+        self.time_layer = get_torch_trans(heads=nheads, layers=1, channels=hidden_dim)
+        # self.time_layer = BiLSTM(input_size=hidden_dim, hidden_size=hidden_dim, num_layers=1)
         self.feature_layer = get_torch_trans(heads=nheads, layers=1, channels=hidden_dim)
 
 
