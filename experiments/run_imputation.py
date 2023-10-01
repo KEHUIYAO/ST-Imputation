@@ -17,7 +17,7 @@ from pytorch_lightning.loggers import TensorBoardLogger
 from torch.optim.lr_scheduler import CosineAnnealingLR
 from tsl import config, logger
 from tsl.data import SpatioTemporalDataModule, ImputationDataset
-from tsl.data.preprocessing import StandardScaler
+from tsl.data.preprocessing import StandardScaler, MinMaxScaler
 from tsl.datasets import AirQuality, MetrLA, PemsBay
 from data import GaussianProcess, DescriptiveST, DynamicST, SoilMoisture, SoilMoistureSparse
 
@@ -269,7 +269,7 @@ def run_experiment(args):
     splitter = dataset.get_splitter(val_len=args.val_len,
                                     test_len=args.test_len)
 
-    scalers = {'data': StandardScaler(axis=(0, 1))}
+    scalers = {'data': MinMaxScaler(axis=(0, 1), out_range=(-1, 1))}
 
 
     dm = SpatioTemporalDataModule(torch_dataset,
