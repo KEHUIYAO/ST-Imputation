@@ -60,6 +60,8 @@ class CsdiImputer(Imputer):
                              unused: Optional[int] = 0) -> None:
 
         observed_data = batch.input.x
+        observed_data[batch.input.mask==0] = 0
+
         B, L, K, C = observed_data.shape  # [batch, steps, nodes, channels]
         device = self.device
         t = torch.randint(0, self.num_steps, [B])
@@ -89,12 +91,6 @@ class CsdiImputer(Imputer):
         # whiten missing values
         if 'x' in batch.input:
             batch.input.x = batch.input.x * batch.input.mask
-
-
-    def on_validation_batch_start(self, batch, batch_idx: int,
-                             unused: Optional[int] = 0) -> None:
-        self.on_train_batch_start(batch, batch_idx, unused)
-
 
 
     def shared_step(self, batch, mask):
@@ -135,6 +131,8 @@ class CsdiImputer(Imputer):
         # scale target
         if not self.scale_target:
             observed_data = batch.transform['y'].transform(observed_data)
+
+        observed_data[batch.mask==0] = 0
         B, L, K, C = observed_data.shape  # [batch, steps, nodes, channels]
         device = self.device
         val_loss_sum = 0
@@ -164,6 +162,8 @@ class CsdiImputer(Imputer):
         # scale target
         if not self.scale_target:
             observed_data = batch.transform['y'].transform(observed_data)
+
+        observed_data[batch.mask==0] = 0
         B, L, K, C = observed_data.shape  # [batch, steps, nodes, channels]
         device = self.device
         val_loss_sum = 0
