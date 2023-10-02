@@ -3,7 +3,7 @@ val_len: 0.2
 test_len: 0.2
 window: 72  # [24, 36]
 stride: 12
-lr_scheduler: multi_step
+lr_scheduler: magic
 loss_fn: mse_loss
 n_samples: 10
 hidden_dim: 64
