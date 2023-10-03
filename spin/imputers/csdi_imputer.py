@@ -91,20 +91,10 @@ class CsdiImputer(Imputer):
             p = random.random()
             whiten_mask = torch.rand(mask.size(), device=mask.device) > p
             batch.input.mask = mask & whiten_mask
-            # whiten missing values
-            if 'x' in batch.input:
-                batch.input.x = batch.input.x * batch.input.mask
 
-        observed_data = batch.input.x
-        observed_data[batch.input.mask == 0] = 0
-        device = self.device
-        t = torch.randint(0, self.num_steps, [B])
-        current_alpha = self.alpha_torch[t].to(device)  # (B,1,1)
-        noise = torch.randn_like(observed_data)
-        noisy_data = (current_alpha ** 0.5) * observed_data + (1.0 - current_alpha) ** 0.5 * noise
-        batch['noise'] = noise
-        batch.input['noisy_data'] = noisy_data
-        batch.input['diffusion_step'] = t.to(device)
+
+
+
 
     # def on_validation_batch_start(self, batch, batch_idx: int,
     #                          unused: Optional[int] = 0) -> None:
@@ -131,8 +121,24 @@ class CsdiImputer(Imputer):
         # batch.input.x = torch.zeros_like(batch.input.x)
         # batch.input.mask = torch.zeros_like(batch.input.mask)
         # ########################################################
+        B, L, K, C = batch.input.x.shape
+        injected_missing = (batch.original_mask - batch.input.mask)
 
-        injected_missing = (batch.original_mask - batch.mask)
+        observed_data = batch.input.x
+        observed_data[injected_missing == 0] = 0
+
+        batch.input.x = batch.input.x * batch.input.mask
+
+        device = self.device
+        t = torch.randint(0, self.num_steps, [B])
+        current_alpha = self.alpha_torch[t].to(device)  # (B,1,1)
+        noise = torch.randn_like(observed_data)
+        noisy_data = (current_alpha ** 0.5) * observed_data + (1.0 - current_alpha) ** 0.5 * noise
+        batch['noise'] = noise
+        batch.input['noisy_data'] = noisy_data
+        batch.input['diffusion_step'] = t.to(device)
+
+
         epsilon_hat, epsilon, loss = self.shared_step(batch, mask=injected_missing)
         # epsilon_hat, epsilon, loss = self.shared_step(batch, mask=batch.original_mask)
         # Logging
@@ -155,7 +161,7 @@ class CsdiImputer(Imputer):
         if not self.scale_target:
             observed_data = batch.transform['y'].transform(observed_data)
 
-        observed_data[batch.mask==0] = 0
+        observed_data[batch.eval_mask==0] = 0
         B, L, K, C = observed_data.shape  # [batch, steps, nodes, channels]
         device = self.device
         val_loss_sum = 0
@@ -186,7 +192,7 @@ class CsdiImputer(Imputer):
         if not self.scale_target:
             observed_data = batch.transform['y'].transform(observed_data)
 
-        observed_data[batch.mask==0] = 0
+        observed_data[batch.eval_mask==0] = 0
         B, L, K, C = observed_data.shape  # [batch, steps, nodes, channels]
         device = self.device
         val_loss_sum = 0
