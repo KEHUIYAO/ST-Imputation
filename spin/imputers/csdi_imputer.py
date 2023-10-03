@@ -125,7 +125,7 @@ class CsdiImputer(Imputer):
         injected_missing = (batch.original_mask - batch.input.mask)
 
         observed_data = batch.input.x
-        # observed_data[injected_missing == 0] = 0
+        observed_data[injected_missing == 0] = 0
 
         batch.input.x = batch.input.x * batch.input.mask
 
@@ -161,7 +161,7 @@ class CsdiImputer(Imputer):
         if not self.scale_target:
             observed_data = batch.transform['y'].transform(observed_data)
 
-        # observed_data[batch.eval_mask==0] = 0
+        observed_data[batch.eval_mask==0] = 0
         B, L, K, C = observed_data.shape  # [batch, steps, nodes, channels]
         device = self.device
         val_loss_sum = 0
@@ -192,7 +192,7 @@ class CsdiImputer(Imputer):
         if not self.scale_target:
             observed_data = batch.transform['y'].transform(observed_data)
 
-        # observed_data[batch.eval_mask==0] = 0
+        observed_data[batch.eval_mask==0] = 0
         B, L, K, C = observed_data.shape  # [batch, steps, nodes, channels]
         device = self.device
         val_loss_sum = 0
