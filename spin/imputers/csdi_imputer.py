@@ -59,18 +59,10 @@ class CsdiImputer(Imputer):
     def on_train_batch_start(self, batch, batch_idx: int,
                              unused: Optional[int] = 0) -> None:
 
-        observed_data = batch.input.x
-        observed_data[batch.input.mask==0] = 0
 
-        B, L, K, C = observed_data.shape  # [batch, steps, nodes, channels]
-        device = self.device
-        t = torch.randint(0, self.num_steps, [B])
-        current_alpha = self.alpha_torch[t].to(device)  # (B,1,1)
-        noise = torch.randn_like(observed_data)
-        noisy_data = (current_alpha ** 0.5) * observed_data + (1.0 - current_alpha) ** 0.5 * noise
-        batch['noise'] = noise
-        batch.input['noisy_data'] = noisy_data
-        batch.input['diffusion_step'] = t.to(device)
+
+        B, L, K, C = batch.input.x.shape  # [batch, steps, nodes, channels]
+
 
         # # randomly mask out value with probability p = whiten_prob
         # batch.original_mask = mask = batch.input.mask
@@ -102,6 +94,17 @@ class CsdiImputer(Imputer):
             # whiten missing values
             if 'x' in batch.input:
                 batch.input.x = batch.input.x * batch.input.mask
+
+        observed_data = batch.input.x
+        observed_data[batch.input.mask == 0] = 0
+        device = self.device
+        t = torch.randint(0, self.num_steps, [B])
+        current_alpha = self.alpha_torch[t].to(device)  # (B,1,1)
+        noise = torch.randn_like(observed_data)
+        noisy_data = (current_alpha ** 0.5) * observed_data + (1.0 - current_alpha) ** 0.5 * noise
+        batch['noise'] = noise
+        batch.input['noisy_data'] = noisy_data
+        batch.input['diffusion_step'] = t.to(device)
 
     # def on_validation_batch_start(self, batch, batch_idx: int,
     #                          unused: Optional[int] = 0) -> None:
