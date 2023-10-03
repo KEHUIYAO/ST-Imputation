@@ -40,6 +40,7 @@ def parse_args():
     parser.add_argument("--model-name", type=str, default='csdi')
     #parser.add_argument("--model-name", type=str, default='interpolation')
     parser.add_argument("--dataset-name", type=str, default='soil_moisture_sparse_point')
+    # parser.add_argument("--dataset-name", type=str, default='air36')
     parser.add_argument("--config", type=str, default=None)
     #parser.add_argument("--config", type=str, default='imputation/csdi_soil_moisture.yaml')
     parser.add_argument('--epochs', type=int, default=200)
