@@ -64,46 +64,35 @@ class CsdiImputer(Imputer):
         B, L, K, C = batch.input.x.shape  # [batch, steps, nodes, channels]
 
 
-        # # randomly mask out value with probability p = whiten_prob
-        # batch.original_mask = mask = batch.input.mask
-        # p = self.whiten_prob
-        # if isinstance(p, Tensor):
-        #     p_size = [mask.size(0)] + [1] * (mask.ndim - 1)
-        #     p = p[torch.randint(len(p), p_size)].to(device=mask.device)
+        # randomly mask out value with probability p = whiten_prob
+        batch.original_mask = mask = batch.input.mask
+        p = self.whiten_prob
+        if isinstance(p, Tensor):
+            p_size = [mask.size(0)] + [1] * (mask.ndim - 1)
+            p = p[torch.randint(len(p), p_size)].to(device=mask.device)
+
+        whiten_mask = torch.zeros(mask.size(), device=mask.device).bool()
+        time_points_observed = torch.rand(mask.size(0), mask.size(1), 1, 1, device=mask.device) > p
+
+        # repeat along the spatial dimensions
+        time_points_observed = time_points_observed.repeat(1, 1, mask.size(2), mask.size(3))
+
+        whiten_mask[time_points_observed] = True
+
+        batch.input.mask = mask & whiten_mask
+
+        # # whiten missing values
+        # if 'x' in batch.input:
+        #     batch.input.x = batch.input.x * batch.input.mask
         #
-        # whiten_mask = torch.zeros(mask.size(), device=mask.device).bool()
-        # time_points_observed = torch.rand(mask.size(0), mask.size(1), 1, 1, device=mask.device) > p
+        #     # randomly mask out value with probability p = whiten_prob
+        #     batch.original_mask = mask = batch.input.mask
         #
-        # # repeat along the spatial dimensions
-        # time_points_observed = time_points_observed.repeat(1, 1, mask.size(2), mask.size(3))
-        #
-        # whiten_mask[time_points_observed] = True
-        #
-        # batch.input.mask = mask & whiten_mask
-
-        # whiten missing values
-        if 'x' in batch.input:
-            batch.input.x = batch.input.x * batch.input.mask
-
-            # randomly mask out value with probability p = whiten_prob
-            batch.original_mask = mask = batch.input.mask
-
-            p = random.random()
-            whiten_mask = torch.rand(mask.size(), device=mask.device) > p
-            batch.input.mask = mask & whiten_mask
+        #     p = random.random()
+        #     whiten_mask = torch.rand(mask.size(), device=mask.device) > p
+        #     batch.input.mask = mask & whiten_mask
 
 
-
-
-
-    # def on_validation_batch_start(self, batch, batch_idx: int,
-    #                          unused: Optional[int] = 0) -> None:
-    #     self.on_train_batch_start(batch, batch_idx, unused)
-
-
-    # def on_test_batch_start(self, batch, batch_idx: int,
-    #                          unused: Optional[int] = 0) -> None:
-    #     self.on_train_batch_start(batch, batch_idx, unused)
 
 
     def shared_step(self, batch, mask):
