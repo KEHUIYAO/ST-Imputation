@@ -63,9 +63,6 @@ class ResidualBlock(nn.Module):
     def __init__(self, hidden_dim, nheads):
         super().__init__()
 
-        self.mid_projection = Conv1d_with_init(hidden_dim, 2 * hidden_dim, 1)
-        self.output_projection = Conv1d_with_init(hidden_dim, 2 * hidden_dim, 1)
-
         self.time_layer = get_torch_trans(heads=nheads, layers=1, channels=hidden_dim)
 
         self.feature_layer = get_torch_trans(heads=nheads, layers=1, channels=hidden_dim)
@@ -104,18 +101,10 @@ class ResidualBlock(nn.Module):
 
         y = self.forward_time(y, base_shape)
         y = self.forward_feature(y, base_shape)  # (B,channel,K*L)
-        y = self.mid_projection(y)  # (B,2*channel,K*L)
 
+        x = y.reshape(base_shape)
 
-        gate, filter = torch.chunk(y, 2, dim=1)
-        y = torch.sigmoid(gate) * torch.tanh(filter)  # (B,channel,K*L)
-        y = self.output_projection(y)
-
-        residual, skip = torch.chunk(y, 2, dim=1)
-        x = x.reshape(base_shape)
-        residual = residual.reshape(base_shape)
-        skip = skip.reshape(base_shape)
-        return (x + residual) / math.sqrt(2.0), skip
+        return x
 
 
 class SpatioTemporalTransformerModel(nn.Module):
@@ -207,10 +196,8 @@ class SpatioTemporalTransformerModel(nn.Module):
 
         skip = []
         for layer in self.residual_layers:
-            x, skip_connection = layer(x)
-            skip.append(skip_connection)
+            x = layer(x)
 
-        x = torch.sum(torch.stack(skip), dim=0) / math.sqrt(len(self.residual_layers))
         x = x.reshape(B, hidden_dim, K * L)
         x = self.output_projection1(x) # (B,hidden_dim,K*L)
         x = F.relu(x)
