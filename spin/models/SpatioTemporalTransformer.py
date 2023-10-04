@@ -60,9 +60,9 @@ class SpatialEmbedding(nn.Module):
 
 
 class ResidualBlock(nn.Module):
-    def __init__(self, cond_dim, hidden_dim, nheads):
+    def __init__(self, hidden_dim, nheads):
         super().__init__()
-        self.cond_projection = Conv1d_with_init(cond_dim, 2 * hidden_dim, 1)
+
         self.mid_projection = Conv1d_with_init(hidden_dim, 2 * hidden_dim, 1)
         self.output_projection = Conv1d_with_init(hidden_dim, 2 * hidden_dim, 1)
 
@@ -95,7 +95,7 @@ class ResidualBlock(nn.Module):
         y = y.reshape(B, L, channel, K).permute(0, 2, 3, 1).reshape(B, channel, K * L)
         return y
 
-    def forward(self, x, cond_info):
+    def forward(self, x):
 
         B, channel, K, L = x.shape
 
@@ -106,10 +106,6 @@ class ResidualBlock(nn.Module):
         y = self.forward_feature(y, base_shape)  # (B,channel,K*L)
         y = self.mid_projection(y)  # (B,2*channel,K*L)
 
-        _, cond_dim, _, _ = cond_info.shape
-        cond_info = cond_info.reshape(B, cond_dim, K * L)
-        cond_info = self.cond_projection(cond_info)  # (B,2*channel,K*L)
-        y = y + cond_info
 
         gate, filter = torch.chunk(y, 2, dim=1)
         y = torch.sigmoid(gate) * torch.tanh(filter)  # (B,channel,K*L)
@@ -144,11 +140,14 @@ class SpatioTemporalTransformerModel(nn.Module):
         self.output_projection2 = Conv1d_with_init(hidden_dim, input_dim, 1)
         nn.init.zeros_(self.output_projection2.weight)
 
+        self.cond_projection = Conv1d_with_init(covariate_dim + input_dim, hidden_dim, 1)
+
+
+
 
         self.residual_layers = nn.ModuleList(
             [
                 ResidualBlock(
-                    cond_dim=covariate_dim + input_dim,
                     hidden_dim=hidden_dim,
                     nheads=nheads
                 )
@@ -185,13 +184,14 @@ class SpatioTemporalTransformerModel(nn.Module):
         x = x.reshape(B, inputdim, K * L)
         x = self.input_projection(x)
         x = F.relu(x)
-
         x = x.reshape(B, hidden_dim, K, L)
 
-        mask_token = (1-mask) * self.mask_token()
-        mask_token = mask_token.permute(0, 3, 2, 1)
 
-        x = mask.permute(0, 3, 2, 1) * x + mask_token
+        _, cond_dim, _, _ = cond_info.shape
+        cond_info = cond_info.reshape(B, cond_dim, K * L)
+        cond_info = self.cond_projection(cond_info)  # (B,channel,K*L)
+
+        x = x + cond_info
 
 
         # time encoding
@@ -206,7 +206,7 @@ class SpatioTemporalTransformerModel(nn.Module):
 
         skip = []
         for layer in self.residual_layers:
-            x, skip_connection = layer(x, cond_info)
+            x, skip_connection = layer(x)
             skip.append(skip_connection)
 
         x = torch.sum(torch.stack(skip), dim=0) / math.sqrt(len(self.residual_layers))
