@@ -5,6 +5,7 @@ from tsl.nn.blocks.encoders.transformer import SpatioTemporalTransformerLayer, \
     TransformerLayer
 from tsl.nn.layers import PositionalEncoding
 from tsl.utils.parser_utils import ArgParser, str_to_bool
+import torch
 
 
 class TransformerModel(nn.Module):

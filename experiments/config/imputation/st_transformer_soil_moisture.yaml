@@ -1,0 +1,15 @@
+epochs: 400
+val_len: 0.2
+test_len: 0.2
+window: 72  # [24, 36]
+stride: 12
+lr_scheduler: magic
+loss_fn: l1_loss
+hidden_dim: 64
+whiten_prob: [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]
+batch_size: 16
+batch_inference: 16
+check_val_every_n_epoch: 1
+covariate_dim: 12
+l2_reg: 0
+batches_epoch: 500

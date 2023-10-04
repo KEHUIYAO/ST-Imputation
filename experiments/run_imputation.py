@@ -31,18 +31,18 @@ from tsl.utils import parser_utils, numpy_metrics
 
 from spin.baselines import SAITS, TransformerModel, BRITS, MeanModel, InterpolationModel
 from spin.imputers import SPINImputer, SAITSImputer, BRITSImputer, MeanImputer, InterpolationImputer, DiffgrinImputer, CsdiImputer, GrinImputer, TransformerImputer
-from spin.models import SPINModel, SPINHierarchicalModel, DiffGrinModel, CsdiModel, GrinModel
+from spin.models import SPINModel, SPINHierarchicalModel, DiffGrinModel, CsdiModel, GrinModel, SpatioTemporalTransformerModel
 from spin.scheduler import CosineSchedulerWithRestarts
 def parse_args():
     # Argument parser
     ########################################
     parser = ArgParser()
-    parser.add_argument("--model-name", type=str, default='transformer')
+    parser.add_argument("--model-name", type=str, default='st_transformer')
     #parser.add_argument("--model-name", type=str, default='interpolation')
     parser.add_argument("--dataset-name", type=str, default='soil_moisture_sparse_point')
     # parser.add_argument("--dataset-name", type=str, default='air36')
     #parser.add_argument("--config", type=str, default=None)
-    parser.add_argument("--config", type=str, default='imputation/transformer_soil_moisture.yaml')
+    parser.add_argument("--config", type=str, default='imputation/st_transformer_soil_moisture.yaml')
     parser.add_argument('--epochs', type=int, default=200)
     parser.add_argument('--check-val-every-n-epoch', type=int, default=1)
     parser.add_argument('--batch-inference', type=int, default=32)
@@ -113,6 +113,8 @@ def get_model_classes(model_str):
         model, filler = DiffGrinModel, DiffgrinImputer
     elif model_str == 'csdi':
         model, filler = CsdiModel, CsdiImputer
+    elif model_str == 'st_transformer':
+        model, filler = SpatioTemporalTransformerModel, TransformerImputer
     else:
         raise ValueError(f'Model {model_str} not available.')
     return model, filler
@@ -249,6 +251,13 @@ def run_experiment(args):
 
         input_map = {
             'u': 'covariates',
+            'x': 'data'
+        }
+
+    elif args.model_name == 'st_transformer' and 'covariates' in dataset.attributes:
+        exog_map = {'covariates': dataset.attributes['covariates']}
+        input_map = {
+            'side_info': 'covariates',
             'x': 'data'
         }
 
