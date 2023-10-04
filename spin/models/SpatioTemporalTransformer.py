@@ -6,6 +6,7 @@ import numpy as np
 import torch
 import torch.nn as nn
 from tsl.nn.base import StaticGraphEmbedding
+from tsl.nn.layers import PositionalEncoding
 
 
 
@@ -130,7 +131,7 @@ class SpatioTemporalTransformerModel(nn.Module):
         nn.init.zeros_(self.output_projection2.weight)
 
         self.cond_projection = Conv1d_with_init(covariate_dim + input_dim, hidden_dim, 1)
-
+        self.pe = PositionalEncoding(hidden_dim)
 
 
 
@@ -176,6 +177,9 @@ class SpatioTemporalTransformerModel(nn.Module):
         x = x.reshape(B, hidden_dim, K, L)
 
 
+
+
+
         _, cond_dim, _, _ = cond_info.shape
         cond_info = cond_info.reshape(B, cond_dim, K * L)
         cond_info = self.cond_projection(cond_info)  # (B,channel,K*L)
@@ -184,10 +188,14 @@ class SpatioTemporalTransformerModel(nn.Module):
         x = x + cond_info
 
 
-        # time encoding
-        time_emb = generate_positional_encoding(B, hidden_dim, K, L).to(x.device)
+        # temporal encoding
+        x = x.permute(0, 3, 2, 1)  # (B,L,K,hidden_dim)
 
-        x = x + time_emb
+        x = self.pe(x)
+
+        x = x.permute(0, 3, 2, 1)  # (B,hidden_dim,K,L)
+
+
 
         # # space encoding
         # spatial_emb = self.spatial_embedding_layer(B, L)
@@ -202,7 +210,7 @@ class SpatioTemporalTransformerModel(nn.Module):
         x = F.relu(x)
         x = self.output_projection2(x)  # (B,input_dim,K*L)
         x = x.reshape(B, -1, K, L)  # (B,input_dim,K,L)
-        x = x.permute(0, 3, 2, 1)  # (B,K,L,input_dim)
+        x = x.permute(0, 3, 2, 1)  # (BL, K ,input_dim)
         return x
 
     @staticmethod
