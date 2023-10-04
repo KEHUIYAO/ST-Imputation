@@ -302,7 +302,7 @@ def run_experiment(args):
                                         output_size=dm.n_channels,
                                         window_size=dm.window)
     else:
-        additional_model_hparams = dict(input_size=dm.n_channels, window_size=dm.window)
+        additional_model_hparams = dict(n_nodes=dm.n_nodes, input_size=dm.n_channels, output_size=dm.n_channels, window_size=dm.window)
 
     # model's inputs
     model_kwargs = parser_utils.filter_args(
