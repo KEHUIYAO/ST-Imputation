@@ -21,12 +21,12 @@ lr: 0.001
 batches_epoch: 160
 check_val_every_n_epoch: 1
 
-adj_threshold: 1
+adj_threshold: 0.1
 
 
 #### Model params #############################################################
 model_name: 'grin'
-exog_size: 12
+exog_size: 0
 hidden_size: 64
 ff_size: 64
 embedding_size: 8
