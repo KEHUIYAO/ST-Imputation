@@ -5,6 +5,7 @@ import math
 import numpy as np
 import torch
 import torch.nn as nn
+from tsl.nn.base import StaticGraphEmbedding
 
 
 
@@ -68,6 +69,8 @@ class ResidualBlock(nn.Module):
         self.time_layer = get_torch_trans(heads=nheads, layers=1, channels=hidden_dim)
 
         self.feature_layer = get_torch_trans(heads=nheads, layers=1, channels=hidden_dim)
+
+
 
 
 
@@ -153,6 +156,8 @@ class SpatioTemporalTransformerModel(nn.Module):
             ]
         )
 
+        self.mask_token = StaticGraphEmbedding(1, hidden_dim)
+
 
     def get_side_info(self, cond_mask, side_info):
         if side_info is not None:
@@ -168,6 +173,9 @@ class SpatioTemporalTransformerModel(nn.Module):
         hidden_dim = self.hidden_dim
         x = mask * x
         x = x.permute(0, 3, 2, 1)
+
+
+
         B, inputdim, K, L = x.shape
 
 
@@ -177,7 +185,14 @@ class SpatioTemporalTransformerModel(nn.Module):
         x = x.reshape(B, inputdim, K * L)
         x = self.input_projection(x)
         x = F.relu(x)
+
         x = x.reshape(B, hidden_dim, K, L)
+
+        mask_token = (1-mask) * self.mask_token()
+        mask_token = mask_token.permute(0, 3, 2, 1)
+
+        x = mask.permute(0, 3, 2, 1) * x + mask_token
+
 
         # time encoding
         time_emb = generate_positional_encoding(B, hidden_dim, K, L).to(x.device)
