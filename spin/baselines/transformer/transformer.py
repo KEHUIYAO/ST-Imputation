@@ -73,7 +73,7 @@ class TransformerModel(nn.Module):
                                     n_layers=2,
                                     dropout=dropout))
 
-    def forward(self, x, u, mask):
+    def forward(self, x, u, mask, **kwargs):
         # x: [batches steps nodes features]
         # u: [batches steps (nodes) features]
         x = x * mask
