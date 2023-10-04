@@ -117,9 +117,4 @@ class TransformerImputer(Imputer):
     def add_argparse_args(parser, **kwargs):
         parser = Predictor.add_argparse_args(parser)
         parser.add_argument('--whiten-prob', type=float, default=0.05)
-        parser.add_argument('--prediction-loss-weight', type=float, default=1.0)
-        parser.add_argument('--n-roots-subgraph', type=int, default=None)
-        parser.add_argument('--n-hops', type=int, default=2)
-        parser.add_argument('--max-edges-subgraph', type=int, default=1000)
-        parser.add_argument('--cut-edges-uniformly', type=bool, default=False)
         return parser
