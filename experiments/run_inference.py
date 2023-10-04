@@ -495,7 +495,7 @@ def run_experiment(args):
     check_mae = numpy_metrics.masked_mae(y_hat, y_true, eval_mask)
     print(f'Test MAE: {check_mae:.2f}')
 
-    seq_len = 365
+    seq_len = 1827
     num_nodes = 1296
     y_true_original = np.zeros([seq_len, num_nodes])
     y_hat_original = np.zeros([seq_len, num_nodes])
