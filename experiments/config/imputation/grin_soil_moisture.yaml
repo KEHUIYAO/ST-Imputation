@@ -21,6 +21,8 @@ lr: 0.001
 batches_epoch: 160
 check_val_every_n_epoch: 1
 
+adj_threshold: 1
+
 
 #### Model params #############################################################
 model_name: 'grin'
