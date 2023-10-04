@@ -190,6 +190,7 @@ class SpatioTemporalTransformerModel(nn.Module):
         _, cond_dim, _, _ = cond_info.shape
         cond_info = cond_info.reshape(B, cond_dim, K * L)
         cond_info = self.cond_projection(cond_info)  # (B,channel,K*L)
+        cond_info = cond_info.reshape(B, hidden_dim, K, L)  # (B,channel,K,L)
 
         x = x + cond_info
 
