@@ -124,7 +124,7 @@ class SpatioTemporalTransformerModel(nn.Module):
                  hidden_dim=64,
                  covariate_dim=0,
                  nheads=1,
-                 nlayers=2,
+                 nlayers=1,
                  spatial_dim=36
                  ):
 
