@@ -30,19 +30,19 @@ from tsl.ops.imputation import add_missing_values
 from tsl.utils import parser_utils, numpy_metrics
 
 from spin.baselines import SAITS, TransformerModel, BRITS, MeanModel, InterpolationModel
-from spin.imputers import SPINImputer, SAITSImputer, BRITSImputer, MeanImputer, InterpolationImputer, DiffgrinImputer, CsdiImputer, GrinImputer
+from spin.imputers import SPINImputer, SAITSImputer, BRITSImputer, MeanImputer, InterpolationImputer, DiffgrinImputer, CsdiImputer, GrinImputer, TransformerImputer
 from spin.models import SPINModel, SPINHierarchicalModel, DiffGrinModel, CsdiModel, GrinModel
 from spin.scheduler import CosineSchedulerWithRestarts
 def parse_args():
     # Argument parser
     ########################################
     parser = ArgParser()
-    parser.add_argument("--model-name", type=str, default='csdi')
+    parser.add_argument("--model-name", type=str, default='transformer')
     #parser.add_argument("--model-name", type=str, default='interpolation')
     parser.add_argument("--dataset-name", type=str, default='soil_moisture_sparse_point')
     # parser.add_argument("--dataset-name", type=str, default='air36')
     #parser.add_argument("--config", type=str, default=None)
-    parser.add_argument("--config", type=str, default='imputation/csdi_soil_moisture.yaml')
+    parser.add_argument("--config", type=str, default='imputation/transformer_soil_moisture.yaml')
     parser.add_argument('--epochs', type=int, default=200)
     parser.add_argument('--check-val-every-n-epoch', type=int, default=1)
     parser.add_argument('--batch-inference', type=int, default=32)
@@ -102,7 +102,7 @@ def get_model_classes(model_str):
     elif model_str == 'saits':
         model, filler = SAITS, SAITSImputer
     elif model_str == 'transformer':
-        model, filler = TransformerModel, SPINImputer
+        model, filler = TransformerModel, TransformerImputer
     elif model_str == 'brits':
         model, filler = BRITS, BRITSImputer
     elif model_str == 'mean':
@@ -294,11 +294,15 @@ def run_experiment(args):
 
     # torch_dataset[0]
 
-    additional_model_hparams = dict(n_nodes=dm.n_nodes,
-                                    input_size=dm.n_channels,
-                                    u_size=4,
-                                    output_size=dm.n_channels,
-                                    window_size=dm.window)
+
+    if args.model_name in ['spin', 'spin_h']:
+        additional_model_hparams = dict(n_nodes=dm.n_nodes,
+                                        input_size=dm.n_channels,
+                                        u_size=4,
+                                        output_size=dm.n_channels,
+                                        window_size=dm.window)
+    else:
+        additional_model_hparams = dict(window_size=dm.window)
 
     # model's inputs
     model_kwargs = parser_utils.filter_args(

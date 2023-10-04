@@ -82,7 +82,7 @@ class TransformerModel(nn.Module):
         h = mask * h + (1 - mask) * self.mask_token()
 
         if self.condition_on_u:
-            h = h + self.u_enc(u).unsqueeze(-2)
+            h = h + self.u_enc(u)
 
         h = self.pe(h)
 
@@ -96,10 +96,6 @@ class TransformerModel(nn.Module):
 
     @staticmethod
     def add_model_specific_args(parser: ArgParser):
-        parser.opt_list('--hidden-size', type=int, default=32, tunable=True,
-                        options=[16, 32, 64, 128, 256])
-        parser.opt_list('--ff-size', type=int, default=32, tunable=True,
-                        options=[32, 64, 128, 256, 512, 1024])
         parser.opt_list('--n-layers', type=int, default=1, tunable=True,
                         options=[1, 2, 3])
         parser.opt_list('--n-heads', type=int, default=1, tunable=True,
