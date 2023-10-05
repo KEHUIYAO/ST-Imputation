@@ -41,8 +41,8 @@ class TransformerModel(nn.Module):
 
         self.condition_on_u = condition_on_u
         if condition_on_u:
-            self.u_enc = MLP(u_size, hidden_size, n_layers=1)
-        self.h_enc = MLP(input_size, hidden_size, n_layers=1)
+            self.u_enc = MLP(u_size, hidden_size, n_layers=2)
+        self.h_enc = MLP(input_size, hidden_size, n_layers=2)
 
         self.mask_token = StaticGraphEmbedding(1, hidden_size)
 
@@ -71,7 +71,7 @@ class TransformerModel(nn.Module):
             self.readout.append(MLP(input_size=hidden_size,
                                     hidden_size=ff_size,
                                     output_size=output_size,
-                                    n_layers=1,
+                                    n_layers=2,
                                     dropout=dropout))
 
     def forward(self, x, u, mask, **kwargs):
@@ -80,7 +80,7 @@ class TransformerModel(nn.Module):
         x = x * mask
 
         h = self.h_enc(x)
-        #h = mask * h + (1 - mask) * self.mask_token()
+        h = mask * h + (1 - mask) * self.mask_token()
 
         if self.condition_on_u:
             h = h + self.u_enc(u)
