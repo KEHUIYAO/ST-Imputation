@@ -5,10 +5,7 @@ import math
 import numpy as np
 import torch
 import torch.nn as nn
-from tsl.nn.base import StaticGraphEmbedding
-from tsl.nn.layers import PositionalEncoding
-from tsl.nn.blocks.encoders.transformer import SpatioTemporalTransformerLayer
-from tsl.nn.blocks.encoders.mlp import MLP
+
 
 
 def positional_encoding(max_len, hidden_dim):
@@ -62,12 +59,18 @@ class SpatialEmbedding(nn.Module):
 
 
 class ResidualBlock(nn.Module):
-    def __init__(self, hidden_dim, nheads):
+    def __init__(self, cond_dim, hidden_dim, nheads):
         super().__init__()
+        self.cond_projection = Conv1d_with_init(cond_dim, 2 * hidden_dim, 1)
+        self.mid_projection = Conv1d_with_init(hidden_dim, 2 * hidden_dim, 1)
+        self.output_projection = Conv1d_with_init(hidden_dim, 2 * hidden_dim, 1)
 
         self.time_layer = get_torch_trans(heads=nheads, layers=1, channels=hidden_dim)
 
         self.feature_layer = get_torch_trans(heads=nheads, layers=1, channels=hidden_dim)
+
+
+
 
 
 
@@ -89,7 +92,7 @@ class ResidualBlock(nn.Module):
         y = y.reshape(B, L, channel, K).permute(0, 2, 3, 1).reshape(B, channel, K * L)
         return y
 
-    def forward(self, x):
+    def forward(self, x, cond_info):
 
         B, channel, K, L = x.shape
 
@@ -98,10 +101,22 @@ class ResidualBlock(nn.Module):
 
         y = self.forward_time(y, base_shape)
         y = self.forward_feature(y, base_shape)  # (B,channel,K*L)
+        y = self.mid_projection(y)  # (B,2*channel,K*L)
 
-        x = y.reshape(base_shape)
+        _, cond_dim, _, _ = cond_info.shape
+        cond_info = cond_info.reshape(B, cond_dim, K * L)
+        cond_info = self.cond_projection(cond_info)  # (B,2*channel,K*L)
+        y = y + cond_info
 
-        return x
+        gate, filter = torch.chunk(y, 2, dim=1)
+        y = torch.sigmoid(gate) * torch.tanh(filter)  # (B,channel,K*L)
+        y = self.output_projection(y)
+
+        residual, skip = torch.chunk(y, 2, dim=1)
+        x = x.reshape(base_shape)
+        residual = residual.reshape(base_shape)
+        skip = skip.reshape(base_shape)
+        return (x + residual) / math.sqrt(2.0), skip
 
 
 class SpatioTemporalTransformerModel(nn.Module):
@@ -109,8 +124,8 @@ class SpatioTemporalTransformerModel(nn.Module):
                  input_dim=1,
                  hidden_dim=64,
                  covariate_dim=0,
-                 nheads=1,
-                 nlayers=1,
+                 nheads=8,
+                 nlayers=4,
                  spatial_dim=36
                  ):
 
@@ -121,38 +136,22 @@ class SpatioTemporalTransformerModel(nn.Module):
 
         self.spatial_embedding_layer = SpatialEmbedding(spatial_dim, hidden_dim)
 
-        self.input_projection = nn.Conv1d(input_dim, hidden_dim, 1)
-        self.cond_projection = nn.Conv1d(covariate_dim + input_dim, hidden_dim, 1)
-        self.output_projection1 = nn.Conv1d(hidden_dim, hidden_dim, 1)
-        self.output_projection2 = nn.Conv1d(hidden_dim, input_dim, 1)
-
-        self.pe = PositionalEncoding(hidden_dim)
-
-        # self.cond_projection = MLP(covariate_dim, hidden_dim, n_layers=1)
-        # self.input_projection = MLP(input_dim, hidden_dim, n_layers=1)
-
-        self.st_transformer_layer = SpatioTemporalTransformerLayer(
-            input_size=hidden_dim,
-            hidden_size=hidden_dim,
-            ff_size=hidden_dim,
-            n_heads=nheads,
-            activation='relu',
-            causal=False,
-            dropout=0.)
+        self.input_projection = Conv1d_with_init(input_dim, hidden_dim, 1)
+        self.output_projection1 = Conv1d_with_init(hidden_dim, hidden_dim, 1)
+        self.output_projection2 = Conv1d_with_init(hidden_dim, input_dim, 1)
+        nn.init.zeros_(self.output_projection2.weight)
 
 
-
-        # self.residual_layers = nn.ModuleList(
-        #     [
-        #         ResidualBlock(
-        #             hidden_dim=hidden_dim,
-        #             nheads=nheads
-        #         )
-        #         for _ in range(nlayers)
-        #     ]
-        # )
-
-        self.mask_token = StaticGraphEmbedding(1, hidden_dim)
+        self.residual_layers = nn.ModuleList(
+            [
+                ResidualBlock(
+                    cond_dim=covariate_dim + input_dim,
+                    hidden_dim=hidden_dim,
+                    nheads=nheads
+                )
+                for _ in range(nlayers)
+            ]
+        )
 
 
     def get_side_info(self, cond_mask, side_info):
@@ -170,51 +169,38 @@ class SpatioTemporalTransformerModel(nn.Module):
         x = mask * x
         x = x.permute(0, 3, 2, 1)
         B, inputdim, K, L = x.shape
+
+
+        cond_info = self.get_side_info(mask, side_info)
+
+
         x = x.reshape(B, inputdim, K * L)
         x = self.input_projection(x)
         x = F.relu(x)
         x = x.reshape(B, hidden_dim, K, L)
-        cond_info = self.get_side_info(mask, side_info)
-        _, cond_dim, _, _ = cond_info.shape
-        cond_info = cond_info.reshape(B, cond_dim, K * L)
-        cond_info = self.cond_projection(cond_info)  # (B,channel,K*L)
-        cond_info = F.relu(cond_info)
-        cond_info = cond_info.reshape(B, hidden_dim, K, L)  # (B,channel,K,L)
-        x = x + cond_info
-        x = x.permute(0, 3, 2, 1)
-        x = self.pe(x)
+
+        # time encoding
+        time_emb = generate_positional_encoding(B, hidden_dim, K, L).to(x.device)
+
+        x = x + time_emb
+
+        # space encoding
+        spatial_emb = self.spatial_embedding_layer(B, L)
+        x = x + spatial_emb
 
 
+        skip = []
+        for layer in self.residual_layers:
+            x, skip_connection = layer(x, cond_info)
+            skip.append(skip_connection)
 
-        # x = x * mask
-        # x = self.input_projection(x)
-        # x = x + self.cond_projection(side_info)
-        # x = self.pe(x)
-
-
-
-
-
-        # # space encoding
-        # spatial_emb = self.spatial_embedding_layer(B, L)
-        # x = x + spatial_emb
-
-
-        # for layer in self.residual_layers:
-        #     x = layer(x)
-
-        x = self.st_transformer_layer(x)
-
-        x = x.permute(0, 3, 2, 1)  # (B,hidden_dim,K,L)
-
-        B, hidden_dim, K, L = x.shape
-
+        x = torch.sum(torch.stack(skip), dim=0) / math.sqrt(len(self.residual_layers))
         x = x.reshape(B, hidden_dim, K * L)
         x = self.output_projection1(x) # (B,hidden_dim,K*L)
         x = F.relu(x)
         x = self.output_projection2(x)  # (B,input_dim,K*L)
         x = x.reshape(B, -1, K, L)  # (B,input_dim,K,L)
-        x = x.permute(0, 3, 2, 1)  # (B, L, K ,input_dim)
+        x = x.permute(0, 3, 2, 1)  # (B,K,L,input_dim)
         return x
 
     @staticmethod
