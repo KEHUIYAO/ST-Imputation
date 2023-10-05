@@ -39,35 +39,6 @@ class DiffusionEmbedding(nn.Module):
         return table
 
 
-def positional_encoding(max_len, hidden_dim):
-    position = torch.arange(max_len).unsqueeze(1)
-    div_term = torch.exp(torch.arange(0, hidden_dim, 2) * (-math.log(10000.0) / hidden_dim))
-    pe = torch.zeros(max_len, hidden_dim)
-    pe[:, 0::2] = torch.sin(position * div_term)
-    pe[:, 1::2] = torch.cos(position * div_term)
-    return pe
-
-
-def generate_positional_encoding(B, hidden_dim, K, L):
-    pe = positional_encoding(L, hidden_dim)  # (L, hidden_dim)
-    pe = pe.permute(1, 0)  # (hidden_dim, L)
-    pe = pe.unsqueeze(0).unsqueeze(2)  # (1, hidden_dim, 1, L)
-    pe = pe.expand(B, hidden_dim, K, L)  # (B, hidden_dim, K, L)
-    return pe
-
-def get_torch_trans(heads=8, layers=1, channels=64):
-    encoder_layer = nn.TransformerEncoderLayer(
-        d_model=channels, nhead=heads, dim_feedforward=64, activation="gelu"
-    )
-    return nn.TransformerEncoder(encoder_layer, num_layers=layers)
-
-
-def Conv1d_with_init(in_channels, out_channels, kernel_size):
-    layer = nn.Conv1d(in_channels, out_channels, kernel_size)
-    nn.init.kaiming_normal_(layer.weight)
-    return layer
-
-
 
 class SpatialEmbedding(nn.Module):
     def __init__(self, K, channel):
@@ -88,48 +59,6 @@ class SpatialEmbedding(nn.Module):
         embed = embed.expand(B, self.channel, self.K, L)  # (B, channel, K, L)
         return embed
 
-
-class ResidualBlock(nn.Module):
-    def __init__(self, hidden_dim, nheads):
-        super().__init__()
-
-        self.time_layer = get_torch_trans(heads=nheads, layers=1, channels=hidden_dim)
-
-        self.feature_layer = get_torch_trans(heads=nheads, layers=1, channels=hidden_dim)
-
-
-
-    def forward_time(self, y, base_shape):
-        B, channel, K, L = base_shape
-        if L == 1:
-            return y
-        y = y.reshape(B, channel, K, L).permute(0, 2, 1, 3).reshape(B * K, channel, L)
-        y = self.time_layer(y.permute(2, 0, 1)).permute(1, 2, 0)
-        y = y.reshape(B, K, channel, L).permute(0, 2, 1, 3).reshape(B, channel, K * L)
-        return y
-
-    def forward_feature(self, y, base_shape):
-        B, channel, K, L = base_shape
-        if K == 1:
-            return y
-        y = y.reshape(B, channel, K, L).permute(0, 3, 1, 2).reshape(B * L, channel, K)
-        y = self.feature_layer(y.permute(2, 0, 1)).permute(1, 2, 0)
-        y = y.reshape(B, L, channel, K).permute(0, 2, 3, 1).reshape(B, channel, K * L)
-        return y
-
-    def forward(self, x):
-
-        B, channel, K, L = x.shape
-
-        base_shape = x.shape
-        y = x.reshape(B, channel, K * L)
-
-        y = self.forward_time(y, base_shape)
-        y = self.forward_feature(y, base_shape)  # (B,channel,K*L)
-
-        x = y.reshape(base_shape)
-
-        return x
 
 
 class CsdiModel(nn.Module):
