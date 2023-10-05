@@ -151,6 +151,7 @@ class SpatioTemporalTransformerModel(nn.Module):
         # space encoding
         B, L, K, C = x.shape
         spatial_emb = self.spatial_embedding_layer(B, L)
+        spatial_emb = spatial_emb.permute(0, 3, 2, 1)  # (B, C, K, L)
         x = x + spatial_emb
 
         x = self.st_transformer_layer(x)
