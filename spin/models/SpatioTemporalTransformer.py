@@ -70,11 +70,6 @@ class ResidualBlock(nn.Module):
 
 
 
-
-
-
-
-
     def forward_time(self, y, base_shape):
         B, channel, K, L = base_shape
         if L == 1:
@@ -128,8 +123,6 @@ class SpatioTemporalTransformerModel(nn.Module):
         self.input_projection = Conv1d_with_init(input_dim, hidden_dim, 1)
         self.output_projection1 = Conv1d_with_init(hidden_dim, hidden_dim, 1)
         self.output_projection2 = Conv1d_with_init(hidden_dim, input_dim, 1)
-        nn.init.zeros_(self.output_projection2.weight)
-
         self.cond_projection = Conv1d_with_init(covariate_dim + input_dim, hidden_dim, 1)
         self.pe = PositionalEncoding(hidden_dim)
 
@@ -198,9 +191,9 @@ class SpatioTemporalTransformerModel(nn.Module):
 
 
 
-        # space encoding
-        spatial_emb = self.spatial_embedding_layer(B, L)
-        x = x + spatial_emb
+        # # space encoding
+        # spatial_emb = self.spatial_embedding_layer(B, L)
+        # x = x + spatial_emb
 
 
         for layer in self.residual_layers:
