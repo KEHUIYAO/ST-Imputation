@@ -132,7 +132,7 @@ class SpatioTemporalTransformerModel(nn.Module):
             ff_size=hidden_dim,
             n_heads=nheads,
             activation='relu',
-            casual=False,
+            causal=False,
             dropout=0.)
 
 
