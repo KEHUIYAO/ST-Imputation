@@ -175,21 +175,21 @@ class SpatioTemporalTransformerModel(nn.Module):
         x = F.relu(x)
         x = x.reshape(B, hidden_dim, K, L)
         cond_info = self.get_side_info(mask, side_info)
-        x = x.reshape(B, inputdim, K * L)
-        x = self.input_projection(x)
         _, cond_dim, _, _ = cond_info.shape
         cond_info = cond_info.reshape(B, cond_dim, K * L)
         cond_info = self.cond_projection(cond_info)  # (B,channel,K*L)
         cond_info = F.relu(cond_info)
         cond_info = cond_info.reshape(B, hidden_dim, K, L)  # (B,channel,K,L)
         x = x + cond_info
+        x = x.permute(0, 3, 2, 1)
+        x = self.pe(x)
+
+
 
         # x = x * mask
         # x = self.input_projection(x)
         # x = x + self.cond_projection(side_info)
-
-        # temporal encoding
-        x = self.pe(x)
+        # x = self.pe(x)
 
 
 
