@@ -148,10 +148,10 @@ class SpatioTemporalTransformerModel(nn.Module):
         x = x + self.cond_projection(side_info)
         x = self.pe(x)
 
-        # # space encoding
-        # B, L, K, C = x.shape
-        # spatial_emb = self.spatial_embedding_layer(B, L)
-        # x = x + spatial_emb
+        # space encoding
+        B, L, K, C = x.shape
+        spatial_emb = self.spatial_embedding_layer(B, L)
+        x = x + spatial_emb
 
         x = self.st_transformer_layer(x)
         x = self.output_projection(x)
