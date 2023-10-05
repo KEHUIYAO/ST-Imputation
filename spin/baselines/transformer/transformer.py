@@ -41,8 +41,8 @@ class TransformerModel(nn.Module):
 
         self.condition_on_u = condition_on_u
         if condition_on_u:
-            self.u_enc = MLP(u_size, hidden_size, n_layers=2)
-        self.h_enc = MLP(input_size, hidden_size, n_layers=2)
+            self.u_enc = MLP(u_size, hidden_size, n_layers=1)
+        self.h_enc = MLP(input_size, hidden_size, n_layers=1)
 
         self.mask_token = StaticGraphEmbedding(1, hidden_size)
 
