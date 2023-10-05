@@ -122,8 +122,8 @@ class SpatioTemporalTransformerModel(nn.Module):
         self.spatial_embedding_layer = SpatialEmbedding(spatial_dim, hidden_dim)
 
         self.pe = PositionalEncoding(hidden_dim)
-        self.cond_projection = MLP(covariate_dim, hidden_dim, n_layers=1)
-        self.input_projection = MLP(input_dim, hidden_dim, n_layers=1)
+        self.cond_projection = MLP(covariate_dim, hidden_dim, n_layers=2)
+        self.input_projection = MLP(input_dim, hidden_dim, n_layers=2)
         self.output_projection = MLP(input_size=hidden_dim,
                                     hidden_size=hidden_dim,
                                     output_size=input_dim,
