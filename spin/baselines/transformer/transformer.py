@@ -71,7 +71,7 @@ class TransformerModel(nn.Module):
             self.readout.append(MLP(input_size=hidden_size,
                                     hidden_size=ff_size,
                                     output_size=output_size,
-                                    n_layers=2,
+                                    n_layers=1,
                                     dropout=dropout))
 
     def forward(self, x, u, mask, **kwargs):
