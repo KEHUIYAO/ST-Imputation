@@ -30,8 +30,8 @@ from tsl.ops.imputation import add_missing_values
 from tsl.utils import parser_utils, numpy_metrics
 
 from spin.baselines import SAITS, TransformerModel, BRITS, MeanModel, InterpolationModel
-from spin.imputers import SPINImputer, SAITSImputer, BRITSImputer, MeanImputer, InterpolationImputer, DiffgrinImputer, CsdiImputer, GrinImputer
-from spin.models import SPINModel, SPINHierarchicalModel, DiffGrinModel, CsdiModel, GrinModel
+from spin.imputers import SPINImputer, SAITSImputer, BRITSImputer, MeanImputer, InterpolationImputer, DiffgrinImputer, CsdiImputer, GrinImputer, TransformerImputer
+from spin.models import SPINModel, SPINHierarchicalModel, DiffGrinModel, CsdiModel, GrinModel, SpatioTemporalTransformerModel
 from spin.scheduler import CosineSchedulerWithRestarts
 
 from tqdm import tqdm
@@ -129,7 +129,7 @@ def get_model_classes(model_str):
     elif model_str == 'saits':
         model, filler = SAITS, SAITSImputer
     elif model_str == 'transformer':
-        model, filler = TransformerModel, SPINImputer
+        model, filler = TransformerModel, TransformerImputer
     elif model_str == 'brits':
         model, filler = BRITS, BRITSImputer
     elif model_str == 'mean':
@@ -140,6 +140,8 @@ def get_model_classes(model_str):
         model, filler = DiffGrinModel, DiffgrinImputer
     elif model_str == 'csdi':
         model, filler = CsdiModel, CsdiImputer
+    elif model_str == 'st_transformer':
+        model, filler = SpatioTemporalTransformerModel, TransformerImputer
     else:
         raise ValueError(f'Model {model_str} not available.')
     return model, filler
@@ -270,6 +272,22 @@ def run_experiment(args):
             'x': 'data'
         }
 
+    elif args.model_name == 'transformer' and 'covariates' in dataset.attributes:
+        exog_map = {'covariates': dataset.attributes['covariates']}
+
+        input_map = {
+            'u': 'covariates',
+            'x': 'data'
+        }
+
+    elif args.model_name == 'st_transformer' and 'covariates' in dataset.attributes:
+        exog_map = {'covariates': dataset.attributes['covariates']}
+        input_map = {
+            'side_info': 'covariates',
+            'x': 'data'
+        }
+
+
     else:
         exog_map = input_map = None
 
@@ -332,11 +350,15 @@ def run_experiment(args):
 
     # torch_dataset[0]
 
-    additional_model_hparams = dict(n_nodes=dm.n_nodes,
-                                    input_size=dm.n_channels,
-                                    u_size=4,
-                                    output_size=dm.n_channels,
-                                    window_size=dm.window)
+    if args.model_name in ['spin', 'spin_h']:
+        additional_model_hparams = dict(n_nodes=dm.n_nodes,
+                                        input_size=dm.n_channels,
+                                        u_size=4,
+                                        output_size=dm.n_channels,
+                                        window_size=dm.window)
+    else:
+        additional_model_hparams = dict(n_nodes=dm.n_nodes, input_size=dm.n_channels, output_size=dm.n_channels,
+                                        window_size=dm.window)
 
     # model's inputs
     model_kwargs = parser_utils.filter_args(
