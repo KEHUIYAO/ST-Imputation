@@ -7,7 +7,7 @@ import torch
 import torch.nn as nn
 from tsl.nn.base import StaticGraphEmbedding
 from tsl.nn.layers import PositionalEncoding
-
+from tsl.nn.blocks.encoders.transformer import SpatioTemporalTransformerLayer
 
 
 def positional_encoding(max_len, hidden_dim):
@@ -126,17 +126,26 @@ class SpatioTemporalTransformerModel(nn.Module):
         self.cond_projection = Conv1d_with_init(covariate_dim + input_dim, hidden_dim, 1)
         self.pe = PositionalEncoding(hidden_dim)
 
+        self.st_transformer_layer = SpatioTemporalTransformerLayer(
+            input_size=hidden_dim,
+            hidden_size=hidden_dim,
+            ff_size=hidden_dim,
+            n_heads=nheads,
+            activation='relu',
+            casual=False,
+            dropout=0.)
 
 
-        self.residual_layers = nn.ModuleList(
-            [
-                ResidualBlock(
-                    hidden_dim=hidden_dim,
-                    nheads=nheads
-                )
-                for _ in range(nlayers)
-            ]
-        )
+
+        # self.residual_layers = nn.ModuleList(
+        #     [
+        #         ResidualBlock(
+        #             hidden_dim=hidden_dim,
+        #             nheads=nheads
+        #         )
+        #         for _ in range(nlayers)
+        #     ]
+        # )
 
         self.mask_token = StaticGraphEmbedding(1, hidden_dim)
 
@@ -187,7 +196,7 @@ class SpatioTemporalTransformerModel(nn.Module):
 
         x = self.pe(x)
 
-        x = x.permute(0, 3, 2, 1)  # (B,hidden_dim,K,L)
+
 
 
 
@@ -196,8 +205,12 @@ class SpatioTemporalTransformerModel(nn.Module):
         # x = x + spatial_emb
 
 
-        for layer in self.residual_layers:
-            x = layer(x)
+        # for layer in self.residual_layers:
+        #     x = layer(x)
+
+        x = self.st_transformer_layer(x)
+
+        x = x.permute(0, 3, 2, 1)  # (B,hidden_dim,K,L)
 
         x = x.reshape(B, hidden_dim, K * L)
         x = self.output_projection1(x) # (B,hidden_dim,K*L)
