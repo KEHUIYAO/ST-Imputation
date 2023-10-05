@@ -101,7 +101,7 @@ class ResidualBlock(nn.Module):
         y = x.reshape(B, channel, K * L)
 
         y = self.forward_time(y, base_shape)
-        # y = self.forward_feature(y, base_shape)  # (B,channel,K*L)
+        y = self.forward_feature(y, base_shape)  # (B,channel,K*L)
 
         x = y.reshape(base_shape)
 
@@ -197,9 +197,9 @@ class SpatioTemporalTransformerModel(nn.Module):
 
 
 
-        # # space encoding
-        # spatial_emb = self.spatial_embedding_layer(B, L)
-        # x = x + spatial_emb
+        # space encoding
+        spatial_emb = self.spatial_embedding_layer(B, L)
+        x = x + spatial_emb
 
 
         for layer in self.residual_layers:
