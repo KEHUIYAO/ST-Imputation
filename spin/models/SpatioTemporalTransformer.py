@@ -8,6 +8,7 @@ import torch.nn as nn
 from tsl.nn.base import StaticGraphEmbedding
 from tsl.nn.layers import PositionalEncoding
 from tsl.nn.blocks.encoders.transformer import SpatioTemporalTransformerLayer
+from tsl.nn.blocks.encoders.mlp import MLP
 
 
 def positional_encoding(max_len, hidden_dim):
@@ -120,11 +121,15 @@ class SpatioTemporalTransformerModel(nn.Module):
 
         self.spatial_embedding_layer = SpatialEmbedding(spatial_dim, hidden_dim)
 
-        self.input_projection = Conv1d_with_init(input_dim, hidden_dim, 1)
+        # self.input_projection = Conv1d_with_init(input_dim, hidden_dim, 1)
+        # self.cond_projection = Conv1d_with_init(covariate_dim + input_dim, hidden_dim, 1)
         self.output_projection1 = Conv1d_with_init(hidden_dim, hidden_dim, 1)
         self.output_projection2 = Conv1d_with_init(hidden_dim, input_dim, 1)
-        self.cond_projection = Conv1d_with_init(covariate_dim + input_dim, hidden_dim, 1)
+
         self.pe = PositionalEncoding(hidden_dim)
+
+        self.cond_projection = MLP(covariate_dim, hidden_dim, n_layers=1)
+        self.input_projection = MLP(input_dim, hidden_dim, n_layers=1)
 
         self.st_transformer_layer = SpatioTemporalTransformerLayer(
             input_size=hidden_dim,
@@ -161,38 +166,43 @@ class SpatioTemporalTransformerModel(nn.Module):
         return cond_info
 
     def forward(self, x, mask, side_info=None, **kwargs):
-        hidden_dim = self.hidden_dim
-        x = mask * x
-        x = x.permute(0, 3, 2, 1)
+        # hidden_dim = self.hidden_dim
+        # x = mask * x
+        # x = x.permute(0, 3, 2, 1)
+        # B, inputdim, K, L = x.shape
+        # x = x.reshape(B, inputdim, K * L)
+        # x = self.input_projection(x)
+        # x = F.relu(x)
+        # x = x.reshape(B, hidden_dim, K, L)
 
-
-
-        B, inputdim, K, L = x.shape
-
-
-        cond_info = self.get_side_info(mask, side_info)
-
-
-        x = x.reshape(B, inputdim, K * L)
+        x = x * mask
         x = self.input_projection(x)
-        x = F.relu(x)
-        x = x.reshape(B, hidden_dim, K, L)
+        x = x + self.cond_projection(side_info)
+
+
+
+        # cond_info = self.get_side_info(mask, side_info)
+
+
+        # x = x.reshape(B, inputdim, K * L)
+        # x = self.input_projection(x)
 
 
 
 
 
-        _, cond_dim, _, _ = cond_info.shape
-        cond_info = cond_info.reshape(B, cond_dim, K * L)
-        cond_info = self.cond_projection(cond_info)  # (B,channel,K*L)
-        cond_info = F.relu(cond_info)
-        cond_info = cond_info.reshape(B, hidden_dim, K, L)  # (B,channel,K,L)
-
-        x = x + cond_info
+        #
+        # _, cond_dim, _, _ = cond_info.shape
+        # cond_info = cond_info.reshape(B, cond_dim, K * L)
+        # cond_info = self.cond_projection(cond_info)  # (B,channel,K*L)
+        # cond_info = F.relu(cond_info)
+        # cond_info = cond_info.reshape(B, hidden_dim, K, L)  # (B,channel,K,L)
+        #
+        # x = x + cond_info
 
 
         # temporal encoding
-        x = x.permute(0, 3, 2, 1)  # (B,L,K,hidden_dim)
+        # x = x.permute(0, 3, 2, 1)  # (B,L,K,hidden_dim)
 
         x = self.pe(x)
 
@@ -211,6 +221,8 @@ class SpatioTemporalTransformerModel(nn.Module):
         x = self.st_transformer_layer(x)
 
         x = x.permute(0, 3, 2, 1)  # (B,hidden_dim,K,L)
+
+        B, hidden_dim, K, L = x.shape
 
         x = x.reshape(B, hidden_dim, K * L)
         x = self.output_projection1(x) # (B,hidden_dim,K*L)
