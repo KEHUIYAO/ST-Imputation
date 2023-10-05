@@ -123,8 +123,8 @@ class SpatioTemporalTransformerModel(nn.Module):
 
         self.input_projection = nn.Conv1d(input_dim, hidden_dim, 1)
         self.cond_projection = nn.Conv1d(covariate_dim + input_dim, hidden_dim, 1)
-        self.output_projection1 = Conv1d_with_init(hidden_dim, hidden_dim, 1)
-        self.output_projection2 = Conv1d_with_init(hidden_dim, input_dim, 1)
+        self.output_projection1 = nn.Conv1d(hidden_dim, hidden_dim, 1)
+        self.output_projection2 = nn.Conv1d(hidden_dim, input_dim, 1)
 
         self.pe = PositionalEncoding(hidden_dim)
 
