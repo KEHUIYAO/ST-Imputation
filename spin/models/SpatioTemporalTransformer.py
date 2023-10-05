@@ -145,7 +145,10 @@ class SpatioTemporalTransformerModel(nn.Module):
         # x: [batches steps nodes features]
         x = x * mask
         x = self.input_projection(x)
-        x = x + self.cond_projection(side_info)
+        x = mask * x + (1 - mask) * self.mask_token()
+        if side_info is not None:
+            side_info = self.cond_projection(side_info)
+            x = x + side_info
         x = self.pe(x)
 
         # space encoding
