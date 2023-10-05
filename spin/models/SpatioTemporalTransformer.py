@@ -183,6 +183,7 @@ class SpatioTemporalTransformerModel(nn.Module):
         _, cond_dim, _, _ = cond_info.shape
         cond_info = cond_info.reshape(B, cond_dim, K * L)
         cond_info = self.cond_projection(cond_info)  # (B,channel,K*L)
+        cond_info = F.relu(cond_info)
         cond_info = cond_info.reshape(B, hidden_dim, K, L)  # (B,channel,K,L)
 
         x = x + cond_info
@@ -210,7 +211,7 @@ class SpatioTemporalTransformerModel(nn.Module):
         x = F.relu(x)
         x = self.output_projection2(x)  # (B,input_dim,K*L)
         x = x.reshape(B, -1, K, L)  # (B,input_dim,K,L)
-        x = x.permute(0, 3, 2, 1)  # (BL, K ,input_dim)
+        x = x.permute(0, 3, 2, 1)  # (B, L, K ,input_dim)
         return x
 
     @staticmethod
