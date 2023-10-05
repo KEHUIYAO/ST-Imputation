@@ -80,7 +80,7 @@ class TransformerModel(nn.Module):
         x = x * mask
 
         h = self.h_enc(x)
-        h = mask * h + (1 - mask) * self.mask_token()
+        #h = mask * h + (1 - mask) * self.mask_token()
 
         if self.condition_on_u:
             h = h + self.u_enc(u)
