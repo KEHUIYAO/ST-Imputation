@@ -112,7 +112,7 @@ class TransformerModel(nn.Module):
         parser.opt_list('--axis', type=str, default='both', tunable=True,
                         options=['steps', 'both'])
 
-        parser.add_argument('--input_size', type=int, default=1)
+        parser.add_argument('--input_size', type=int, default=4)
         parser.add_argument('--hidden_size', type=int, default=64)
         parser.add_argument('--output_size', type=int, default=1)
         parser.add_argument('--ff_size', type=int, default=64)
