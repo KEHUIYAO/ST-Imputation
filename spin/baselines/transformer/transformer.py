@@ -32,7 +32,7 @@ class TransformerModel(nn.Module):
                  ff_size: int,
                  u_size: int,
                  n_heads: int = 1,
-                 n_layers: int = 4,
+                 n_layers: int = 1,
                  dropout: float = 0.,
                  condition_on_u: bool = True,
                  axis: str = 'both',
@@ -97,8 +97,8 @@ class TransformerModel(nn.Module):
 
     @staticmethod
     def add_model_specific_args(parser: ArgParser):
-        parser.opt_list('--n-layers', type=int, default=1, tunable=True,
-                        options=[1, 2, 3])
+        parser.opt_list('--n-layers', type=int, default=4, tunable=True,
+                        options=[1, 2, 3, 4])
         parser.opt_list('--n-heads', type=int, default=1, tunable=True,
                         options=[1, 2, 3])
         parser.opt_list('--dropout', type=float, default=0., tunable=True,
