@@ -89,7 +89,7 @@ class TransformerModel(nn.Module):
 
         out = []
         for encoder, mlp in zip(self.encoder, self.readout):
-            # h = encoder(h)
+            h = encoder(h)
             out.append(mlp(h))
 
         x_hat = out.pop(-1)
@@ -97,7 +97,7 @@ class TransformerModel(nn.Module):
 
     @staticmethod
     def add_model_specific_args(parser: ArgParser):
-        parser.opt_list('--n-layers', type=int, default=1, tunable=True,
+        parser.opt_list('--n-layers', type=int, default=4, tunable=True,
                         options=[1, 2, 3, 4])
         parser.opt_list('--n-heads', type=int, default=1, tunable=True,
                         options=[1, 2, 3])

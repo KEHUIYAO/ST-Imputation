@@ -15,7 +15,7 @@ batch_inference: 16
 
 loss_fn: l1_loss
 lr_scheduler: magic
-lr: 0.001
+lr: 0.0001
 patience: 40
 precision: 16
 batches_epoch: 300
