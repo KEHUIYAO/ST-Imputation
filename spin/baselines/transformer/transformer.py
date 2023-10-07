@@ -6,6 +6,7 @@ from tsl.nn.blocks.encoders.transformer import SpatioTemporalTransformerLayer, \
 from tsl.nn.layers import PositionalEncoding
 from tsl.utils.parser_utils import ArgParser, str_to_bool
 import torch
+from tsl.nn.layers.norm import LayerNorm
 
 
 class TransformerModel(nn.Module):
@@ -66,8 +67,10 @@ class TransformerModel(nn.Module):
 
         self.encoder = nn.ModuleList()
         self.readout = nn.ModuleList()
+        self.layer_norm = nn.ModuleList()
         for _ in range(n_layers):
             self.encoder.append(transformer_layer(**kwargs))
+            self.layer_norm.append(LayerNorm(hidden_size))
             self.readout.append(MLP(input_size=hidden_size,
                                     hidden_size=ff_size,
                                     output_size=output_size,
@@ -88,8 +91,9 @@ class TransformerModel(nn.Module):
         h = self.pe(h)
 
         out = []
-        for encoder, mlp in zip(self.encoder, self.readout):
+        for encoder, mlp, layer_norm in zip(self.encoder, self.readout, self.layer_norm):
             h = encoder(h)
+            h = layer_norm(h)
             out.append(mlp(h))
 
         x_hat = out.pop(-1)
@@ -97,7 +101,7 @@ class TransformerModel(nn.Module):
 
     @staticmethod
     def add_model_specific_args(parser: ArgParser):
-        parser.opt_list('--n-layers', type=int, default=4, tunable=True,
+        parser.opt_list('--n-layers', type=int, default=1, tunable=True,
                         options=[1, 2, 3, 4])
         parser.opt_list('--n-heads', type=int, default=1, tunable=True,
                         options=[1, 2, 3])
