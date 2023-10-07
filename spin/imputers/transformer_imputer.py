@@ -69,7 +69,8 @@ class TransformerImputer(Imputer):
         y_hat, y, loss = self.shared_step(batch, mask=injected_missing)
 
         # Logging
-        self.train_metrics.update(y_hat, y, batch.eval_mask)
+        #self.train_metrics.update(y_hat, y, batch.eval_mask)
+        self.train_metrics.update(y_hat, y, injected_missing)
         self.log_metrics(self.train_metrics, batch_size=batch.batch_size)
         self.log_loss('train', loss, batch_size=batch.batch_size)
         if 'target_nodes' in batch:
