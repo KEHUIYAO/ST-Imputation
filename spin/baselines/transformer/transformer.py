@@ -32,7 +32,7 @@ class TransformerModel(nn.Module):
                  ff_size: int,
                  u_size: int,
                  n_heads: int = 1,
-                 n_layers: int = 1,
+                 n_layers: int = 2,
                  dropout: float = 0.,
                  condition_on_u: bool = True,
                  axis: str = 'both',
