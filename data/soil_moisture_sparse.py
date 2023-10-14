@@ -43,8 +43,18 @@ class SoilMoistureSparse(PandasDataset, MissingValuesMixin):
 
         self.set_eval_mask(eval_mask_new)
 
+        self.original_data = dict()
+
+
 
     def load(self, mode):
+
+        if mode == 'train':
+            date_start = '2016-01-01'
+            date_end = '2018-12-31'
+        else:
+            date_start = '2019-01-01'
+            date_end = '2020-12-31'
 
         df = pd.read_csv(os.path.join(current_dir, 'smap_1km.csv'))
         y = df.iloc[:, 4:]
@@ -52,7 +62,7 @@ class SoilMoistureSparse(PandasDataset, MissingValuesMixin):
         # transpose the dataframe
         y = y.T
 
-        tmp = pd.DataFrame(index=pd.date_range(start='2016-01-01', end='2020-12-31'))
+        tmp = pd.DataFrame(index=pd.date_range(start=date_start, end=date_end))
 
         y.index = pd.to_datetime(y.index)
         y = tmp.merge(y, left_index=True, right_index=True, how='left')
@@ -61,6 +71,7 @@ class SoilMoistureSparse(PandasDataset, MissingValuesMixin):
 
         mask = ~np.isnan(y)
         mask = mask.astype(int)
+        self.original_data['mask'] = mask
 
         rows, cols = y.shape
 
@@ -81,6 +92,8 @@ class SoilMoistureSparse(PandasDataset, MissingValuesMixin):
         # y_imputed[(eval_mask==1) & (mask==1)] = y[(eval_mask==1) & (mask==1)]
 
         y = y_imputed.copy()
+
+        self.original_data['y'] = y
 
         y = pd.DataFrame(y)
 
@@ -106,7 +119,7 @@ class SoilMoistureSparse(PandasDataset, MissingValuesMixin):
             x = x.T
 
             x.index = pd.to_datetime(x.index)
-            tmp = pd.DataFrame(index=pd.date_range(start='2016-01-01', end='2020-12-31'))
+            tmp = pd.DataFrame(index=pd.date_range(start=date_start, end=date_end))
 
             x = tmp.merge(x, left_index=True, right_index=True, how='left')
 
@@ -125,6 +138,8 @@ class SoilMoistureSparse(PandasDataset, MissingValuesMixin):
         scaler.fit(X)
         X = scaler.transform(X)
         X = X.reshape((L, K, C))
+
+        self.original_data['X'] = X
 
         # if mode == 'train':
         #     y = y.iloc[:-365, :]
