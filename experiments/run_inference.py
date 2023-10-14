@@ -519,6 +519,7 @@ def run_experiment(args):
 
     #seq_len = 1827
     seq_len = dataset.original_data['y'].shape[0]
+    print(seq_len)
     #num_nodes = 1296
     num_nodes = dataset.original_data['y'].shape[1]
     y_true_original = np.zeros([seq_len, num_nodes])
