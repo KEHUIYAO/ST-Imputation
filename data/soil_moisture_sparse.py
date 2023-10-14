@@ -64,7 +64,7 @@ class SoilMoistureSparse(PandasDataset, MissingValuesMixin):
 
         rows, cols = y.shape
 
-        p_missing = 0.5
+        p_missing = 0.2
         time_points_to_eval = self.rng.choice(rows, int(p_missing * rows), replace=False)
         eval_mask = np.zeros_like(y)
         eval_mask[time_points_to_eval, :] = 1
