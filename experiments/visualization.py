@@ -10,11 +10,13 @@ log_dir = 'log/soil_moisture_sparse_point/interpolation/20230922T105905_4501766/
 #
 # log_dir = 'log/soil_moisture_sparse_point/grin/20230920T200001_144194526/output.npz'
 #
-log_dir = 'log/soil_moisture_sparse_point/grin/20230926T181808_532941873/output.npz'
+# log_dir = 'log/soil_moisture_sparse_point/grin/20230930T195129_175358131/output.npz'
 #
 # log_dir = 'log/soil_moisture_sparse_point/spin_h/20230922T041452_741390810/output.npz'
 
-log_dir = 'log/soil_moisture_sparse_point/csdi/20230928T000101_259491669/output.npz'
+log_dir = 'log/soil_moisture_sparse_point/st_transformer/20231005T192936_202512050/output.npz'
+
+log_dir = 'log/soil_moisture_sparse_point/transformer/20231014T192741_374245530/output.npz'
 
 
 
@@ -30,26 +32,26 @@ check_mae = numpy_metrics.masked_mae(y_hat, y_true, eval_mask)
 n_eval = np.sum(eval_mask)
 print(f'Evalpoint: {n_eval}')
 print(f'Test MAE: {check_mae:.5f}')
-
-# in-situ data
-df = pd.read_csv('../data/Insitu_gap_filling_data.csv')
-df['Date'] = pd.to_datetime(df['Date'], format='%Y%m%d')
-y2 = df[df['Date'].dt.year == 2016].copy()
-y2 = y2.pivot(index='Date', columns='POINTID', values='SMAP_1km').values
-y2 = y2[np.newaxis, ...]
-mask = np.ones_like(y2)
-mask[np.isnan(y2)] = 0
-
-# calculate ubrmse
-bias = np.mean((y2 - y_hat)[mask == 1])
-tmp = (y2-y_hat)**2
-tmp = np.mean(tmp[mask==1])
-ubrmse = np.sqrt(tmp - bias**2)
-print(f'UBRMSE: {ubrmse:.5f}')
-
-# calculate correlation
-corr = np.corrcoef(y2[mask == 1], y_hat[mask == 1])[0, 1]
-print(f'Correlation: {corr:.5f}')
+#
+# # in-situ data
+# df = pd.read_csv('../data/Insitu_gap_filling_data.csv')
+# df['Date'] = pd.to_datetime(df['Date'], format='%Y%m%d')
+# y2 = df[df['Date'].dt.year == 2016].copy()
+# y2 = y2.pivot(index='Date', columns='POINTID', values='SMAP_1km').values
+# y2 = y2[np.newaxis, ...]
+# mask = np.ones_like(y2)
+# mask[np.isnan(y2)] = 0
+#
+# # calculate ubrmse
+# bias = np.mean((y2 - y_hat)[mask == 1])
+# tmp = (y2-y_hat)**2
+# tmp = np.mean(tmp[mask==1])
+# ubrmse = np.sqrt(tmp - bias**2)
+# print(f'UBRMSE: {ubrmse:.5f}')
+#
+# # calculate correlation
+# corr = np.corrcoef(y2[mask == 1], y_hat[mask == 1])[0, 1]
+# print(f'Correlation: {corr:.5f}')
 
 
 
@@ -85,7 +87,7 @@ K = all_target_np.shape[2]
 dataind = 0
 
 plt.rcParams["font.size"] = 16
-fig, axes = plt.subplots(nrows=9, ncols=4,figsize=(36.0, 24.0))
+fig, axes = plt.subplots(nrows=9, ncols=4,figsize=(128, 24.0))
 
 fig.delaxes(axes[-1][-1])
 
