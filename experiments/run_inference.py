@@ -517,8 +517,10 @@ def run_experiment(args):
     check_mae = numpy_metrics.masked_mae(y_hat, y_true, eval_mask)
     print(f'Test MAE: {check_mae:.2f}')
 
-    seq_len = 1827
-    num_nodes = 1296
+    #seq_len = 1827
+    seq_len = dataset.original_data['y'].shape[0]
+    #num_nodes = 1296
+    num_nodes = dataset.original_data['y'].shape[1]
     y_true_original = np.zeros([seq_len, num_nodes])
     y_hat_original = np.zeros([seq_len, num_nodes])
     if enable_multiple_imputation:
