@@ -27,6 +27,7 @@ class SoilMoistureSparse(PandasDataset, MissingValuesMixin):
 
     def __init__(self, mode='train', seed=42):
         self.rng = np.random.RandomState(seed)
+        self.original_data = {}
         df, dist, mask, st_coords_new, X_new, eval_mask_new = self.load(mode=mode)
 
         super().__init__(dataframe=df,
@@ -43,7 +44,7 @@ class SoilMoistureSparse(PandasDataset, MissingValuesMixin):
 
         self.set_eval_mask(eval_mask_new)
 
-        self.original_data = {}
+
 
 
 
