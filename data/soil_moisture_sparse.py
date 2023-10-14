@@ -72,13 +72,13 @@ class SoilMoistureSparse(PandasDataset, MissingValuesMixin):
         y_imputed = y.copy()
         y_imputed[eval_mask == 1] = np.nan
 
-        # # impute using interpolation method
-        # for i in range(cols):
-        #     y_imputed[:, i] = pd.Series(y_imputed[:, i]).interpolate(method='linear', limit_direction='both').values
+        # impute using interpolation method
+        for i in range(cols):
+            y_imputed[:, i] = pd.Series(y_imputed[:, i]).interpolate(method='linear', limit_direction='both').values
 
         y_imputed[np.isnan(y_imputed)] = 0
 
-        # y_imputed[(eval_mask==1) & (mask==1)] = y[(eval_mask==1) & (mask==1)]
+        y_imputed[(eval_mask==1) & (mask==1)] = y[(eval_mask==1) & (mask==1)]
 
         y = y_imputed.copy()
 
