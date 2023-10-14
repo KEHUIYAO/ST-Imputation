@@ -46,9 +46,6 @@ class SoilMoistureSparse(PandasDataset, MissingValuesMixin):
 
     def load(self, mode):
 
-
-
-
         df = pd.read_csv(os.path.join(current_dir, 'smap_1km.csv'))
         y = df.iloc[:, 4:]
 
@@ -67,7 +64,7 @@ class SoilMoistureSparse(PandasDataset, MissingValuesMixin):
 
         rows, cols = y.shape
 
-        p_missing = 0.2
+        p_missing = 0.5
         time_points_to_eval = self.rng.choice(rows, int(p_missing * rows), replace=False)
         eval_mask = np.zeros_like(y)
         eval_mask[time_points_to_eval, :] = 1
@@ -75,13 +72,13 @@ class SoilMoistureSparse(PandasDataset, MissingValuesMixin):
         y_imputed = y.copy()
         y_imputed[eval_mask == 1] = np.nan
 
-        # impute using interpolation method
-        for i in range(cols):
-            y_imputed[:, i] = pd.Series(y_imputed[:, i]).interpolate(method='linear', limit_direction='both').values
+        # # impute using interpolation method
+        # for i in range(cols):
+        #     y_imputed[:, i] = pd.Series(y_imputed[:, i]).interpolate(method='linear', limit_direction='both').values
 
         y_imputed[np.isnan(y_imputed)] = 0
 
-        y_imputed[(eval_mask==1) & (mask==1)] = y[(eval_mask==1) & (mask==1)]
+        # y_imputed[(eval_mask==1) & (mask==1)] = y[(eval_mask==1) & (mask==1)]
 
         y = y_imputed.copy()
 
