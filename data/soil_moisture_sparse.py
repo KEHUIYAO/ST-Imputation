@@ -43,7 +43,7 @@ class SoilMoistureSparse(PandasDataset, MissingValuesMixin):
 
         self.set_eval_mask(eval_mask_new)
 
-        self.original_data = dict()
+        self.original_data = {}
 
 
 
