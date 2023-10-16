@@ -76,7 +76,7 @@ class SoilMoistureSparse(PandasDataset, MissingValuesMixin):
 
         rows, cols = y.shape
 
-        p_missing = 0.5
+        p_missing = 0.2
         time_points_to_eval = self.rng.choice(rows, int(p_missing * rows), replace=False)
         eval_mask = np.zeros_like(y)
         eval_mask[time_points_to_eval, :] = 1
@@ -133,6 +133,20 @@ class SoilMoistureSparse(PandasDataset, MissingValuesMixin):
             X.append(x_mask)
 
         X = np.stack(X, axis=-1)
+
+        # static features
+        static_features = ['elevation', 'slope', 'aspect', 'hillshade', 'clay', 'sand', 'bd', 'soc', 'LC']
+        tmp = pd.read_csv(os.path.join(current_dir, 'constant_grid.csv'))
+        tmp = tmp.iloc[:, 4:].values  # (K, C)
+        tmp = np.tile(tmp[np.newaxis, :, :], (X.shape[0], 1, 1))
+        X = np.concatenate([X, tmp], axis=-1)
+
+
+
+
+
+        self.original_data['original_X'] = X.copy()
+
         L, K, C = X.shape
         X = X.reshape((L * K, C))
         scaler = StandardScaler()
