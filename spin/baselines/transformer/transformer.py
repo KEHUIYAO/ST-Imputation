@@ -98,7 +98,7 @@ class TransformerModel(nn.Module):
                                     n_layers=2,
                                     dropout=dropout))
 
-    def forward(self, x, u, mask, **kwargs):
+    def forward(self, x, mask, u=None, **kwargs):
         # x: [batches steps nodes features]
         # u: [batches steps (nodes) features]
         x = x * mask
@@ -106,7 +106,7 @@ class TransformerModel(nn.Module):
         h = self.h_enc(x)
         h = mask * h + (1 - mask) * self.mask_token()
 
-        if self.condition_on_u:
+        if self.condition_on_u and u is not None:
             h = h + self.u_enc(u)
 
         h = self.pe(h)
