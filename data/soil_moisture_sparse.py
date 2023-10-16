@@ -30,17 +30,17 @@ class SoilMoistureSparse(PandasDataset, MissingValuesMixin):
         self.original_data = {}
         df, dist, mask, st_coords_new, X_new, eval_mask_new = self.load(mode=mode)
 
-        super().__init__(dataframe=df,
-                         similarity_score="distance",
-                         mask=mask,
-                         attributes=dict(dist=dist,
-                          st_coords=st_coords_new, covariates=X_new))
-
         # super().__init__(dataframe=df,
         #                  similarity_score="distance",
         #                  mask=mask,
         #                  attributes=dict(dist=dist,
-        #                   st_coords=st_coords_new))
+        #                   st_coords=st_coords_new, covariates=X_new))
+
+        super().__init__(dataframe=df,
+                         similarity_score="distance",
+                         mask=mask,
+                         attributes=dict(dist=dist,
+                          st_coords=st_coords_new))
 
         self.set_eval_mask(eval_mask_new)
 
@@ -109,9 +109,9 @@ class SoilMoistureSparse(PandasDataset, MissingValuesMixin):
 
 
         # spatiotemporal covariates
-        # covariates = ['smap_36km', 'prcp_1km', 'srad_1km', 'tmax_1km', 'tmin_1km', 'vp_1km']
+        covariates = ['smap_36km', 'prcp_1km', 'srad_1km', 'tmax_1km', 'tmin_1km', 'vp_1km']
         # covariates = ['prcp_1km', 'srad_1km', 'tmax_1km', 'tmin_1km', 'vp_1km']
-        covariates = ['smap_36km']
+        # covariates = ['smap_36km']
 
         # covariates = ['prcp', 'srad', 'tmax', 'tmin', 'vp', 'SMAP_36km', 'elevation', 'slope', 'aspect', 'hillshade', 'clay', 'sand', 'bd', 'soc', 'LC']
 

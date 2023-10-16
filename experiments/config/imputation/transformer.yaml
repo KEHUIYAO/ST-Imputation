@@ -23,4 +23,4 @@ check_val_every_n_epoch: 1
 l2_reg: 0
 
 ### Model params #############################################################
-u_size: 2
+u_size: 0
