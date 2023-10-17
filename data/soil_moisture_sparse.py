@@ -30,17 +30,17 @@ class SoilMoistureSparse(PandasDataset, MissingValuesMixin):
         self.original_data = {}
         df, dist, mask, st_coords_new, X_new, eval_mask_new = self.load(mode=mode)
 
-        # super().__init__(dataframe=df,
-        #                  similarity_score="distance",
-        #                  mask=mask,
-        #                  attributes=dict(dist=dist,
-        #                   st_coords=st_coords_new, covariates=X_new))
-
         super().__init__(dataframe=df,
                          similarity_score="distance",
                          mask=mask,
                          attributes=dict(dist=dist,
-                          st_coords=st_coords_new))
+                          st_coords=st_coords_new, covariates=X_new))
+
+        # super().__init__(dataframe=df,
+        #                  similarity_score="distance",
+        #                  mask=mask,
+        #                  attributes=dict(dist=dist,
+        #                   st_coords=st_coords_new))
 
         self.set_eval_mask(eval_mask_new)
 
@@ -136,12 +136,12 @@ class SoilMoistureSparse(PandasDataset, MissingValuesMixin):
 
         X = np.stack(X, axis=-1)
 
-        # # static features
-        # static_features = ['elevation', 'slope', 'aspect', 'hillshade', 'clay', 'sand', 'bd', 'soc', 'LC']
-        # tmp = pd.read_csv(os.path.join(current_dir, 'constant_grid.csv'))
-        # tmp = tmp.iloc[:, 4:].values  # (K, C)
-        # tmp = np.tile(tmp[np.newaxis, :, :], (X.shape[0], 1, 1))
-        # X = np.concatenate([X, tmp], axis=-1)
+        # static features
+        static_features = ['elevation', 'slope', 'aspect', 'hillshade', 'clay', 'sand', 'bd', 'soc', 'LC']
+        tmp = pd.read_csv(os.path.join(current_dir, 'constant_grid.csv'))
+        tmp = tmp.iloc[:, 4:].values  # (K, C)
+        tmp = np.tile(tmp[np.newaxis, :, :], (X.shape[0], 1, 1))
+        X = np.concatenate([X, tmp], axis=-1)
 
 
 
