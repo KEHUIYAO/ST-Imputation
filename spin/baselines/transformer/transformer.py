@@ -54,7 +54,7 @@ class TransformerModel(nn.Module):
                  n_layers: int = 1,
                  dropout: float = 0.,
                  condition_on_u: bool = True,
-                 axis: str = 'nodes',
+                 axis: str = 'both',
                  activation: str = 'elu',
                  spatial_dim: int = 36):
         super(TransformerModel, self).__init__()
