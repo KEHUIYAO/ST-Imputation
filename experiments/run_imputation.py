@@ -267,6 +267,14 @@ def run_experiment(args):
     else:
         exog_map = input_map = None
 
+    if 'st_coords' in dataset.attributes:
+        if exog_map is None and input_map is None:
+            exog_map = {'st_coords': dataset.attributes['st_coords']}
+            input_map = {'x': 'data', 'st_coords': 'st_coords'}
+        else:
+            exog_map['st_coords'] = dataset.attributes['st_coords']
+            input_map['st_coords'] = 'st_coords'
+
     if args.model_name in ['spin', 'spin_h', 'grin', 'diffgrin']:
         adj = dataset.get_connectivity(threshold=args.adj_threshold,
                                        include_self=False,
@@ -437,6 +445,23 @@ def run_experiment(args):
     ########################################
     # testing                              #
     ########################################
+    scaler = StandardScaler(axis=(0, 1))
+    scaler.fit(dataset.numpy(), dataset.training_mask)
+    scaler.bias = torch.tensor(scaler.bias)
+    scaler.scale = torch.tensor(scaler.scale)
+    scalers = {'data': scaler}
+
+    # instantiate dataset
+    torch_dataset = ImputationDataset(*dataset.numpy(return_idx=True),
+                                      training_mask=dataset.training_mask,
+                                      eval_mask=dataset.eval_mask,
+                                      connectivity=adj,
+                                      exogenous=exog_map,
+                                      input_map=input_map,
+                                      window=args.window,
+                                      stride=args.stride,
+                                      scalers=scalers)
+
     # get train/val/test indices
     splitter = dataset.get_splitter(val_len=0,
                                     test_len=len(torch_dataset))
