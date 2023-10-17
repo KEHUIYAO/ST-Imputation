@@ -54,7 +54,7 @@ class TransformerModel(nn.Module):
                  n_layers: int = 1,
                  dropout: float = 0.,
                  condition_on_u: bool = True,
-                 axis: str = 'both',
+                 axis: str = 'step',
                  activation: str = 'elu',
                  spatial_dim: int = 36):
         super(TransformerModel, self).__init__()
@@ -120,7 +120,7 @@ class TransformerModel(nn.Module):
 
         out = []
         for encoder, mlp, layer_norm in zip(self.encoder, self.readout, self.layer_norm):
-            # h = encoder(h)
+            h = encoder(h)
             h = layer_norm(h)
             out.append(mlp(h))
 
