@@ -34,7 +34,7 @@ from spin.imputers import SPINImputer, SAITSImputer, BRITSImputer, MeanImputer, 
 from spin.models import SPINModel, SPINHierarchicalModel, DiffGrinModel, CsdiModel, GrinModel, SpatioTemporalTransformerModel
 from spin.scheduler import CosineSchedulerWithRestarts
 
-import tqdm
+from tqdm import tqdm
 
 def parse_args():
     # Argument parser
