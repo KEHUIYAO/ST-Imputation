@@ -29,18 +29,10 @@ impute_column_with_fallback <- function(column_data) {
 }
 
 
-df <- read.csv('../data/SMAP_Climate_In_Situ_TxSON.csv')
-
-# Convert to Date
-df$Date <- as.Date(as.character(df$Date), format='%Y%m%d')
-
-# Filter data for the year 2017
-y <- df %>% filter(format(Date, "%Y") == "2017")
-
-setDT(y)
-y <- dcast(y, Date ~ POINTID, value.var = "SMAP_1km")[, -"Date", with = FALSE]
+y <- read.csv('../data/smap_1km.csv')
+y <- y[1:nrow(y), 5:ncol(y)]
 y <- as.matrix(y)
-
+y <- t(y)
 
 # Randomly mask out rows with probability p = 0.2
 p <- 0.2
