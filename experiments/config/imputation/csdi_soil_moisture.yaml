@@ -7,11 +7,11 @@ lr_scheduler: magic
 loss_fn: mse_loss
 n_samples: 10
 hidden_dim: 64
-whiten_prob: [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]
+whiten_prob: [0.2, 0.5, 0.8]
 batch_size: 16
 batch_inference: 16
 check_val_every_n_epoch: 10
-covariate_dim: 12
+covariate_dim: 21
 diffusion_embedding_dim: 128
 l2_reg: 0
 batches_epoch: 500
