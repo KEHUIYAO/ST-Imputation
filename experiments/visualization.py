@@ -16,7 +16,7 @@ log_dir = 'log/soil_moisture_sparse_point/interpolation/20230922T105905_4501766/
 
 log_dir = 'log/soil_moisture_sparse_point/st_transformer/20231005T192936_202512050/output.npz'
 
-log_dir = 'log/soil_moisture_sparse_point/transformer/20231014T192741_374245530/output.npz'
+log_dir = 'log/soil_moisture_sparse_point/transformer/20231018T022334_829125978/output.npz'
 
 
 
