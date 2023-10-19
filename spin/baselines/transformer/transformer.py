@@ -109,7 +109,7 @@ class TransformerModel(nn.Module):
         if self.condition_on_u and u is not None:
             h = h + self.u_enc(u)
 
-        h = self.pe(h)
+        #h = self.pe(h)
 
 
         # space encoding
