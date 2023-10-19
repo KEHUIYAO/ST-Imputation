@@ -109,7 +109,7 @@ class TransformerModel(nn.Module):
         if self.condition_on_u and u is not None:
             h = h + self.u_enc(u)
 
-        #h = self.pe(h)
+        h = self.pe(h)
 
 
         # space encoding
@@ -120,7 +120,7 @@ class TransformerModel(nn.Module):
 
         out = []
         for encoder, mlp, layer_norm in zip(self.encoder, self.readout, self.layer_norm):
-            #h = encoder(h)
+            h = encoder(h)
             h = layer_norm(h)
             out.append(mlp(h))
 
