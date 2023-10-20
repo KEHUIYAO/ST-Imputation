@@ -60,19 +60,18 @@ def parse_args():
     # Argument parser
     ########################################
     parser = ArgParser()
-    parser.add_argument("--model-name", type=str, default='csdi')
+    parser.add_argument("--model-name", type=str, default='transformer')
     #parser.add_argument("--model-name", type=str, default='interpolation')
     #parser.add_argument("--model-name", type=str, default='spin_h')
     parser.add_argument("--dataset-name", type=str, default='soil_moisture_sparse_point')
     #parser.add_argument("--config", type=str, default=None)
     # parser.add_argument("--config", type=str, default='imputation/interpolation_soil_moisture.yaml')
     # parser.add_argument("--config", type=str, default='imputation/spin_h_soil_moisture.yaml')
-    parser.add_argument("--config", type=str, default='imputation/csdi_soil_moisture.yaml')
+    parser.add_argument("--config", type=str, default='imputation/transformer_soil_moisture.yaml')
     parser.add_argument('--epochs', type=int, default=200)
     parser.add_argument('--check-val-every-n-epoch', type=int, default=1)
     parser.add_argument('--batch-inference', type=int, default=32)
-    parser.add_argument('--load-from-pretrained', type=str,
-                        default=None)
+    parser.add_argument('--load-from-pretrained', type=str, default='log/soil_moisture_sparse_point/transformer/20231019T152213_738205459/epoch=106-step=23325.ckpt')
     # parser.add_argument('--load-from-pretrained', type=str,
     #                     default='~/ST-Imputation/experiments/log/soil_moisture_sparse_point/csdi/20230920T224443_184448715/epoch=19-step=1079.ckpt')
     # parser.add_argument('--load-from-pretrained', type=str,
