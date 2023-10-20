@@ -54,8 +54,8 @@ class SoilMoistureSparse(PandasDataset, MissingValuesMixin):
             date_start = '2016-01-01'
             date_end = '2020-12-31'
         else:
-            date_start = '2016-01-01'
-            date_end = '2020-12-31'
+            date_start = '2021-01-01'
+            date_end = '2022-12-31'
 
         df = pd.read_csv(os.path.join(current_dir, 'smap_1km.csv'))
         y = df.iloc[:, 4:]

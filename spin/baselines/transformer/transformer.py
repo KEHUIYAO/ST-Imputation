@@ -116,7 +116,7 @@ class TransformerModel(nn.Module):
         B, L, K, C = h.shape
         spatial_emb = self.spatial_embedding_layer(B, L)
         spatial_emb = spatial_emb.permute(0, 3, 2, 1)  # (B, C, K, L)
-        #h = h + spatial_emb
+        h = h + spatial_emb
 
         out = []
         for encoder, mlp, layer_norm in zip(self.encoder, self.readout, self.layer_norm):
