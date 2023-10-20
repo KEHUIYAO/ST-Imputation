@@ -513,8 +513,8 @@ def run_experiment(args):
         multiple_imputations = np.concatenate(multiple_imputations, axis=0)
         multiple_imputations = multiple_imputations.squeeze(-1)
 
-    check_mae = numpy_metrics.masked_mae(y_hat, y_true, eval_mask)
-    print(f'Test MAE: {check_mae:.2f}')
+    # check_mae = numpy_metrics.masked_mae(y_hat, y_true, eval_mask)
+    # print(f'Test MAE: {check_mae:.2f}')
 
     #seq_len = 1827
     seq_len = dataset.original_data['y'].shape[0]
@@ -542,7 +542,10 @@ def run_experiment(args):
                     y_hat_multiple_imputation[:, ts_pos[0], ts_pos[1]] = multiple_imputations[b, :, l, k]
 
     check_mae = numpy_metrics.masked_mae(y_hat_original, y_true_original, eval_mask_original)
-    print(f'Test MAE: {check_mae:.2f}')
+    print(f'Test MAE: {check_mae:.6f}')
+
+    check_mre = numpy_metrics.masked_mre(y_hat_original, y_true_original, eval_mask_original)
+    print(f'Test MRE: {check_mre:.6f}')
 
     # save output to file
     output = {}
