@@ -296,6 +296,108 @@ def get_dataloader(dataset, mode):
 
     return dm
 
+def evaluate_imputer(dataset, dm, imputer, logdir):
+
+    imputer.freeze()
+
+
+    y_hat = []
+    y_true = []
+    eval_mask = []
+    observed_mask = []
+    st_coords = []
+
+    if args.model_name in ['csdi', 'diffgrin']:
+        enable_multiple_imputation = True
+    else:
+        enable_multiple_imputation = False
+
+    if enable_multiple_imputation:
+        multiple_imputations = []
+
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    for batch_id, batch in enumerate(
+            tqdm(dm.test_dataloader(batch_size=args.batch_inference), desc="Processing", leave=True)):
+
+        batch = batch.to(device)
+        imputer = imputer.to(device)
+
+        batch = imputer.on_after_batch_transfer(batch, 0)
+        output = imputer.predict_step(batch, batch_id)
+
+        y_hat.append(output['y_hat'].detach().cpu().numpy())
+        y_true.append(output['y'].detach().cpu().numpy())
+        eval_mask.append(output['eval_mask'].detach().cpu().numpy())
+        observed_mask.append(output['observed_mask'].detach().cpu().numpy())
+        st_coords.append(output['st_coords'].detach().cpu().numpy())
+
+        if enable_multiple_imputation:
+            multiple_imputations.append(output['imputed_samples'].detach().cpu().numpy())
+
+    y_hat = np.concatenate(y_hat, axis=0)
+    y_true = np.concatenate(y_true, axis=0)
+    eval_mask = np.concatenate(eval_mask, axis=0)
+    observed_mask = np.concatenate(observed_mask, axis=0)
+    st_coords = np.concatenate(st_coords, axis=0)
+
+    y_hat = y_hat.squeeze(-1)
+    y_true = y_true.squeeze(-1)
+    eval_mask = eval_mask.squeeze(-1)
+    observed_mask = observed_mask.squeeze(-1)
+
+    if enable_multiple_imputation:
+        multiple_imputations = np.concatenate(multiple_imputations, axis=0)
+        multiple_imputations = multiple_imputations.squeeze(-1)
+
+    # check_mae = numpy_metrics.masked_mae(y_hat, y_true, eval_mask)
+    # print(f'Test MAE: {check_mae:.4f}')
+
+    # seq_len = 1827
+    seq_len = dataset.original_data['y'].shape[0]
+    print(seq_len)
+    # num_nodes = 1296
+    num_nodes = dataset.original_data['y'].shape[1]
+    y_true_original = np.zeros([seq_len, num_nodes])
+    y_hat_original = np.zeros([seq_len, num_nodes])
+    if enable_multiple_imputation:
+        y_hat_multiple_imputation = np.zeros([multiple_imputations.shape[1], seq_len, num_nodes])
+    observed_mask_original = np.zeros([seq_len, num_nodes])
+    eval_mask_original = np.zeros([seq_len, num_nodes])
+
+    B, L, K = y_hat.shape
+    for b in range(B):
+        for l in range(L):
+            for k in range(K):
+                ts_pos = st_coords[b, l, k, ::-1]
+                y_true_original[ts_pos[0], ts_pos[1]] = y_true[b, l, k]
+                y_hat_original[ts_pos[0], ts_pos[1]] = y_hat[b, l, k]
+                observed_mask_original[ts_pos[0], ts_pos[1]] = observed_mask[b, l, k]
+                eval_mask_original[ts_pos[0], ts_pos[1]] = eval_mask[b, l, k]
+
+                if enable_multiple_imputation:
+                    y_hat_multiple_imputation[:, ts_pos[0], ts_pos[1]] = multiple_imputations[b, :, l, k]
+
+    check_mae = numpy_metrics.masked_mae(y_hat_original, y_true_original, eval_mask_original)
+    print(f'Test MAE: {check_mae:.6f}')
+
+    check_mre = numpy_metrics.masked_mre(y_hat_original, y_true_original, eval_mask_original)
+    print(f'Test MRE: {check_mre:.6f}')
+
+    # save output to file
+    output = {}
+    output['y_hat'] = y_hat_original[np.newaxis, :, :, np.newaxis]
+    output['y'] = y_true_original[np.newaxis, :, :, np.newaxis]
+    output['eval_mask'] = eval_mask_original[np.newaxis, :, :, np.newaxis]
+    output['observed_mask'] = observed_mask_original[np.newaxis, :, :, np.newaxis]
+
+    if enable_multiple_imputation:
+        output['imputed_samples'] = y_hat_multiple_imputation[np.newaxis, :, :, :, np.newaxis]
+
+    np.savez(os.path.join(logdir, 'output.npz'), **output)
+
+    return check_mae, check_mre
+
+
 
 def run_experiment(args):
     torch.set_num_threads(1)
@@ -324,9 +426,14 @@ def run_experiment(args):
                   indent=4, sort_keys=True)
 
 
+
+
+    ########################################
+    # training                             #
+    ########################################
+    args.mode = 'train'
     # get dataloader
     dm = get_dataloader(dataset, args.mode)
-
 
     ########################################
     # predictor                            #
@@ -371,10 +478,6 @@ def run_experiment(args):
         scheduler_kwargs=scheduler_kwargs,
         **imputer_kwargs
     )
-
-    ########################################
-    # training                             #
-    ########################################
 
     require_training = True
     if args.model_name in ['mean', 'interpolation']:
@@ -424,113 +527,10 @@ def run_experiment(args):
          **imputer_kwargs)
 
     ########################################
-    # testing                             #
-    ########################################
-    imputer.freeze()
-    # trainer.test(imputer, dataloaders=dm.test_dataloader(
-    #     batch_size=args.batch_inference))
-
-    ########################################
-    # in-sample testing                              #
+    # in-sample testing
     ########################################
     dm = get_dataloader(dataset, mode='test')
-
-    y_hat = []
-    y_true = []
-    eval_mask = []
-    observed_mask = []
-    st_coords = []
-
-    if args.model_name in ['csdi', 'diffgrin']:
-        enable_multiple_imputation = True
-    else:
-        enable_multiple_imputation = False
-
-    if enable_multiple_imputation:
-        multiple_imputations = []
-
-    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    for batch_id, batch in enumerate(
-            tqdm(dm.test_dataloader(batch_size=args.batch_inference), desc="Processing", leave=True)):
-
-        batch = batch.to(device)
-        imputer = imputer.to(device)
-
-        batch = imputer.on_after_batch_transfer(batch, 0)
-        output = imputer.predict_step(batch, batch_id)
-
-        y_hat.append(output['y_hat'].detach().cpu().numpy())
-        y_true.append(output['y'].detach().cpu().numpy())
-        eval_mask.append(output['eval_mask'].detach().cpu().numpy())
-        observed_mask.append(output['observed_mask'].detach().cpu().numpy())
-        st_coords.append(output['st_coords'].detach().cpu().numpy())
-
-        if enable_multiple_imputation:
-            multiple_imputations.append(output['imputed_samples'].detach().cpu().numpy())
-
-    y_hat = np.concatenate(y_hat, axis=0)
-    y_true = np.concatenate(y_true, axis=0)
-    eval_mask = np.concatenate(eval_mask, axis=0)
-    observed_mask = np.concatenate(observed_mask, axis=0)
-    st_coords = np.concatenate(st_coords, axis=0)
-
-    y_hat = y_hat.squeeze(-1)
-    y_true = y_true.squeeze(-1)
-    eval_mask = eval_mask.squeeze(-1)
-    observed_mask = observed_mask.squeeze(-1)
-
-    if enable_multiple_imputation:
-        multiple_imputations = np.concatenate(multiple_imputations, axis=0)
-        multiple_imputations = multiple_imputations.squeeze(-1)
-
-    # check_mae = numpy_metrics.masked_mae(y_hat, y_true, eval_mask)
-    # print(f'Test MAE: {check_mae:.4f}')
-
-    # seq_len = 1827
-    seq_len = dataset.original_data['y'].shape[0]
-    print(seq_len)
-    # num_nodes = 1296
-    num_nodes = dataset.original_data['y'].shape[1]
-    y_true_original = np.zeros([seq_len, num_nodes])
-    y_hat_original = np.zeros([seq_len, num_nodes])
-    if enable_multiple_imputation:
-        y_hat_multiple_imputation = np.zeros([multiple_imputations.shape[1], seq_len, num_nodes])
-    observed_mask_original = np.zeros([seq_len, num_nodes])
-    eval_mask_original = np.zeros([seq_len, num_nodes])
-
-    B, L, K = y_hat.shape
-    for b in range(B):
-        for l in range(L):
-            for k in range(K):
-                ts_pos = st_coords[b, l, k, ::-1]
-                y_true_original[ts_pos[0], ts_pos[1]] = y_true[b, l, k]
-                y_hat_original[ts_pos[0], ts_pos[1]] = y_hat[b, l, k]
-                observed_mask_original[ts_pos[0], ts_pos[1]] = observed_mask[b, l, k]
-                eval_mask_original[ts_pos[0], ts_pos[1]] = eval_mask[b, l, k]
-
-                if enable_multiple_imputation:
-                    y_hat_multiple_imputation[:, ts_pos[0], ts_pos[1]] = multiple_imputations[b, :, l, k]
-
-    check_mae = numpy_metrics.masked_mae(y_hat_original, y_true_original, eval_mask_original)
-    print(f'Test MAE: {check_mae:.6f}')
-
-    check_mre = numpy_metrics.masked_mre(y_hat_original, y_true_original, eval_mask_original)
-    print(f'Test MRE: {check_mre:.6f}')
-
-    # save output to file
-    output = {}
-    output['y_hat'] = y_hat_original[np.newaxis, :, :, np.newaxis]
-    output['y'] = y_true_original[np.newaxis, :, :, np.newaxis]
-    output['eval_mask'] = eval_mask_original[np.newaxis, :, :, np.newaxis]
-    output['observed_mask'] = observed_mask_original[np.newaxis, :, :, np.newaxis]
-
-    if enable_multiple_imputation:
-        output['imputed_samples'] = y_hat_multiple_imputation[np.newaxis, :, :, :, np.newaxis]
-
-    np.savez(os.path.join(logdir, 'in_sample.npz'), **output)
-
-    in_sample_mae = check_mae
-    in_sample_mre = check_mre
+    in_sample_mae, in_sample_mre = evaluate_imputer(dataset, dm, imputer, logdir)
 
     ########################################
     # out-sample testing                              #
@@ -538,103 +538,8 @@ def run_experiment(args):
     args.mode = 'test'
     dataset = get_dataset(args.dataset_name, args)
     dm = get_dataloader(dataset, mode='test')
+    out_sample_mae, out_sample_mre = evaluate_imputer(dataset, dm, imputer, logdir)
 
-    y_hat = []
-    y_true = []
-    eval_mask = []
-    observed_mask = []
-    st_coords = []
-
-    if args.model_name in ['csdi', 'diffgrin']:
-        enable_multiple_imputation = True
-    else:
-        enable_multiple_imputation = False
-
-    if enable_multiple_imputation:
-        multiple_imputations = []
-
-    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    for batch_id, batch in enumerate(
-            tqdm(dm.test_dataloader(batch_size=args.batch_inference), desc="Processing", leave=True)):
-
-        batch = batch.to(device)
-        imputer = imputer.to(device)
-
-        batch = imputer.on_after_batch_transfer(batch, 0)
-        output = imputer.predict_step(batch, batch_id)
-
-        y_hat.append(output['y_hat'].detach().cpu().numpy())
-        y_true.append(output['y'].detach().cpu().numpy())
-        eval_mask.append(output['eval_mask'].detach().cpu().numpy())
-        observed_mask.append(output['observed_mask'].detach().cpu().numpy())
-        st_coords.append(output['st_coords'].detach().cpu().numpy())
-
-        if enable_multiple_imputation:
-            multiple_imputations.append(output['imputed_samples'].detach().cpu().numpy())
-
-    y_hat = np.concatenate(y_hat, axis=0)
-    y_true = np.concatenate(y_true, axis=0)
-    eval_mask = np.concatenate(eval_mask, axis=0)
-    observed_mask = np.concatenate(observed_mask, axis=0)
-    st_coords = np.concatenate(st_coords, axis=0)
-
-    y_hat = y_hat.squeeze(-1)
-    y_true = y_true.squeeze(-1)
-    eval_mask = eval_mask.squeeze(-1)
-    observed_mask = observed_mask.squeeze(-1)
-
-    if enable_multiple_imputation:
-        multiple_imputations = np.concatenate(multiple_imputations, axis=0)
-        multiple_imputations = multiple_imputations.squeeze(-1)
-
-    # check_mae = numpy_metrics.masked_mae(y_hat, y_true, eval_mask)
-    # print(f'Test MAE: {check_mae:.4f}')
-
-    # seq_len = 1827
-    seq_len = dataset.original_data['y'].shape[0]
-    print(seq_len)
-    # num_nodes = 1296
-    num_nodes = dataset.original_data['y'].shape[1]
-    y_true_original = np.zeros([seq_len, num_nodes])
-    y_hat_original = np.zeros([seq_len, num_nodes])
-    if enable_multiple_imputation:
-        y_hat_multiple_imputation = np.zeros([multiple_imputations.shape[1], seq_len, num_nodes])
-    observed_mask_original = np.zeros([seq_len, num_nodes])
-    eval_mask_original = np.zeros([seq_len, num_nodes])
-
-    B, L, K = y_hat.shape
-    for b in range(B):
-        for l in range(L):
-            for k in range(K):
-                ts_pos = st_coords[b, l, k, ::-1]
-                y_true_original[ts_pos[0], ts_pos[1]] = y_true[b, l, k]
-                y_hat_original[ts_pos[0], ts_pos[1]] = y_hat[b, l, k]
-                observed_mask_original[ts_pos[0], ts_pos[1]] = observed_mask[b, l, k]
-                eval_mask_original[ts_pos[0], ts_pos[1]] = eval_mask[b, l, k]
-
-                if enable_multiple_imputation:
-                    y_hat_multiple_imputation[:, ts_pos[0], ts_pos[1]] = multiple_imputations[b, :, l, k]
-
-    check_mae = numpy_metrics.masked_mae(y_hat_original, y_true_original, eval_mask_original)
-    print(f'Test MAE: {check_mae:.6f}')
-
-    check_mre = numpy_metrics.masked_mre(y_hat_original, y_true_original, eval_mask_original)
-    print(f'Test MRE: {check_mre:.6f}')
-
-    # save output to file
-    output = {}
-    output['y_hat'] = y_hat_original[np.newaxis, :, :, np.newaxis]
-    output['y'] = y_true_original[np.newaxis, :, :, np.newaxis]
-    output['eval_mask'] = eval_mask_original[np.newaxis, :, :, np.newaxis]
-    output['observed_mask'] = observed_mask_original[np.newaxis, :, :, np.newaxis]
-
-    if enable_multiple_imputation:
-        output['imputed_samples'] = y_hat_multiple_imputation[np.newaxis, :, :, :, np.newaxis]
-
-    np.savez(os.path.join(logdir, 'out_sample.npz'), **output)
-
-    out_sample_mae = check_mae
-    out_sample_mre = check_mre
 
     return in_sample_mae, in_sample_mre, out_sample_mae, out_sample_mre
 
