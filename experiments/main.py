@@ -549,7 +549,7 @@ def main(args):
     args = copy.deepcopy(args)
 
     # seed
-    n_rep = 2
+    n_rep = 5
     seed_list = [i for i in range(n_rep)]
 
     # model
@@ -568,7 +568,6 @@ def main(args):
 
     for seed in seed_list:
         args.seed = seed
-        args.epochs = 2
 
         for model in model_list:
             args.model_name = model
