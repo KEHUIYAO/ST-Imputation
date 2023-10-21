@@ -549,7 +549,7 @@ def main(args):
     args = copy.deepcopy(args)
 
     # seed
-    n_rep = 5
+    n_rep = 2
     seed_list = [i for i in range(n_rep)]
 
     # model
