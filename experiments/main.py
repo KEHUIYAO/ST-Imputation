@@ -656,7 +656,8 @@ def main(args):
     args = copy.deepcopy(args)
 
     # seed
-    seed_list = [i for i in range(10)]
+    n_rep = 5
+    seed_list = [i for i in range(n_rep)]
 
     # model
     # model_list = ['transformer', 'grin', 'csdi']
