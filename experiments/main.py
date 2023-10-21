@@ -730,9 +730,12 @@ def main(args):
         for model in model_list:
             args.model_name = model
             args.config = model_config[model]
-            mae, mre = run_experiment(args)
-            result[model]['validation']['mae'].append(mae)
-            result[model]['test']['mre'].append(mre)
+            in_sample_mae, in_sample_mre, out_sample_mae, out_sample_mre = run_experiment(args)
+
+            result[model]['validation']['mae'].append(in_sample_mae)
+            result[model]['validation']['mre'].append(in_sample_mre)
+            result[model]['test']['mae'].append(out_sample_mae)
+            result[model]['test']['mre'].append(out_sample_mre)
 
 
     # compute mean and std
