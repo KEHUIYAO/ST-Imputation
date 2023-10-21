@@ -675,6 +675,7 @@ def main(args):
 
     for seed in seed_list:
         args.seed = seed
+        args.epochs = 2
 
         for model in model_list:
             args.model_name = model
