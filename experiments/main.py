@@ -178,33 +178,7 @@ def get_scheduler(scheduler_name: str = None, args=None):
     return scheduler_class, scheduler_kwargs
 
 
-
-def run_experiment(args):
-    torch.set_num_threads(1)
-    pl.seed_everything(args.seed)
-
-    # script flags
-    is_spin = args.model_name in ['spin', 'spin_h']
-
-    model_cls, imputer_class = get_model_classes(args.model_name)
-    dataset = get_dataset(args.dataset_name, args)
-
-    # logger.info(args)
-
-    ########################################
-    # create logdir and save configuration #
-    ########################################
-
-    exp_name = datetime.datetime.now().strftime('%Y%m%dT%H%M%S')
-    exp_name = f"{exp_name}_{args.seed}"
-    logdir = os.path.join(config.log_dir, args.dataset_name,
-                          args.model_name, exp_name)
-    # save config for logging
-    os.makedirs(logdir, exist_ok=True)
-    with open(os.path.join(logdir, 'config.yaml'), 'w') as fp:
-        yaml.dump(parser_utils.config_dict_from_args(args), fp,
-                  indent=4, sort_keys=True)
-
+def get_dataloader(dataset, mode):
     ########################################
     # data module                          #
     ########################################
@@ -262,7 +236,7 @@ def run_experiment(args):
     if args.model_name in ['spin', 'spin_h', 'grin', 'diffgrin']:
         adj = dataset.get_connectivity(threshold=args.adj_threshold,
                                        include_self=False,
-                                       force_symmetric=is_spin)
+                                       )
     else:
         adj = None
 
@@ -276,21 +250,83 @@ def run_experiment(args):
                                       window=args.window,
                                       stride=args.stride)
 
+    if mode == 'train':
+        # get train/val/test indices
+        splitter = dataset.get_splitter(val_len=args.val_len,
+                                        test_len=args.test_len)
+
+        # scalers = {'data': MinMaxScaler(axis=(0, 1), out_range=(-1, 1))}
+        scalers = {'data': StandardScaler(axis=(0, 1))}
+
+        dm = SpatioTemporalDataModule(torch_dataset,
+                                      scalers=scalers,
+                                      splitter=splitter,
+                                      batch_size=args.batch_size // args.split_batch_in)
 
 
-    # get train/val/test indices
-    splitter = dataset.get_splitter(val_len=args.val_len,
-                                    test_len=args.test_len)
+    elif mode=='test':
+        scaler = StandardScaler(axis=(0, 1))
+        scaler.fit(dataset.numpy(), dataset.training_mask)
+        scaler.bias = torch.tensor(scaler.bias)
+        scaler.scale = torch.tensor(scaler.scale)
+        scalers = {'data': scaler}
 
-    # scalers = {'data': MinMaxScaler(axis=(0, 1), out_range=(-1, 1))}
-    scalers = {'data': StandardScaler(axis=(0, 1))}
+        # instantiate dataset
+        torch_dataset = ImputationDataset(*dataset.numpy(return_idx=True),
+                                          training_mask=dataset.training_mask,
+                                          eval_mask=dataset.eval_mask,
+                                          connectivity=adj,
+                                          exogenous=exog_map,
+                                          input_map=input_map,
+                                          window=args.window,
+                                          stride=args.stride,
+                                          scalers=scalers)
+
+        # get train/val/test indices
+        splitter = dataset.get_splitter(val_len=0,
+                                        test_len=len(torch_dataset))
+
+        dm = SpatioTemporalDataModule(torch_dataset,
+                                      splitter=splitter,
+                                      batch_size=args.batch_size // args.split_batch_in)
 
 
-    dm = SpatioTemporalDataModule(torch_dataset,
-                                  scalers=scalers,
-                                  splitter=splitter,
-                                  batch_size=args.batch_size // args.split_batch_in)
     dm.setup()
+
+
+    return dm
+
+
+def run_experiment(args):
+    torch.set_num_threads(1)
+    pl.seed_everything(args.seed)
+
+    # script flags
+    is_spin = args.model_name in ['spin', 'spin_h']
+
+    model_cls, imputer_class = get_model_classes(args.model_name)
+    dataset = get_dataset(args.dataset_name, args)
+
+    # logger.info(args)
+
+    ########################################
+    # create logdir and save configuration #
+    ########################################
+
+    exp_name = datetime.datetime.now().strftime('%Y%m%dT%H%M%S')
+    exp_name = f"{exp_name}_{args.seed}"
+    logdir = os.path.join(config.log_dir, args.dataset_name,
+                          args.model_name, exp_name)
+    # save config for logging
+    os.makedirs(logdir, exist_ok=True)
+    with open(os.path.join(logdir, 'config.yaml'), 'w') as fp:
+        yaml.dump(parser_utils.config_dict_from_args(args), fp,
+                  indent=4, sort_keys=True)
+
+
+    # get dataloader
+    dm = get_dataloader(dataset, args.mode)
+
 
     ########################################
     # predictor                            #
@@ -397,31 +433,7 @@ def run_experiment(args):
     ########################################
     # in-sample testing                              #
     ########################################
-    scaler = StandardScaler(axis=(0, 1))
-    scaler.fit(dataset.numpy(), dataset.training_mask)
-    scaler.bias = torch.tensor(scaler.bias)
-    scaler.scale = torch.tensor(scaler.scale)
-    scalers = {'data': scaler}
-
-    # instantiate dataset
-    torch_dataset = ImputationDataset(*dataset.numpy(return_idx=True),
-                                      training_mask=dataset.training_mask,
-                                      eval_mask=dataset.eval_mask,
-                                      connectivity=adj,
-                                      exogenous=exog_map,
-                                      input_map=input_map,
-                                      window=args.window,
-                                      stride=args.stride,
-                                      scalers=scalers)
-
-    # get train/val/test indices
-    splitter = dataset.get_splitter(val_len=0,
-                                    test_len=len(torch_dataset))
-
-    dm = SpatioTemporalDataModule(torch_dataset,
-                                  splitter=splitter,
-                                  batch_size=args.batch_size // args.split_batch_in)
-    dm.setup()
+    dm = get_dataloader(dataset, mode='test')
 
     y_hat = []
     y_true = []
@@ -525,81 +537,7 @@ def run_experiment(args):
     ########################################
     args.mode = 'test'
     dataset = get_dataset(args.dataset_name, args)
-    scaler = StandardScaler(axis=(0, 1))
-    scaler.fit(dataset.numpy(), dataset.training_mask)
-    scaler.bias = torch.tensor(scaler.bias)
-    scaler.scale = torch.tensor(scaler.scale)
-    scalers = {'data': scaler}
-
-    if args.model_name == 'csdi' and 'covariates' in dataset.attributes:
-        exog_map = {'covariates': dataset.attributes['covariates']}
-        input_map = {
-            'side_info': 'covariates',
-            'x': 'data'
-        }
-
-    elif args.model_name == 'grin' and 'covariates' in dataset.attributes:
-        exog_map = {'covariates': dataset.attributes['covariates']}
-        input_map = {
-            'u': 'covariates',
-            'x': 'data'
-        }
-
-
-    elif args.model_name == 'diffgrin' and 'covariates' in dataset.attributes:
-
-        exog_map = {'covariates': dataset.attributes['covariates']}
-
-        input_map = {
-            'side_info': 'covariates',
-            'x': 'data'
-        }
-
-    elif args.model_name == 'transformer' and 'covariates' in dataset.attributes:
-        exog_map = {'covariates': dataset.attributes['covariates']}
-
-        input_map = {
-            'u': 'covariates',
-            'x': 'data'
-        }
-
-    elif args.model_name == 'st_transformer' and 'covariates' in dataset.attributes:
-        exog_map = {'covariates': dataset.attributes['covariates']}
-        input_map = {
-            'side_info': 'covariates',
-            'x': 'data'
-        }
-
-    else:
-        exog_map = input_map = None
-
-    if 'st_coords' in dataset.attributes:
-        if exog_map is None and input_map is None:
-            exog_map = {'st_coords': dataset.attributes['st_coords']}
-            input_map = {'x': 'data', 'st_coords': 'st_coords'}
-        else:
-            exog_map['st_coords'] = dataset.attributes['st_coords']
-            input_map['st_coords'] = 'st_coords'
-
-    # instantiate dataset
-    torch_dataset = ImputationDataset(*dataset.numpy(return_idx=True),
-                                      training_mask=dataset.training_mask,
-                                      eval_mask=dataset.eval_mask,
-                                      connectivity=adj,
-                                      exogenous=exog_map,
-                                      input_map=input_map,
-                                      window=args.window,
-                                      stride=args.stride,
-                                      scalers=scalers)
-
-    # get train/val/test indices
-    splitter = dataset.get_splitter(val_len=0,
-                                    test_len=len(torch_dataset))
-
-    dm = SpatioTemporalDataModule(torch_dataset,
-                                  splitter=splitter,
-                                  batch_size=args.batch_size // args.split_batch_in)
-    dm.setup()
+    dm = get_dataloader(dataset, mode='test')
 
     y_hat = []
     y_true = []
