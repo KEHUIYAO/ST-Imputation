@@ -391,8 +391,8 @@ def run_experiment(args):
     # testing                             #
     ########################################
     imputer.freeze()
-    trainer.test(imputer, dataloaders=dm.test_dataloader(
-        batch_size=args.batch_inference))
+    # trainer.test(imputer, dataloaders=dm.test_dataloader(
+    #     batch_size=args.batch_inference))
 
     ########################################
     # in-sample testing                              #
@@ -530,6 +530,56 @@ def run_experiment(args):
     scaler.bias = torch.tensor(scaler.bias)
     scaler.scale = torch.tensor(scaler.scale)
     scalers = {'data': scaler}
+
+    if args.model_name == 'csdi' and 'covariates' in dataset.attributes:
+        exog_map = {'covariates': dataset.attributes['covariates']}
+        input_map = {
+            'side_info': 'covariates',
+            'x': 'data'
+        }
+
+    elif args.model_name == 'grin' and 'covariates' in dataset.attributes:
+        exog_map = {'covariates': dataset.attributes['covariates']}
+        input_map = {
+            'u': 'covariates',
+            'x': 'data'
+        }
+
+
+    elif args.model_name == 'diffgrin' and 'covariates' in dataset.attributes:
+
+        exog_map = {'covariates': dataset.attributes['covariates']}
+
+        input_map = {
+            'side_info': 'covariates',
+            'x': 'data'
+        }
+
+    elif args.model_name == 'transformer' and 'covariates' in dataset.attributes:
+        exog_map = {'covariates': dataset.attributes['covariates']}
+
+        input_map = {
+            'u': 'covariates',
+            'x': 'data'
+        }
+
+    elif args.model_name == 'st_transformer' and 'covariates' in dataset.attributes:
+        exog_map = {'covariates': dataset.attributes['covariates']}
+        input_map = {
+            'side_info': 'covariates',
+            'x': 'data'
+        }
+
+    else:
+        exog_map = input_map = None
+
+    if 'st_coords' in dataset.attributes:
+        if exog_map is None and input_map is None:
+            exog_map = {'st_coords': dataset.attributes['st_coords']}
+            input_map = {'x': 'data', 'st_coords': 'st_coords'}
+        else:
+            exog_map['st_coords'] = dataset.attributes['st_coords']
+            input_map['st_coords'] = 'st_coords'
 
     # instantiate dataset
     torch_dataset = ImputationDataset(*dataset.numpy(return_idx=True),
