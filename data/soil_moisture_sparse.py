@@ -81,6 +81,8 @@ class SoilMoistureSparse(PandasDataset, MissingValuesMixin):
         eval_mask = np.zeros_like(y)
         eval_mask[time_points_to_eval, :] = 1
 
+        self.original_data['eval_mask'] = eval_mask
+
         y_imputed = y.copy()
         # y_imputed[eval_mask == 1] = np.nan
         #
@@ -185,11 +187,11 @@ class SoilMoistureSparse(PandasDataset, MissingValuesMixin):
         i = 0
         j = 0
         complete_split = []
-        for j in range(0, 36, 6):
-            for i in range(0, 36, 6):
+        for j in range(0, 36, 2):
+            for i in range(0, 36, 2):
                 cur_split = []
-                for jj in range(j, j+6):
-                    for ii in range(i, i+6):
+                for jj in range(j, j+16):
+                    for ii in range(i, i+16):
                         cur_split.append(pointid_dict[(sorted_x[ii], sorted_y[jj])])
                 complete_split.append(cur_split)
 
