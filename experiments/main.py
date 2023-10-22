@@ -529,7 +529,7 @@ def run_experiment(args):
     ########################################
     # in-sample testing
     ########################################
-    dm = get_dataloader(dataset, mode='test')
+    dm = get_dataloader(dataset, args)
     in_sample_mae, in_sample_mre = evaluate_imputer(dataset, dm, imputer, logdir)
 
     ########################################
@@ -537,7 +537,7 @@ def run_experiment(args):
     ########################################
     args.mode = 'test'
     dataset = get_dataset(args.dataset_name, args)
-    dm = get_dataloader(dataset, mode='test')
+    dm = get_dataloader(dataset, args)
     out_sample_mae, out_sample_mre = evaluate_imputer(dataset, dm, imputer, logdir)
 
 
