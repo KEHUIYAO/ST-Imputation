@@ -559,6 +559,8 @@ def main(args):
                     'grin': 'imputation/grin_soil_moisture.yaml',
                     'csdi': 'imputation/csdi_soil_moisture.yaml'}
 
+
+
     # svaing result
     result = {}
     result['transformer'] = {'validation':{'mae':[], 'mre': []}, 'test':{'mae':[], 'mre': []}}
@@ -572,6 +574,15 @@ def main(args):
         for model in model_list:
             args.model_name = model
             args.config = model_config[model]
+
+            if args.config is not None:
+                cfg_path = os.path.join(config.config_dir, args.config)
+                with open(cfg_path, 'r') as fp:
+                    config_args = yaml.load(fp, Loader=yaml.FullLoader)
+                for arg in config_args:
+                    setattr(args, arg, config_args[arg])
+
+
             in_sample_mae, in_sample_mre, out_sample_mae, out_sample_mre = run_experiment(args)
 
             result[model]['validation']['mae'].append(in_sample_mae)
@@ -584,11 +595,11 @@ def main(args):
     for model in model_list:
         for mode in ['validation', 'test']:
             for metric in ['mae', 'mre']:
-                result[model][mode][metric] = np.mean(result[model][mode][metric])
-                result[model][mode][metric+'_std'] = np.std(result[model][mode][metric])
+                metric_mean = np.mean(result[model][mode][metric])
+                metric_std = np.std(result[model][mode][metric])
 
                 # print result
-                print(f'{model} {mode} {metric}: {result[model][mode][metric]:.6f} +/- {result[model][mode][metric+"_std"]:.6f}')
+                print(f'{model} {mode} {metric}: {metric_mean:.6f} +/- {metric_std:.6f}')
 
     # save result
     np.savez(os.path.join(config.log_dir, 'result.npz'), **result)
