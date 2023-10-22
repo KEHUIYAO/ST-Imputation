@@ -187,8 +187,8 @@ class SoilMoistureSparse(PandasDataset, MissingValuesMixin):
         i = 0
         j = 0
         complete_split = []
-        for j in range(0, 36, 2):
-            for i in range(0, 36, 2):
+        for j in range(0, 20, 2):
+            for i in range(0, 20, 2):
                 cur_split = []
                 for jj in range(j, j+16):
                     for ii in range(i, i+16):
