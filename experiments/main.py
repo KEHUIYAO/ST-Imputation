@@ -480,7 +480,7 @@ def run_experiment(args):
     )
 
     require_training = True
-    if args.model_name in ['mean', 'interpolation']:
+    if args.model_name in ['grin']:
         require_training = False
 
     if args.load_from_pretrained is not None:
