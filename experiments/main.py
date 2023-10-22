@@ -554,7 +554,7 @@ def main(args):
 
     # model
     # model_list = ['transformer', 'grin', 'csdi']
-    model_list = ['transformer']
+    model_list = ['csdi']
     model_config = {'transformer': 'imputation/transformer_soil_moisture.yaml',
                     'grin': 'imputation/grin_soil_moisture.yaml',
                     'csdi': 'imputation/csdi_soil_moisture.yaml'}
