@@ -480,7 +480,7 @@ def run_experiment(args):
     )
 
     require_training = True
-    if args.model_name in ['grin']:
+    if args.model_name in ['mean', 'interpolation']:
         require_training = False
 
     if args.load_from_pretrained is not None:
@@ -554,7 +554,7 @@ def main(args):
 
     # model
     # model_list = ['transformer', 'grin', 'csdi']
-    model_list = ['mean', 'interpolation']
+    model_list = ['grin']
     model_config = {'transformer': 'imputation/transformer_soil_moisture.yaml',
                     'grin': 'imputation/grin_soil_moisture.yaml',
                     'csdi': 'imputation/csdi_soil_moisture.yaml',
