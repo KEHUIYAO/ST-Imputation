@@ -565,9 +565,15 @@ def main(args):
 
     # svaing result
     result = {}
-    result['transformer'] = {'validation':{'mae':[], 'mre': []}, 'test':{'mae':[], 'mre': []}}
-    result['grin'] = {'validation':{'mae':[], 'mre': []}, 'test':{'mae':[], 'mre': []}}
-    result['csdi'] = {'validation':{'mae':[], 'mre': []}, 'test':{'mae':[], 'mre': []}}
+    for model in model_list:
+        result[model] = {}
+        result[model]['validation'] = {}
+        result[model]['test'] = {}
+        result[model]['validation']['mae'] = []
+        result[model]['validation']['mre'] = []
+        result[model]['test']['mae'] = []
+        result[model]['test']['mre'] = []
+
 
 
     for seed in seed_list:
