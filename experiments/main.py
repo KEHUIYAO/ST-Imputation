@@ -178,7 +178,7 @@ def get_scheduler(scheduler_name: str = None, args=None):
     return scheduler_class, scheduler_kwargs
 
 
-def get_dataloader(dataset, mode):
+def get_dataloader(dataset, args=None):
     ########################################
     # data module                          #
     ########################################
@@ -250,7 +250,7 @@ def get_dataloader(dataset, mode):
                                       window=args.window,
                                       stride=args.stride)
 
-    if mode == 'train':
+    if args.mode == 'train':
         # get train/val/test indices
         splitter = dataset.get_splitter(val_len=args.val_len,
                                         test_len=args.test_len)
@@ -264,7 +264,7 @@ def get_dataloader(dataset, mode):
                                       batch_size=args.batch_size // args.split_batch_in)
 
 
-    elif mode=='test':
+    elif args.mode=='test':
         scaler = StandardScaler(axis=(0, 1))
         scaler.fit(dataset.numpy(), dataset.training_mask)
         scaler.bias = torch.tensor(scaler.bias)
@@ -296,7 +296,7 @@ def get_dataloader(dataset, mode):
 
     return dm
 
-def evaluate_imputer(dataset, dm, imputer, logdir):
+def evaluate_imputer(dataset, dm, imputer, logdir, args=None):
 
     imputer.freeze()
 
@@ -433,7 +433,7 @@ def run_experiment(args):
     ########################################
     args.mode = 'train'
     # get dataloader
-    dm = get_dataloader(dataset, args.mode)
+    dm = get_dataloader(dataset, args)
 
     ########################################
     # predictor                            #
