@@ -218,7 +218,7 @@ def get_dataloader(dataset, args=None):
     elif args.model_name == 'st_transformer' and 'covariates' in dataset.attributes:
         exog_map = {'covariates': dataset.attributes['covariates']}
         input_map = {
-            'side_info': 'covariates',
+            'u': 'covariates',
             'x': 'data'
         }
 
