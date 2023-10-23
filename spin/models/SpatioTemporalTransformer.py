@@ -374,11 +374,11 @@ class SpatioTemporalTransformerLayer(nn.Module):
         x = self.skip_conn(x) + self.dropout(self.temporal_att(self.norm1(x), attn_mask=mask)[0])
         # reshape x to be [batch*steps, nodes, features]
         B, L, K, C = x.shape
-        x = x.view(B*L, K, C)
-        x = x + self.dropout(self.spatial_att[0](self.norm2(x)))
-        x = x + self.dropout(self.spatial_att[1](self.norm3(x)))
-        # reshape x back to be [batch, steps, nodes, features]
-        x = x.view(B, L, K, C)
+        # x = x.view(B*L, K, C)
+        # x = x + self.dropout(self.spatial_att[0](self.norm2(x)))
+        # x = x + self.dropout(self.spatial_att[1](self.norm3(x)))
+        # # reshape x back to be [batch, steps, nodes, features]
+        # x = x.view(B, L, K, C)
         x = x + self.mlp(x)
         return x
 
