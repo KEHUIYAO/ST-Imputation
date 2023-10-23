@@ -338,17 +338,17 @@ class SpatioTemporalTransformerLayer(nn.Module):
                                                axis='steps',
                                                causal=causal)
 
-        # self.spatial_att = MultiHeadAttention(embed_dim=hidden_size,
-        #                                       qdim=hidden_size,
-        #                                       kdim=hidden_size,
-        #                                       vdim=hidden_size,
-        #                                       heads=n_heads,
-        #                                       axis='nodes',
-        #                                       causal=False)
+        self.spatial_att = MultiHeadAttention(embed_dim=hidden_size,
+                                              qdim=hidden_size,
+                                              kdim=hidden_size,
+                                              vdim=hidden_size,
+                                              heads=n_heads,
+                                              axis='nodes',
+                                              causal=False)
 
 
-        self.spatial_att = nn.ModuleList([SwinTransformerBlock(dim=hidden_size, input_resolution=(16, 16), num_heads=1, window_size=4, shift_size=0, mlp_ratio=1),
-                                          SwinTransformerBlock(dim=hidden_size, input_resolution=(16, 16), num_heads=1, window_size=4, shift_size=2, mlp_ratio=1)])
+        # self.spatial_att = nn.ModuleList([SwinTransformerBlock(dim=hidden_size, input_resolution=(16, 16), num_heads=1, window_size=4, shift_size=0, mlp_ratio=1),
+        #                                   SwinTransformerBlock(dim=hidden_size, input_resolution=(16, 16), num_heads=1, window_size=4, shift_size=2, mlp_ratio=1)])
 
         self.skip_conn = nn.Linear(input_size, hidden_size)
 
@@ -372,13 +372,16 @@ class SpatioTemporalTransformerLayer(nn.Module):
         # x: [batch, steps, nodes, features]
 
         x = self.skip_conn(x) + self.dropout(self.temporal_att(self.norm1(x), attn_mask=mask)[0])
-        # reshape x to be [batch*steps, nodes, features]
-        B, L, K, C = x.shape
+        x = x + self.dropout(self.spatial_att(self.norm2(x), attn_mask=mask)[0])
+
+        # # reshape x to be [batch*steps, nodes, features]
+        # B, L, K, C = x.shape
         # x = x.view(B*L, K, C)
         # x = x + self.dropout(self.spatial_att[0](self.norm2(x)))
         # x = x + self.dropout(self.spatial_att[1](self.norm3(x)))
         # # reshape x back to be [batch, steps, nodes, features]
         # x = x.view(B, L, K, C)
+
         x = x + self.mlp(x)
         return x
 
