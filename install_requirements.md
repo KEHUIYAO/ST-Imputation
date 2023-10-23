@@ -11,6 +11,7 @@ pip install pytorch_lightning==1.5.0
 pip install torchmetrics==0.7
 pip install torch-spatiotemporal==0.1.1
 pip install matplotlib
+pip install timm==0.4.12
 ```
 
 # Install packages for M1 macOS.
@@ -26,6 +27,7 @@ pip install pandas==1.3.5
 pip install pytorch_lightning==1.5.0
 pip install torchmetrics==0.7
 pip install matplotlib
+pip install timm==0.4.12
 ```
 
 
