@@ -205,7 +205,7 @@ class SwinTransformerBlock(nn.Module):
             self.window_size = min(self.input_resolution)
         assert 0 <= self.shift_size < self.window_size, "shift_size must in 0-window_size"
 
-        # self.norm1 = norm_layer(dim)
+        self.norm1 = norm_layer(dim)
         self.attn = WindowAttention(
             dim, window_size=to_2tuple(self.window_size), num_heads=num_heads,
             qkv_bias=qkv_bias, qk_scale=qk_scale, attn_drop=attn_drop, proj_drop=drop)
@@ -247,7 +247,7 @@ class SwinTransformerBlock(nn.Module):
         assert L == H * W, "input feature has wrong size"
 
         # shortcut = x
-        # x = self.norm1(x)
+        x = self.norm1(x)
         x = x.view(B, H, W, C)
 
         # cyclic shift
@@ -347,14 +347,12 @@ class SpatioTemporalTransformerLayer(nn.Module):
         #                                       causal=False)
 
 
-        self.spatial_att = nn.ModuleList([SwinTransformerBlock(dim=hidden_size, input_resolution=(16, 16), num_heads=1, window_size=4, shift_size=0, mlp_ratio=1),
-                                          SwinTransformerBlock(dim=hidden_size, input_resolution=(16, 16), num_heads=1, window_size=4, shift_size=2, mlp_ratio=1)])
+        self.spatial_att = nn.ModuleList([SwinTransformerBlock(dim=hidden_size, input_resolution=(12, 12), num_heads=1, window_size=4, shift_size=0, mlp_ratio=1),
+                                          SwinTransformerBlock(dim=hidden_size, input_resolution=(12, 12), num_heads=1, window_size=4, shift_size=2, mlp_ratio=1)])
 
         self.skip_conn = nn.Linear(input_size, hidden_size)
 
         self.norm1 = LayerNorm(input_size)
-        self.norm2 = LayerNorm(hidden_size)
-        self.norm3 = LayerNorm(hidden_size)
 
         self.mlp = nn.Sequential(
             LayerNorm(hidden_size),
@@ -377,8 +375,10 @@ class SpatioTemporalTransformerLayer(nn.Module):
         # reshape x to be [batch*steps, nodes, features]
         B, L, K, C = x.shape
         x = x.view(B*L, K, C)
-        x = x + self.dropout(self.spatial_att[0](self.norm2(x)))
-        x = x + self.dropout(self.spatial_att[1](self.norm3(x)))
+
+        for layer in self.spatial_att:
+            x =  x + self.dropout(layer(x))
+
         # reshape x back to be [batch, steps, nodes, features]
         x = x.view(B, L, K, C)
 
