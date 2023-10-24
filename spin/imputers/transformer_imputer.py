@@ -58,7 +58,7 @@ class TransformerImputer(Imputer):
         whiten_mask[time_points_observed] = True
 
         # for whiten_mask == 1, set 20% of them to be 0
-        whiten_mask[torch.rand(whiten_mask.size(), device=mask.device) < 0.2] = False
+        whiten_mask[torch.rand(whiten_mask.size(), device=mask.device) < 0.5] = False
 
         batch.input.mask = mask & whiten_mask
         # whiten missing values
