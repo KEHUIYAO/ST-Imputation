@@ -553,9 +553,12 @@ def main(args):
     seed_list = [i for i in range(n_rep)]
 
     # model
-    # model_list = ['transformer', 'grin', 'csdi']
-    model_list = ['csdi']
-    model_config = {'transformer': 'imputation/transformer_soil_moisture.yaml',
+    # model_list = ['st_transformer', 'grin', 'csdi']
+    model_list = ['st_transformer']
+    # model_list = ['csdi', 'st_transformer', 'transformer', 'mean', 'interpolation']
+
+    model_config = {'st-transformer': 'imputation/st_transformer_soil_moisture.yaml',
+                    'transformer': 'imputation/transformer_soil_moisture.yaml',
                     'grin': 'imputation/grin_soil_moisture.yaml',
                     'csdi': 'imputation/csdi_soil_moisture.yaml',
                     'mean': 'imputation/mean_soil_moisture.yaml',
