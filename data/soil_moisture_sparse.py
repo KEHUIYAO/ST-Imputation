@@ -77,23 +77,23 @@ class SoilMoistureSparse(PandasDataset, MissingValuesMixin):
         rows, cols = y.shape
 
         p_missing = 0.2
-        time_points_to_eval = self.rng.choice(rows, int(p_missing * rows), replace=False)
-        eval_mask = np.zeros_like(y)
-        eval_mask[time_points_to_eval, :] = 1
+        ################## missing completely for selected time point ##################
+        # time_points_to_eval = self.rng.choice(rows, int(p_missing * rows), replace=False)
+        # eval_mask = np.zeros_like(y)
+        # eval_mask[time_points_to_eval, :] = 1
+        # self.original_data['eval_mask'] = eval_mask
+        ################## missing completely for selected time point ##################
 
-        self.original_data['eval_mask'] = eval_mask
+        ################## missing at random ##################
+        eval_mask = np.zeros_like(y)
+        # randomly mask p_missing of the data
+        eval_mask[self.rng.rand(*y.shape) < p_missing] = 1
+        ################## missing at random ##################
+
+
 
         y_imputed = y.copy()
-        # y_imputed[eval_mask == 1] = np.nan
-        #
-        # # impute using interpolation method
-        # for i in range(cols):
-        #     y_imputed[:, i] = pd.Series(y_imputed[:, i]).interpolate(method='linear', limit_direction='both').values
-
         y_imputed[np.isnan(y_imputed)] = 0
-
-        # y_imputed[(eval_mask==1) & (mask==1)] = y[(eval_mask==1) & (mask==1)]
-
         y = y_imputed.copy()
 
         self.original_data['y'] = y
