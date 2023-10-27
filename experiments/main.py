@@ -529,6 +529,7 @@ def run_experiment(args):
     ########################################
     # in-sample testing
     ########################################
+    args.mode='test'
     dm = get_dataloader(dataset, args)
     in_sample_mae, in_sample_mre = evaluate_imputer(dataset, dm, imputer, logdir, args)
 
@@ -554,7 +555,7 @@ def main(args):
 
     # model
     # model_list = ['st_transformer', 'grin', 'csdi']
-    model_list = ['mean', 'interpolation']
+    model_list = ['csdi']
     # model_list = ['csdi', 'st_transformer', 'transformer', 'mean', 'interpolation']
 
     model_config = {'st_transformer': 'imputation/st_transformer_soil_moisture.yaml',
