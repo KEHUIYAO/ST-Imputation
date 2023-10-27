@@ -88,6 +88,7 @@ class SoilMoistureSparse(PandasDataset, MissingValuesMixin):
         eval_mask = np.zeros_like(y)
         # randomly mask p_missing of the data
         eval_mask[self.rng.rand(*y.shape) < p_missing] = 1
+        self.original_data['eval_mask'] = eval_mask
         ################## missing at random ##################
 
 
@@ -187,11 +188,19 @@ class SoilMoistureSparse(PandasDataset, MissingValuesMixin):
         i = 0
         j = 0
         complete_split = []
-        for j in range(0, 24, 12):
-            for i in range(0, 24, 12):
+        # for j in range(0, 24, 12):
+        #     for i in range(0, 24, 12):
+        #         cur_split = []
+        #         for jj in range(j, j+12):
+        #             for ii in range(i, i+12):
+        #                 cur_split.append(pointid_dict[(sorted_x[ii], sorted_y[jj])])
+        #         complete_split.append(cur_split)
+
+        for j in range(0, 30, 6):
+            for i in range(0, 30, 6):
                 cur_split = []
-                for jj in range(j, j+12):
-                    for ii in range(i, i+12):
+                for jj in range(j, j+6):
+                    for ii in range(i, i+6):
                         cur_split.append(pointid_dict[(sorted_x[ii], sorted_y[jj])])
                 complete_split.append(cur_split)
 
