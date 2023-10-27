@@ -71,26 +71,23 @@ class CsdiImputer(Imputer):
             p_size = [mask.size(0)] + [1] * (mask.ndim - 1)
             p = p[torch.randint(len(p), p_size)].to(device=mask.device)
 
-        whiten_mask = torch.zeros(mask.size(), device=mask.device).bool()
-        time_points_observed = torch.rand(mask.size(0), mask.size(1), 1, 1, device=mask.device) > p
+        ####################### missing completely for each time point #######################
+        # whiten_mask = torch.zeros(mask.size(), device=mask.device).bool()
+        # time_points_observed = torch.rand(mask.size(0), mask.size(1), 1, 1, device=mask.device) > p
+        #
+        # # repeat along the spatial dimensions
+        # time_points_observed = time_points_observed.repeat(1, 1, mask.size(2), mask.size(3))
+        # whiten_mask[time_points_observed] = True
+        ####################### missing completely for each time point #######################
 
-        # repeat along the spatial dimensions
-        time_points_observed = time_points_observed.repeat(1, 1, mask.size(2), mask.size(3))
-
-        whiten_mask[time_points_observed] = True
+        ####################### missing at random #######################
+        # randomly set p percent of the time points to be missing
+        whiten_mask = torch.rand(mask.size(), device=mask.device) < p
+        ####################### missing at random #######################
 
         batch.input.mask = mask & whiten_mask
 
-        # # whiten missing values
-        # if 'x' in batch.input:
-        #     batch.input.x = batch.input.x * batch.input.mask
-        #
-        #     # randomly mask out value with probability p = whiten_prob
-        #     batch.original_mask = mask = batch.input.mask
-        #
-        #     p = random.random()
-        #     whiten_mask = torch.rand(mask.size(), device=mask.device) > p
-        #     batch.input.mask = mask & whiten_mask
+
 
 
 
