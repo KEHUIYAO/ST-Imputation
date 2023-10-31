@@ -188,21 +188,21 @@ class SoilMoistureSparse(PandasDataset, MissingValuesMixin):
         i = 0
         j = 0
         complete_split = []
-        # for j in range(0, 24, 12):
-        #     for i in range(0, 24, 12):
-        #         cur_split = []
-        #         for jj in range(j, j+12):
-        #             for ii in range(i, i+12):
-        #                 cur_split.append(pointid_dict[(sorted_x[ii], sorted_y[jj])])
-        #         complete_split.append(cur_split)
-
-        for j in range(0, 30, 6):
-            for i in range(0, 30, 6):
+        for j in range(0, 24, 12):
+            for i in range(0, 24, 12):
                 cur_split = []
-                for jj in range(j, j+6):
-                    for ii in range(i, i+6):
+                for jj in range(j, j+12):
+                    for ii in range(i, i+12):
                         cur_split.append(pointid_dict[(sorted_x[ii], sorted_y[jj])])
                 complete_split.append(cur_split)
+
+        # for j in range(0, 30, 6):
+        #     for i in range(0, 30, 6):
+        #         cur_split = []
+        #         for jj in range(j, j+6):
+        #             for ii in range(i, i+6):
+        #                 cur_split.append(pointid_dict[(sorted_x[ii], sorted_y[jj])])
+        #         complete_split.append(cur_split)
 
         complete_split = np.array(complete_split, dtype=int)
 
