@@ -296,7 +296,7 @@ def get_dataloader(dataset, args=None):
 
     return dm
 
-def evaluate_imputer(dataset, dm, imputer, logdir, args=None):
+def evaluate_imputer(dataset, dm, imputer, logdir, args=None, save_dir='output'):
 
     imputer.freeze()
 
@@ -393,7 +393,7 @@ def evaluate_imputer(dataset, dm, imputer, logdir, args=None):
     if enable_multiple_imputation:
         output['imputed_samples'] = y_hat_multiple_imputation[np.newaxis, :, :, :, np.newaxis]
 
-    np.savez(os.path.join(logdir, 'output.npz'), **output)
+    np.savez(os.path.join(logdir, save_dir+'.npz'), **output)
 
     return check_mae, check_mre
 
@@ -531,7 +531,7 @@ def run_experiment(args):
     ########################################
     args.mode='test'
     dm = get_dataloader(dataset, args)
-    in_sample_mae, in_sample_mre = evaluate_imputer(dataset, dm, imputer, logdir, args)
+    in_sample_mae, in_sample_mre = evaluate_imputer(dataset, dm, imputer, logdir, args, 'in_sample')
 
     ########################################
     # out-sample testing                              #
@@ -539,7 +539,7 @@ def run_experiment(args):
     args.mode = 'test'
     dataset = get_dataset(args.dataset_name, args)
     dm = get_dataloader(dataset, args)
-    out_sample_mae, out_sample_mre = evaluate_imputer(dataset, dm, imputer, logdir, args)
+    out_sample_mae, out_sample_mre = evaluate_imputer(dataset, dm, imputer, logdir, args, 'out_sample')
 
 
     return in_sample_mae, in_sample_mre, out_sample_mae, out_sample_mre
@@ -550,7 +550,7 @@ def main(args):
     args = copy.deepcopy(args)
 
     # seed
-    n_rep = 5
+    n_rep = 1
     seed_list = [i for i in range(n_rep)]
 
     # model
