@@ -112,11 +112,11 @@ class SoilMoistureSparse(PandasDataset, MissingValuesMixin):
 
 
         # spatiotemporal covariates
-        # covariates = ['smap_36km', 'prcp_1km', 'srad_1km', 'tmax_1km', 'tmin_1km', 'vp_1km']
+        covariates = ['smap_36km', 'prcp_1km', 'srad_1km', 'tmax_1km', 'tmin_1km', 'vp_1km']
         # covariates = ['prcp_1km', 'srad_1km', 'tmax_1km', 'tmin_1km', 'vp_1km']
         # covariates = ['smap_36km']
 
-        covariates = ['prcp_1km', 'srad_1km', 'tmax_1km', 'tmin_1km', 'vp_1km', 'smap_36km', 'elevation', 'slope', 'aspect', 'hillshade', 'clay', 'sand', 'bd', 'soc', 'LC']
+
 
         X = []
         for cov in covariates:
@@ -139,12 +139,12 @@ class SoilMoistureSparse(PandasDataset, MissingValuesMixin):
 
         X = np.stack(X, axis=-1)
 
-        # # static features
-        # static_features = ['elevation', 'slope', 'aspect', 'hillshade', 'clay', 'sand', 'bd', 'soc', 'LC']
-        # tmp = pd.read_csv(os.path.join(current_dir, 'constant_grid.csv'))
-        # tmp = tmp.iloc[:, 4:].values  # (K, C)
-        # tmp = np.tile(tmp[np.newaxis, :, :], (X.shape[0], 1, 1))
-        # X = np.concatenate([X, tmp], axis=-1)
+        # static features
+        static_features = ['elevation', 'slope', 'aspect', 'hillshade', 'clay', 'sand', 'bd', 'soc', 'LC']
+        tmp = pd.read_csv(os.path.join(current_dir, 'constant_grid.csv'))
+        tmp = tmp.iloc[:, 4:].values  # (K, C)
+        tmp = np.tile(tmp[np.newaxis, :, :], (X.shape[0], 1, 1))
+        X = np.concatenate([X, tmp], axis=-1)
 
 
 
