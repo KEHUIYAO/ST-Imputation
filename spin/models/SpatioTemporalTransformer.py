@@ -499,8 +499,8 @@ class SpatioTemporalTransformerModel(nn.Module):
 
         out = []
         for encoder, mlp, layer_norm in zip(self.encoder, self.readout, self.layer_norm):
-            h = encoder(h)
-            h = layer_norm(h)
+            # h = encoder(h)
+            # h = layer_norm(h)
             out.append(mlp(h))
 
         x_hat = out.pop(-1)
