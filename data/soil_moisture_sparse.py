@@ -146,7 +146,10 @@ class SoilMoistureSparse(PandasDataset, MissingValuesMixin):
         tmp = pd.read_csv(os.path.join(current_dir, 'constant_grid.csv'))
         tmp = tmp.iloc[:, 4:].values  # (K, C)
         tmp = np.tile(tmp[np.newaxis, :, :], (rows, 1, 1))
-        X = np.concatenate([X, tmp], axis=-1)
+        if len(X) > 0:
+            X = np.concatenate([X, tmp], axis=-1)
+        else:
+            X = tmp
 
 
 
