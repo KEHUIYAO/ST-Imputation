@@ -93,9 +93,9 @@ class SoilMoistureSparse(PandasDataset, MissingValuesMixin):
 
 
 
-        y_imputed = y.copy()
-        y_imputed[np.isnan(y_imputed)] = 0
-        y = y_imputed.copy()
+        # y_imputed = y.copy()
+        # y_imputed[np.isnan(y_imputed)] = 0
+        # y = y_imputed.copy()
 
         self.original_data['y'] = y
 
