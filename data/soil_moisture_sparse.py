@@ -30,17 +30,17 @@ class SoilMoistureSparse(PandasDataset, MissingValuesMixin):
         self.original_data = {}
         df, dist, mask, st_coords_new, X_new, eval_mask_new = self.load(mode=mode)
 
-        # super().__init__(dataframe=df,
-        #                  similarity_score="distance",
-        #                  mask=mask,
-        #                  attributes=dict(dist=dist,
-        #                   st_coords=st_coords_new, covariates=X_new))
-
         super().__init__(dataframe=df,
                          similarity_score="distance",
                          mask=mask,
                          attributes=dict(dist=dist,
-                          st_coords=st_coords_new))
+                          st_coords=st_coords_new, covariates=X_new))
+
+        # super().__init__(dataframe=df,
+        #                  similarity_score="distance",
+        #                  mask=mask,
+        #                  attributes=dict(dist=dist,
+        #                   st_coords=st_coords_new))
 
         self.set_eval_mask(eval_mask_new)
 
@@ -112,9 +112,10 @@ class SoilMoistureSparse(PandasDataset, MissingValuesMixin):
 
 
         # spatiotemporal covariates
-        covariates = ['smap_36km', 'prcp_1km', 'srad_1km', 'tmax_1km', 'tmin_1km', 'vp_1km']
+        # covariates = ['smap_36km', 'prcp_1km', 'srad_1km', 'tmax_1km', 'tmin_1km', 'vp_1km']
         # covariates = ['prcp_1km', 'srad_1km', 'tmax_1km', 'tmin_1km', 'vp_1km']
         # covariates = ['smap_36km']
+        covariates = []
 
 
 
@@ -137,7 +138,8 @@ class SoilMoistureSparse(PandasDataset, MissingValuesMixin):
             X.append(x)
             X.append(x_mask)
 
-        X = np.stack(X, axis=-1)
+        if len(X) > 0:
+            X = np.stack(X, axis=-1)
 
         # static features
         static_features = ['elevation', 'slope', 'aspect', 'hillshade', 'clay', 'sand', 'bd', 'soc', 'LC']
@@ -145,6 +147,7 @@ class SoilMoistureSparse(PandasDataset, MissingValuesMixin):
         tmp = tmp.iloc[:, 4:].values  # (K, C)
         tmp = np.tile(tmp[np.newaxis, :, :], (X.shape[0], 1, 1))
         X = np.concatenate([X, tmp], axis=-1)
+
 
 
 
