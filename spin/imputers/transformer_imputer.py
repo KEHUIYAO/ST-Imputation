@@ -47,20 +47,20 @@ class TransformerImputer(Imputer):
             p_size = [mask.size(0)] + [1] * (mask.ndim - 1)
             p = p[torch.randint(len(p), p_size)].to(device=mask.device)
 
-        ###################### missing completely for each time point #######################
-        whiten_mask = torch.zeros(mask.size(), device=mask.device).bool()
-        time_points_observed = torch.rand(mask.size(0), mask.size(1), 1, 1, device=mask.device) > p
-
-        # repeat along the spatial dimensions
-        time_points_observed = time_points_observed.repeat(1, 1, mask.size(2), mask.size(3))
-        whiten_mask[time_points_observed] = True
-        ###################### missing completely for each time point #######################
-
-        # ####################### missing at random #######################
+        # ###################### missing completely for each time point #######################
         # whiten_mask = torch.zeros(mask.size(), device=mask.device).bool()
-        # # randomly set p percent of the time points to be missing
-        # whiten_mask = torch.rand(mask.size(), device=mask.device) < p
-        # ####################### missing at random #######################
+        # time_points_observed = torch.rand(mask.size(0), mask.size(1), 1, 1, device=mask.device) > p
+        #
+        # # repeat along the spatial dimensions
+        # time_points_observed = time_points_observed.repeat(1, 1, mask.size(2), mask.size(3))
+        # whiten_mask[time_points_observed] = True
+        # ###################### missing completely for each time point #######################
+
+        ####################### missing at random #######################
+        whiten_mask = torch.zeros(mask.size(), device=mask.device).bool()
+        # randomly set p percent of the time points to be missing
+        whiten_mask = torch.rand(mask.size(), device=mask.device) < p
+        ####################### missing at random #######################
 
 
 
