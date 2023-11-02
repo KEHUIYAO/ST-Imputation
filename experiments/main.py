@@ -406,8 +406,7 @@ def run_experiment(args):
     # script flags
     is_spin = args.model_name in ['spin', 'spin_h']
 
-    model_cls, imputer_class = get_model_classes(args.model_name)
-    dataset = get_dataset(args.dataset_name, args)
+
 
     # logger.info(args)
 
@@ -432,7 +431,8 @@ def run_experiment(args):
     # training                             #
     ########################################
     args.mode = 'train'
-    # get dataloader
+    model_cls, imputer_class = get_model_classes(args.model_name)
+    dataset = get_dataset(args.dataset_name, args)
     dm = get_dataloader(dataset, args)
 
     ########################################
