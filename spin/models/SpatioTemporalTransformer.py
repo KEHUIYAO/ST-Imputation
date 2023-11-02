@@ -338,18 +338,18 @@ class SpatioTemporalTransformerLayer(nn.Module):
                                                axis='steps',
                                                causal=causal)
 
-        # self.spatial_att = MultiHeadAttention(embed_dim=hidden_size,
-        #                                       qdim=hidden_size,
-        #                                       kdim=hidden_size,
-        #                                       vdim=hidden_size,
-        #                                       heads=n_heads,
-        #                                       axis='nodes',
-        #                                       causal=False)
+        self.spatial_att = MultiHeadAttention(embed_dim=hidden_size,
+                                              qdim=hidden_size,
+                                              kdim=hidden_size,
+                                              vdim=hidden_size,
+                                              heads=n_heads,
+                                              axis='nodes',
+                                              causal=False)
 
 
-        self.spatial_att = nn.ModuleList([SwinTransformerBlock(dim=hidden_size, input_resolution=(12, 12), num_heads=1, window_size=6, shift_size=0, mlp_ratio=1),
-                                          SwinTransformerBlock(dim=hidden_size, input_resolution=(12, 12), num_heads=1, window_size=6, shift_size=3, mlp_ratio=1)
-                                          ])
+        # self.spatial_att = nn.ModuleList([SwinTransformerBlock(dim=hidden_size, input_resolution=(12, 12), num_heads=1, window_size=6, shift_size=0, mlp_ratio=1),
+        #                                   SwinTransformerBlock(dim=hidden_size, input_resolution=(12, 12), num_heads=1, window_size=6, shift_size=3, mlp_ratio=1)
+        #                                   ])
 
         self.skip_conn = nn.Linear(input_size, hidden_size)
 
