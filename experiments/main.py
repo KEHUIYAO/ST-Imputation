@@ -550,12 +550,12 @@ def main(args):
     args = copy.deepcopy(args)
 
     # seed
-    n_rep = 1
+    n_rep = 5
     seed_list = [i for i in range(n_rep)]
 
     # model
     # model_list = ['st_transformer', 'grin', 'csdi']
-    model_list = ['st_transformer']
+    model_list = ['interpolation']
     # model_list = ['csdi', 'st_transformer', 'transformer', 'mean', 'interpolation']
 
     model_config = {'st_transformer': 'imputation/st_transformer_soil_moisture.yaml',
