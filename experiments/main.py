@@ -363,6 +363,8 @@ def evaluate_imputer(dataset, dm, imputer, logdir, args=None, save_dir='output')
         y_hat_multiple_imputation = np.zeros([multiple_imputations.shape[1], seq_len, num_nodes])
     observed_mask_original = np.zeros([seq_len, num_nodes])
     eval_mask_original = np.zeros([seq_len, num_nodes])
+    count = np.zeros([seq_len, num_nodes])
+    y_hat_original_sum = np.zeros([seq_len, num_nodes])
 
     B, L, K = y_hat.shape
     for b in range(B):
@@ -370,12 +372,18 @@ def evaluate_imputer(dataset, dm, imputer, logdir, args=None, save_dir='output')
             for k in range(K):
                 ts_pos = st_coords[b, l, k, ::-1]
                 y_true_original[ts_pos[0], ts_pos[1]] = y_true[b, l, k]
-                y_hat_original[ts_pos[0], ts_pos[1]] = y_hat[b, l, k]
+                y_hat_original_sum[ts_pos[0], ts_pos[1]] += y_hat[b, l, k]
+                count[ts_pos[0], ts_pos[1]] += 1
+
                 observed_mask_original[ts_pos[0], ts_pos[1]] = observed_mask[b, l, k]
                 eval_mask_original[ts_pos[0], ts_pos[1]] = eval_mask[b, l, k]
 
                 if enable_multiple_imputation:
                     y_hat_multiple_imputation[:, ts_pos[0], ts_pos[1]] = multiple_imputations[b, :, l, k]
+
+    # for those positions that count is not 0, we divide the sum by count to get the average
+    y_hat_original[count != 0] = y_hat_original_sum[count != 0] / count[count != 0]
+
 
     check_mae = numpy_metrics.masked_mae(y_hat_original, y_true_original, eval_mask_original)
     print(f'Test MAE: {check_mae:.6f}')
@@ -550,14 +558,14 @@ def main(args):
     args = copy.deepcopy(args)
 
     # seed
-    n_rep = 5
+    n_rep = 1
     seed_list = [i for i in range(n_rep)]
 
     # model
     # model_list = ['st_transformer', 'grin', 'csdi']
     # model_list = ['interpolation']
     # model_list = ['csdi', 'st_transformer', 'transformer', 'mean', 'interpolation']
-    model_list = ['transformer']
+    model_list = ['interpolation']
 
     model_config = {'st_transformer': 'imputation/st_transformer_soil_moisture.yaml',
                     'transformer': 'imputation/transformer_soil_moisture.yaml',
