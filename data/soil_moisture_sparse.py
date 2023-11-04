@@ -144,6 +144,12 @@ class SoilMoistureSparse(PandasDataset, MissingValuesMixin):
         # static features
         static_features = ['elevation', 'slope', 'aspect', 'hillshade', 'clay', 'sand', 'bd', 'soc', 'LC']
         tmp = pd.read_csv(os.path.join(current_dir, 'constant_grid.csv'))
+
+        # for column LC, encode it as one-hot vector
+        one_hot = pd.get_dummies(tmp['LC'])
+        tmp = tmp.drop('LC', axis=1)
+        tmp = tmp.join(one_hot)
+
         tmp = tmp.iloc[:, 4:].values  # (K, C)
         tmp = np.tile(tmp[np.newaxis, :, :], (rows, 1, 1))
         if len(X) > 0:
