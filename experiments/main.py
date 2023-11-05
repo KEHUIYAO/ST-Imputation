@@ -134,8 +134,7 @@ def get_dataset(dataset_name: str, args=None):
                                   min_seq=12, max_seq=12 * 4, seed=56789)
 
     if dataset_name == 'soil_moisture':
-        return add_missing_values(SoilMoisture(36, 50000, seed=args.seed), p_fault=p_fault, p_noise=p_noise,
-                                  min_seq=12, max_seq=12 * 4, seed=56789)
+        return SoilMoisture(mode=args.mode)
 
     if dataset_name == 'soil_moisture_sparse':
         return SoilMoistureSparse(mode=args.mode)
