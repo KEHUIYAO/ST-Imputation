@@ -3,7 +3,7 @@ sys.path.append('/home/kehuiyao/ST-Imputation/')
 sys.path.append('/Users/kehuiyao/Desktop/ST-Imputation/')
 
 
-
+import argparse
 import copy
 import datetime
 import os
@@ -39,16 +39,13 @@ def parse_args():
     # Argument parser
     ########################################
     parser = ArgParser()
-    parser.add_argument("--model-name", type=str, default='transformer')
     parser.add_argument("--dataset-name", type=str, default='soil_moisture_point')
-    parser.add_argument("--mode", type=str, default='train')
-    parser.add_argument("--config", type=str, default='imputation/transformer_soil_moisture.yaml')
+
     parser.add_argument('--epochs', type=int, default=200)
     parser.add_argument('--check-val-every-n-epoch', type=int, default=1)
     parser.add_argument('--batch-inference', type=int, default=32)
     parser.add_argument('--load-from-pretrained', type=str,
                         default=None)
-    parser.add_argument('--seed', type=int, default=-1)
     parser.add_argument('--precision', type=int, default=32)
     # Splitting/aggregation params
     parser.add_argument('--val-len', type=float, default=0.1)
@@ -69,19 +66,10 @@ def parse_args():
     parser.add_argument('--p-noise', type=float, default=0.9)
 
     known_args, _ = parser.parse_known_args()
-    model_cls, imputer_cls = get_model_classes(known_args.model_name)
-    parser = model_cls.add_model_specific_args(parser)
-    parser = imputer_cls.add_argparse_args(parser)
-    parser = SpatioTemporalDataModule.add_argparse_args(parser)
-    parser = ImputationDataset.add_argparse_args(parser)
+
 
     args = parser.parse_args()
-    if args.config is not None:
-        cfg_path = os.path.join(config.config_dir, args.config)
-        with open(cfg_path, 'r') as fp:
-            config_args = yaml.load(fp, Loader=yaml.FullLoader)
-        for arg in config_args:
-            setattr(args, arg, config_args[arg])
+
 
     return args
 
@@ -594,6 +582,24 @@ def main(args):
         for model in model_list:
             args.model_name = model
             args.config = model_config[model]
+            model_cls, imputer_cls = get_model_classes(args.model_name)
+            parser = ArgParser()
+            parser = model_cls.add_model_specific_args(parser)
+            parser = imputer_cls.add_argparse_args(parser)
+            additional_args = parser.parse_args()
+
+            # but you can convert them to dictionaries:
+            dict_args1 = vars(args)
+            dict_args2 = vars(additional_args)
+
+            # Now you can merge the dictionaries
+            combined_args = {**dict_args1, **dict_args2}
+
+            # If you want to turn this back into a Namespace object:
+            args = argparse.Namespace(**combined_args)
+
+
+
 
             if args.config is not None:
                 cfg_path = os.path.join(config.config_dir, args.config)
