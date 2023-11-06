@@ -58,17 +58,23 @@ class SoilMoisture(PandasDataset, MissingValuesMixin):
             date_end = '2019-12-31'
 
         df = pd.read_csv(os.path.join(current_dir, 'smap_hb_1km.csv'))
+        df_tmp = pd.read_csv(os.path.join(current_dir, 'smap_1km.csv'))
         y = df.iloc[:, 4:]
+        y_tmp = df_tmp.iloc[:, 4:]
 
         # transpose the dataframe
         y = y.T
+        y_tmp = y_tmp.T
 
         tmp = pd.DataFrame(index=pd.date_range(start=date_start, end=date_end))
 
         y.index = pd.to_datetime(y.index)
         y = tmp.merge(y, left_index=True, right_index=True, how='left')
+        y_tmp.index = pd.to_datetime(y_tmp.index)
+        y_tmp = tmp.merge(y_tmp, left_index=True, right_index=True, how='left')
 
         y = y.values
+        y_tmp = y_tmp.values
 
         mask = ~np.isnan(y)
         mask = mask.astype(int)
@@ -76,13 +82,17 @@ class SoilMoisture(PandasDataset, MissingValuesMixin):
 
         rows, cols = y.shape
 
-        p_missing = 0.9
-        ################# missing completely for selected time point ##################
-        time_points_to_eval = self.rng.choice(rows, int(p_missing * rows), replace=False)
-        eval_mask = np.zeros_like(y)
-        eval_mask[time_points_to_eval, :] = 1
+        eval_mask = np.isnan(y_tmp)
         self.original_data['eval_mask'] = eval_mask
-        ################# missing completely for selected time point ##################
+
+
+        # p_missing = 0.9
+        # ################# missing completely for selected time point ##################
+        # time_points_to_eval = self.rng.choice(rows, int(p_missing * rows), replace=False)
+        # eval_mask = np.zeros_like(y)
+        # eval_mask[time_points_to_eval, :] = 1
+        # self.original_data['eval_mask'] = eval_mask
+        # ################# missing completely for selected time point ##################
 
         # ################## missing at random ##################
         # eval_mask = np.zeros_like(y)
