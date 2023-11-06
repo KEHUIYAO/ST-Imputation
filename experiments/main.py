@@ -40,7 +40,7 @@ def parse_args():
     ########################################
     parser = ArgParser()
     parser.add_argument("--model-name", type=str, default='transformer')
-    parser.add_argument("--dataset-name", type=str, default='soil_moisture_sparse_point')
+    parser.add_argument("--dataset-name", type=str, default='soil_moisture_point')
     parser.add_argument("--mode", type=str, default='train')
     parser.add_argument("--config", type=str, default='imputation/transformer_soil_moisture.yaml')
     parser.add_argument('--epochs', type=int, default=200)
