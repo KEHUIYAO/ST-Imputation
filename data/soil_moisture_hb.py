@@ -57,7 +57,7 @@ class SoilMoistureHB(PandasDataset, MissingValuesMixin):
             date_start = '2019-01-01'
             date_end = '2019-12-31'
 
-        filename_list = ['smap_hb_1km_sample_1.csv', 'smap_hb_1km_sample_2.csv']
+        filename_list = ['smap_hb_1km_sample_1.csv', 'smap_hb_1km_sample_2.csv', 'smap_hb_1km_sample_3.csv', 'smap_hb_1km_sample_4.csv', 'smap_hb_1km_sample_5.csv']
         y_list = []
         eval_mask_list = []
         mask_list = []
