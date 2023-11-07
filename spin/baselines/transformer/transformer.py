@@ -7,6 +7,24 @@ from tsl.nn.layers import PositionalEncoding
 from tsl.utils.parser_utils import ArgParser, str_to_bool
 import torch
 from tsl.nn.layers.norm import LayerNorm
+class SpatialEmbedding(nn.Module):
+    def __init__(self, K, channel):
+        super(SpatialEmbedding, self).__init__()
+
+        self.K = K
+        self.channel = channel
+
+        # Trainable embedding layer
+        self.embedding = nn.Embedding(K, channel)
+
+    def forward(self, B, L):
+        # Generate embeddings for [0, 1, ..., K-1]
+        x = torch.arange(self.K).to(self.embedding.weight.device)
+        embed = self.embedding(x)  # (K, channel)
+        embed = embed.permute(1, 0)  # (channel, K)
+        embed = embed.unsqueeze(0).unsqueeze(3)  # (1, channel, K, 1)
+        embed = embed.expand(B, self.channel, self.K, L)  # (B, channel, K, L)
+        return embed
 
 
 class TransformerModel(nn.Module):
@@ -50,6 +68,7 @@ class TransformerModel(nn.Module):
 
         self.pe = PositionalEncoding(hidden_size)
 
+        self.spatial_embedding_layer = SpatialEmbedding(spatial_dim, hidden_size)
 
         kwargs = dict(input_size=hidden_size,
                       hidden_size=hidden_size,
@@ -92,6 +111,12 @@ class TransformerModel(nn.Module):
 
         h = self.pe(h)
 
+
+        # space encoding
+        B, L, K, C = h.shape
+        spatial_emb = self.spatial_embedding_layer(B, L)
+        spatial_emb = spatial_emb.permute(0, 3, 2, 1)  # (B, C, K, L)
+        h = h + spatial_emb
 
         out = []
         for encoder, mlp, layer_norm in zip(self.encoder, self.readout, self.layer_norm):
