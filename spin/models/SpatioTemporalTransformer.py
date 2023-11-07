@@ -351,7 +351,7 @@ class SpatioTemporalTransformerLayer(nn.Module):
 
 
         input_resolution = (int(math.sqrt(spatial_dim)), int(math.sqrt(spatial_dim)))
-        window_size = int(input_resolution / 4)
+        window_size = int(input_resolution[0] / 4)
         shift_size = int(window_size // 2)
 
         self.spatial_att = nn.ModuleList([SwinTransformerBlock(dim=hidden_size, input_resolution=input_resolution, num_heads=1, window_size=window_size, shift_size=0, mlp_ratio=1),
