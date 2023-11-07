@@ -19,7 +19,7 @@ from tsl import config, logger
 from tsl.data import SpatioTemporalDataModule, ImputationDataset
 from tsl.data.preprocessing import StandardScaler, MinMaxScaler
 from tsl.datasets import AirQuality, MetrLA, PemsBay
-from data import GaussianProcess, DescriptiveST, DynamicST, SoilMoisture, SoilMoistureSparse
+from data import GaussianProcess, DescriptiveST, DynamicST, SoilMoisture, SoilMoistureSparse, HealingMnist
 
 from tsl.imputers import Imputer
 from tsl.nn.metrics import MaskedMetric, MaskedMAE, MaskedMSE, MaskedMRE
@@ -75,7 +75,7 @@ def parse_args():
     parser.add_argument("--adj-threshold", type=float, default=0.1)
 
     parser.add_argument('--p-fault', type=float, default=0.0)
-    parser.add_argument('--p-noise', type=float, default=0.9)
+    parser.add_argument('--p-noise', type=float, default=0.5)
 
     known_args, _ = parser.parse_known_args()
     model_cls, imputer_cls = get_model_classes(known_args.model_name)
@@ -158,6 +158,10 @@ def get_dataset(dataset_name: str):
 
     if dataset_name == 'dynamic':
         return add_missing_values(DynamicST(num_nodes=36, seq_len=400), p_fault=p_fault, p_noise=p_noise, min_seq=12, max_seq=12 * 4, seed=56789)
+
+    if dataset_name == 'healing_mnist':
+        return add_missing_values(HealingMnist(), p_fault=p_fault, p_noise=p_noise, min_seq=12,
+                                  max_seq=12 * 4, seed=56789)
 
     raise ValueError(f"Invalid dataset name: {dataset_name}.")
 
