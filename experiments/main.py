@@ -552,7 +552,7 @@ def main(args):
     # model_list = ['st_transformer', 'grin', 'csdi']
     # model_list = ['interpolation']
     # model_list = ['csdi', 'st_transformer', 'transformer', 'mean', 'interpolation']
-    model_list = ['grin']
+    model_list = ['st_transformer']
 
     model_config = {'st_transformer': 'imputation/st_transformer_soil_moisture.yaml',
                     'transformer': 'imputation/transformer_soil_moisture.yaml',
