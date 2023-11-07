@@ -18,7 +18,7 @@ from tsl import config, logger
 from tsl.data import SpatioTemporalDataModule, ImputationDataset
 from tsl.data.preprocessing import StandardScaler, MinMaxScaler
 from tsl.datasets import AirQuality, MetrLA, PemsBay
-from data import GaussianProcess, DescriptiveST, DynamicST, SoilMoisture, SoilMoistureSparse
+from data import GaussianProcess, DescriptiveST, DynamicST, SoilMoisture, SoilMoistureSparse, SoilMoistureHB
 
 from tsl.imputers import Imputer
 from tsl.nn.metrics import MaskedMetric, MaskedMAE, MaskedMSE, MaskedMRE
@@ -39,7 +39,7 @@ def parse_args():
     # Argument parser
     ########################################
     parser = ArgParser()
-    parser.add_argument("--dataset-name", type=str, default='soil_moisture_point')
+    parser.add_argument("--dataset-name", type=str, default='soil_moisture_hb_point')
 
     parser.add_argument('--epochs', type=int, default=200)
     parser.add_argument('--check-val-every-n-epoch', type=int, default=1)
@@ -123,6 +123,9 @@ def get_dataset(dataset_name: str, args=None):
 
     if dataset_name == 'soil_moisture':
         return SoilMoisture(mode=args.mode)
+
+    if dataset_name == 'soil_moisture_hb':
+        return SoilMoistureHB(mode=args.mode)
 
     if dataset_name == 'soil_moisture_sparse':
         return SoilMoistureSparse(mode=args.mode)
