@@ -14,6 +14,8 @@ import torch.nn.functional as F
 import torch.utils.checkpoint as checkpoint
 from timm.models.layers import DropPath, to_2tuple, trunc_normal_
 
+import math
+
 WindowProcess = None
 WindowProcessReverse = None
 
@@ -328,7 +330,8 @@ class SpatioTemporalTransformerLayer(nn.Module):
                  n_heads=1,
                  causal=True,
                  activation='elu',
-                 dropout=0.):
+                 dropout=0.,
+                 spatial_dim=36):
         super(SpatioTemporalTransformerLayer, self).__init__()
         self.temporal_att = MultiHeadAttention(embed_dim=hidden_size,
                                                qdim=input_size,
@@ -347,8 +350,12 @@ class SpatioTemporalTransformerLayer(nn.Module):
         #                                       causal=False)
 
 
-        self.spatial_att = nn.ModuleList([SwinTransformerBlock(dim=hidden_size, input_resolution=(12, 12), num_heads=1, window_size=6, shift_size=0, mlp_ratio=1),
-                                          SwinTransformerBlock(dim=hidden_size, input_resolution=(12, 12), num_heads=1, window_size=6, shift_size=3, mlp_ratio=1)
+        input_resolution = (int(math.sqrt(spatial_dim)), int(math.sqrt(spatial_dim)))
+        window_size = int(input_resolution / 4)
+        shift_size = int(window_size // 2)
+
+        self.spatial_att = nn.ModuleList([SwinTransformerBlock(dim=hidden_size, input_resolution=input_resolution, num_heads=1, window_size=window_size, shift_size=0, mlp_ratio=1),
+                                          SwinTransformerBlock(dim=hidden_size, input_resolution=input_resolution, num_heads=1, window_size=window_size, shift_size=shift_size, mlp_ratio=1)
                                           ])
 
         self.skip_conn = nn.Linear(input_size, hidden_size)
@@ -455,7 +462,8 @@ class SpatioTemporalTransformerModel(nn.Module):
                       n_heads=n_heads,
                       activation=activation,
                       causal=False,
-                      dropout=dropout)
+                      dropout=dropout,
+                      spatial_dim=spatial_dim)
 
         if axis in ['steps', 'nodes']:
             transformer_layer = TransformerLayer
