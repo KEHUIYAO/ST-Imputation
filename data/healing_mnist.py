@@ -34,7 +34,7 @@ class HealingMnist(PandasDataset, MissingValuesMixin):
 
     def load(self):
 
-        with np.load(os.path.join(current_dir, 'hmnist_mnar.npz')) as data:
+        with np.load(os.path.join(current_dir, 'hmnist_random.npz')) as data:
             x_train_full = data['x_train_full']
 
             y = x_train_full[1:1000, :, :]
