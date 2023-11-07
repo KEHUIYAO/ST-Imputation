@@ -104,6 +104,7 @@ class SoilMoistureHB(PandasDataset, MissingValuesMixin):
 
 
         y = np.concatenate(y_list, axis=0)
+        self.original_data['y'] = y
         rows, cols = y.shape
         eval_mask = np.concatenate(eval_mask_list, axis=0)
         mask = np.concatenate(mask_list, axis=0)
