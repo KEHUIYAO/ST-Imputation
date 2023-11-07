@@ -37,7 +37,7 @@ class HealingMnist(PandasDataset, MissingValuesMixin):
         with np.load(os.path.join(current_dir, 'hmnist_random.npz')) as data:
             x_train_full = data['x_train_full']
 
-            y = x_train_full[1:1000, :, :]
+            y = x_train_full[1:100000, :, :]
 
         # reshape
         y = y.reshape((y.shape[0]*y.shape[1], y.shape[2]))
@@ -77,67 +77,6 @@ class HealingMnist(PandasDataset, MissingValuesMixin):
             return gaussian_kernel(self.dist, theta=theta)
 
 
-    def get_splitter(self, method=None, **kwargs):
-        return SoilMoistureSplitter(kwargs.get('val_len'), kwargs.get('test_len'))
-
-
-# class SoilMoistureSplitter(FixedIndicesSplitter):
-#     def __init__(self):
-#         # train_idxs = []
-#         # valid_idxs = []
-#         # for i in range(36):
-#         #     for j in range(365):
-#         #         train_idxs.append(i*365 + j)
-#         #
-#         #     start = 10
-#         #     end = 50
-#         #
-#         #     for j in range(start, end):
-#         #         valid_idxs.append(i*365 + j)
-#         #
-#         #
-#         # test_idxs = []
-#         # for i in range(36):
-#         #     for j in range(365):
-#         #         test_idxs.append(i*365 + 365 + j)
-#
-#         train_idxs = [0, 1, 2]
-#         valid_idxs = [3, 4, 5]
-#         test_idxs = [6, 7, 8]
-#
-#         super().__init__(train_idxs, valid_idxs, test_idxs)
-
-
-class SoilMoistureSplitter(Splitter):
-
-    def __init__(self, val_len: int = None, test_len: int = None):
-        super().__init__()
-        self._val_len = val_len
-        self._test_len = test_len
-
-    def fit(self, dataset):
-        idx = np.arange(len(dataset))
-        val_len, test_len = self._val_len, self._test_len
-        if test_len < 1:
-            test_len = int(test_len * len(idx))
-        if val_len < 1:
-            val_len = int(val_len * (len(idx) - test_len))
-
-        # randomly split idx into train, val, test
-        np.random.shuffle(idx)
-        val_start = len(idx) - val_len - test_len
-        test_start = len(idx) - test_len
-
-
-        self.set_indices(idx[:val_start - dataset.samples_offset],
-                         idx[val_start:test_start - dataset.samples_offset],
-                         idx[test_start:])
-
-    @staticmethod
-    def add_argparse_args(parser):
-        parser.add_argument('--val-len', type=float or int, default=0.2)
-        parser.add_argument('--test-len', type=float or int, default=0.2)
-        return parser
 
 
 if __name__ == '__main__':
