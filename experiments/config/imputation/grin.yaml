@@ -5,8 +5,8 @@
 val_len: 0.2
 test_len: 0.2
 
-window: 72  # [24, 36]
-stride: 12
+window: 36  # [24, 36]
+stride: 1
 
 #### Training params ##########################################################
 whiten_prob: [0.2, 0.5, 0.8]
@@ -24,7 +24,7 @@ check_val_every_n_epoch: 1
 
 #### Model params #############################################################
 model_name: 'grin'
-exog_size: 2
+exog_size: 0
 hidden_size: 64
 ff_size: 64
 embedding_size: 8
