@@ -23,7 +23,7 @@ class HealingMnist(PandasDataset, MissingValuesMixin):
 
     def __init__(self):
         self.original_data = {}
-        df, dist, st_coords = self.load()
+        df, dist, st_coords, eval_mask = self.load()
 
 
         super().__init__(dataframe=df,
@@ -31,16 +31,22 @@ class HealingMnist(PandasDataset, MissingValuesMixin):
                          attributes=dict(dist=dist,
                           st_coords=st_coords))
 
+        self.set_eval_mask(eval_mask)
+
 
     def load(self):
 
         with np.load(os.path.join(current_dir, 'hmnist_random.npz')) as data:
             y = data['x_train_full']
+            eval_mask = data['m_train_miss']
+
 
 
 
         # reshape
         y = y.reshape((y.shape[0]*y.shape[1], y.shape[2]))
+        eval_mask = eval_mask.reshape((eval_mask.shape[0]*eval_mask.shape[1], eval_mask.shape[2]))
+
 
 
         rows, cols = y.shape
@@ -69,7 +75,7 @@ class HealingMnist(PandasDataset, MissingValuesMixin):
         dist = cdist(dist, dist)
 
 
-        return y, dist, st_coords
+        return y, dist, st_coords, eval_mask
 
     def compute_similarity(self, method: str, **kwargs):
         if method == "distance":
