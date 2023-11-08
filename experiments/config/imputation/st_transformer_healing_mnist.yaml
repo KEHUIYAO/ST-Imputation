@@ -13,7 +13,7 @@ epochs: 200
 batch_size: 16
 batch_inference: 16
 
-loss_fn: l2_loss
+loss_fn: mse
 lr_scheduler: magic
 lr: 0.001
 patience: 40
