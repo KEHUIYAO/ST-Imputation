@@ -82,17 +82,17 @@ class SoilMoisture(PandasDataset, MissingValuesMixin):
 
         rows, cols = y.shape
 
-        # eval_mask = np.isnan(y_tmp)
-        # self.original_data['eval_mask'] = eval_mask
-
-
-        p_missing = 0.8
-        ################# missing completely for selected time point ##################
-        time_points_to_eval = self.rng.choice(rows, int(p_missing * rows), replace=False)
-        eval_mask = np.zeros_like(y)
-        eval_mask[time_points_to_eval, :] = 1
+        eval_mask = np.isnan(y_tmp)
         self.original_data['eval_mask'] = eval_mask
-        ################# missing completely for selected time point ##################
+
+
+        # p_missing = 0.8
+        # ################# missing completely for selected time point ##################
+        # time_points_to_eval = self.rng.choice(rows, int(p_missing * rows), replace=False)
+        # eval_mask = np.zeros_like(y)
+        # eval_mask[time_points_to_eval, :] = 1
+        # self.original_data['eval_mask'] = eval_mask
+        # ################# missing completely for selected time point ##################
 
         # ################## missing at random ##################
         # eval_mask = np.zeros_like(y)
@@ -261,8 +261,8 @@ class SoilMoisture(PandasDataset, MissingValuesMixin):
 
 
         dist = []
-        for j in range(6):
-            for i in range(6):
+        for j in range(12):
+            for i in range(12):
                 dist.append([sorted_x[i], sorted_y[j]])
         dist = np.array(dist)
         dist = cdist(dist, dist)
@@ -341,7 +341,7 @@ class SoilMoistureSplitter(Splitter):
 
 if __name__ == '__main__':
     from tsl.ops.imputation import add_missing_values
-    dataset = SoilMoistureSparse()
+    dataset = SoilMoisture()
     add_missing_values(dataset, p_fault=0, p_noise=0.25, min_seq=12,
                        max_seq=12 * 4, seed=56789)
 

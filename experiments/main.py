@@ -39,7 +39,7 @@ def parse_args():
     # Argument parser
     ########################################
     parser = ArgParser()
-    parser.add_argument("--dataset-name", type=str, default='soil_moisture_hb_point')
+    parser.add_argument("--dataset-name", type=str, default='soil_moisture_point')
 
     parser.add_argument('--epochs', type=int, default=200)
     parser.add_argument('--check-val-every-n-epoch', type=int, default=1)
