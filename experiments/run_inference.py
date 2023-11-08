@@ -19,7 +19,7 @@ from tsl import config, logger
 from tsl.data import SpatioTemporalDataModule, ImputationDataset
 from tsl.data.preprocessing import StandardScaler
 from tsl.datasets import AirQuality, MetrLA, PemsBay
-from data import GaussianProcess, DescriptiveST, DynamicST, SoilMoisture, SoilMoistureSparse
+from data import GaussianProcess, DescriptiveST, DynamicST, SoilMoisture, SoilMoistureSparse, HealingMnist
 
 from tsl.imputers import Imputer
 from tsl.nn.metrics import MaskedMetric, MaskedMAE, MaskedMSE, MaskedMRE
@@ -60,20 +60,20 @@ def parse_args():
     # Argument parser
     ########################################
     parser = ArgParser()
-    parser.add_argument("--model-name", type=str, default='transformer')
+    parser.add_argument("--model-name", type=str, default='st_transformer')
     #parser.add_argument("--model-name", type=str, default='interpolation')
     #parser.add_argument("--model-name", type=str, default='spin_h')
-    parser.add_argument("--dataset-name", type=str, default='soil_moisture_sparse_point')
+    parser.add_argument("--dataset-name", type=str, default='healing_mnist_point')
     #parser.add_argument("--config", type=str, default=None)
-    # parser.add_argument("--config", type=str, default='imputation/interpolation_soil_moisture.yaml')
+    parser.add_argument("--config", type=str, default='imputation/st_transformer_healing_mnist.yaml')
     # parser.add_argument("--config", type=str, default='imputation/spin_h_soil_moisture.yaml')
-    parser.add_argument("--config", type=str, default='imputation/transformer_soil_moisture.yaml')
+    # parser.add_argument("--config", type=str, default='imputation/transformer_soil_moisture.yaml')
     parser.add_argument('--epochs', type=int, default=200)
     parser.add_argument('--check-val-every-n-epoch', type=int, default=1)
     parser.add_argument('--batch-inference', type=int, default=32)
     # parser.add_argument('--load-from-pretrained', type=str, default='log/soil_moisture_sparse_point/transformer/20231020T041452_872647949/epoch=8-step=1961.ckpt')
     parser.add_argument('--load-from-pretrained', type=str,
-                        default=None)
+                        default='log/healing_mnist_point/st_transformer/20231107T231224_468173666/epoch=52-step=127146.ckpt')
 
 
     # parser.add_argument('--load-from-pretrained', type=str,
@@ -186,6 +186,9 @@ def get_dataset(dataset_name: str):
         return add_missing_values(DynamicST(num_nodes=36, seq_len=400), p_fault=p_fault, p_noise=p_noise, min_seq=12, max_seq=12 * 4, seed=56789)
 
     raise ValueError(f"Invalid dataset name: {dataset_name}.")
+
+    if dataset_name == 'healing_mnist':
+        return HealingMnist(mode='test')
 
 
 

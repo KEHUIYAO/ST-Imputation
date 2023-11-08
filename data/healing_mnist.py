@@ -21,9 +21,10 @@ current_dir = os.path.dirname(os.path.abspath(__file__))
 class HealingMnist(PandasDataset, MissingValuesMixin):
     similarity_options = {'distance'}
 
-    def __init__(self):
+    def __init__(self, mode='train'):
         self.original_data = {}
-        df, dist, st_coords, eval_mask = self.load()
+
+        df, dist, st_coords, eval_mask = self.load(mode=mode)
 
 
         super().__init__(dataframe=df,
@@ -34,11 +35,16 @@ class HealingMnist(PandasDataset, MissingValuesMixin):
         self.set_eval_mask(eval_mask)
 
 
-    def load(self):
+    def load(self, mode):
 
         with np.load(os.path.join(current_dir, 'hmnist_random.npz')) as data:
-            y = data['x_train_full']
-            eval_mask = data['m_train_miss']
+
+            if mode == 'train':
+                y = data['x_train_full']
+                eval_mask = data['m_train_miss']
+            elif mode == 'test':
+                y = data['x_test_full']
+                eval_mask = data['m_test_miss']
 
 
 
@@ -87,7 +93,7 @@ class HealingMnist(PandasDataset, MissingValuesMixin):
 
 if __name__ == '__main__':
     from tsl.ops.imputation import add_missing_values
-    dataset = HealingMnist()
+    dataset = HealingMnist('test')
     add_missing_values(dataset, p_fault=0, p_noise=0.25, min_seq=12,
                        max_seq=12 * 4, seed=56789)
 
