@@ -18,7 +18,7 @@ lr_scheduler: magic
 lr: 0.001
 patience: 40
 precision: 16
-batches_epoch: 300
+batches_epoch: 1000
 check_val_every_n_epoch: 1
 l2_reg: 0
 
