@@ -22,7 +22,7 @@ current_dir = os.path.dirname(os.path.abspath(__file__))
 
 
 
-class SoilMoisture(PandasDataset, MissingValuesMixin):
+class SoilMoistureHB(PandasDataset, MissingValuesMixin):
     similarity_options = {'distance'}
 
     def __init__(self, mode='train', seed=42):
@@ -30,17 +30,17 @@ class SoilMoisture(PandasDataset, MissingValuesMixin):
         self.original_data = {}
         df, dist, mask, st_coords_new, X_new, eval_mask_new = self.load(mode=mode)
 
-        super().__init__(dataframe=df,
-                         similarity_score="distance",
-                         mask=mask,
-                         attributes=dict(dist=dist,
-                          st_coords=st_coords_new, covariates=X_new))
-
         # super().__init__(dataframe=df,
         #                  similarity_score="distance",
         #                  mask=mask,
         #                  attributes=dict(dist=dist,
-        #                   st_coords=st_coords_new))
+        #                   st_coords=st_coords_new, covariates=X_new))
+
+        super().__init__(dataframe=df,
+                         similarity_score="distance",
+                         mask=mask,
+                         attributes=dict(dist=dist,
+                          st_coords=st_coords_new))
 
         self.set_eval_mask(eval_mask_new)
 
@@ -52,66 +52,65 @@ class SoilMoisture(PandasDataset, MissingValuesMixin):
 
         if mode == 'train':
             date_start = '2016-01-01'
-            date_end = '2019-12-31'
+            date_end = '2018-12-31'
         else:
             date_start = '2019-01-01'
             date_end = '2019-12-31'
 
-        df = pd.read_csv(os.path.join(current_dir, 'smap_hb_1km.csv'))
-        df_tmp = pd.read_csv(os.path.join(current_dir, 'smap_1km.csv'))
-        y = df.iloc[:, 4:]
-        y_tmp = df_tmp.iloc[:, 4:]
+        filename_list = ['smap_hb_1km_sample_1.csv', 'smap_hb_1km_sample_2.csv', 'smap_hb_1km_sample_3.csv', 'smap_hb_1km_sample_4.csv', 'smap_hb_1km_sample_5.csv']
+        y_list = []
+        eval_mask_list = []
+        mask_list = []
+        for filename in filename_list:
+            df = pd.read_csv(os.path.join(current_dir, filename))
+            y = df.iloc[:, 3:]
+            # transpose the dataframe
+            y = y.T
+            tmp = pd.DataFrame(index=pd.date_range(start=date_start, end=date_end))
+            y.index = pd.to_datetime(y.index)
+            y = tmp.merge(y, left_index=True, right_index=True, how='left')
+            y = y.values
+            mask = ~np.isnan(y)
+            mask = mask.astype(int)
+            rows, cols = y.shape
 
-        # transpose the dataframe
-        y = y.T
-        y_tmp = y_tmp.T
+            p_missing = 0.8
+            ################# missing completely for selected time point ##################
+            time_points_to_eval = self.rng.choice(rows, int(p_missing * rows), replace=False)
+            eval_mask = np.zeros_like(y)
+            eval_mask[time_points_to_eval, :] = 1
 
-        tmp = pd.DataFrame(index=pd.date_range(start=date_start, end=date_end))
+            ################# missing completely for selected time point ##################
 
-        y.index = pd.to_datetime(y.index)
-        y = tmp.merge(y, left_index=True, right_index=True, how='left')
-        y_tmp.index = pd.to_datetime(y_tmp.index)
-        y_tmp = tmp.merge(y_tmp, left_index=True, right_index=True, how='left')
-
-        y = y.values
-        y_tmp = y_tmp.values
-
-        mask = ~np.isnan(y)
-        mask = mask.astype(int)
-        self.original_data['mask'] = mask
-
-        rows, cols = y.shape
-
-        eval_mask = np.isnan(y_tmp)
-        self.original_data['eval_mask'] = eval_mask
-
-
-        p_missing = 0.9
-        ################# missing completely for selected time point ##################
-        time_points_to_eval = self.rng.choice(rows, int(p_missing * rows), replace=False)
-        eval_mask = np.zeros_like(y)
-        eval_mask[time_points_to_eval, :] = 1
-        self.original_data['eval_mask'] = eval_mask
-        ################# missing completely for selected time point ##################
-
-        # ################## missing at random ##################
-        # eval_mask = np.zeros_like(y)
-        # # randomly mask p_missing of the data
-        # eval_mask[self.rng.rand(*y.shape) < p_missing] = 1
-        # self.original_data['eval_mask'] = eval_mask
-        # ################## missing at random ##################
+            # ################## missing at random ##################
+            # eval_mask = np.zeros_like(y)
+            # # randomly mask p_missing of the data
+            # eval_mask[self.rng.rand(*y.shape) < p_missing] = 1
+            # self.original_data['eval_mask'] = eval_mask
+            # ################## missing at random ##################
+            y_imputed = y.copy()
+            y_imputed[np.isnan(y_imputed)] = 0
+            y_list.append(y_imputed.copy())
+            eval_mask_list.append(eval_mask.copy())
+            mask_list.append(mask.copy())
 
 
 
-        y_imputed = y.copy()
-        y_imputed[np.isnan(y_imputed)] = 0
-        y = y_imputed.copy()
 
+
+
+
+
+
+
+        y = np.concatenate(y_list, axis=0)
         self.original_data['y'] = y
-
+        rows, cols = y.shape
+        eval_mask = np.concatenate(eval_mask_list, axis=0)
+        mask = np.concatenate(mask_list, axis=0)
         y = pd.DataFrame(y)
-
         y.index = pd.to_datetime(y.index)
+
 
 
 
@@ -121,78 +120,7 @@ class SoilMoisture(PandasDataset, MissingValuesMixin):
 
 
 
-        # spatiotemporal covariates
-        covariates = ['smap_36km', 'prcp_1km', 'srad_1km', 'tmax_1km', 'tmin_1km', 'vp_1km']
-        # covariates = ['prcp_1km', 'srad_1km', 'tmax_1km', 'tmin_1km', 'vp_1km']
-        # covariates = ['smap_36km']
-        # covariates = []
-
-
-
-        X = []
-        for cov in covariates:
-            x = pd.read_csv(os.path.join(current_dir, f'{cov}.csv'))
-            x = x.iloc[:, 4:]
-            x = x.T
-
-            x.index = pd.to_datetime(x.index)
-            tmp = pd.DataFrame(index=pd.date_range(start=date_start, end=date_end))
-
-            x = tmp.merge(x, left_index=True, right_index=True, how='left')
-
-            x = x.values
-            x_mask = ~np.isnan(x)
-            x_mask = x_mask.astype(int)
-            x[x_mask==0] = np.nanmean(x)
-
-            X.append(x)
-            X.append(x_mask)
-
-        if len(X) > 0:
-            X = np.stack(X, axis=-1)
-
-        # static features
-        static_features = ['elevation', 'slope', 'aspect', 'hillshade', 'clay', 'sand', 'bd', 'soc', 'LC']
-        tmp = pd.read_csv(os.path.join(current_dir, 'constant_grid.csv'))
-
-        # for column LC, encode it as one-hot vector
-        one_hot = pd.get_dummies(tmp['LC'])
-        tmp = tmp.drop('LC', axis=1)
-        tmp = tmp.join(one_hot)
-
-        tmp = tmp.iloc[:, 4:].values  # (K, C)
-        tmp = np.tile(tmp[np.newaxis, :, :], (rows, 1, 1))
-        if len(X) > 0:
-            X = np.concatenate([X, tmp], axis=-1)
-        else:
-            X = tmp
-
-        self.original_data['original_X'] = X.copy()
-
-        L, K, C = X.shape
-        X = X.reshape((L * K, C))
-        scaler = StandardScaler()
-        scaler.fit(X)
-        X = scaler.transform(X)
-        X = X.reshape((L, K, C))
-
-        self.original_data['X'] = X
-
-        # if mode == 'train':
-        #     y = y.iloc[:-365, :]
-        #     X = X[:-365, :, :]
-        #
-        # elif mode == 'test':
-        #     y = y.iloc[-365:, :]
-        #     X = X[-365:, :, :]
-        #
-        # plt.figure()
-        # plt.plot(np.arange(0, y.shape[0]), y.values, marker='o', linestyle='-')
-        # plt.show()
-        #
-
-
-        unique_points = df.iloc[:, [0, 2, 3]]
+        unique_points = df.iloc[:, [0, 1, 2]]
         unique_points.columns = ['POINTID', 'x', 'y']
 
         sorted_x = np.sort(unique_points['x'].unique())
@@ -242,7 +170,6 @@ class SoilMoisture(PandasDataset, MissingValuesMixin):
             df_new.append(cur_df)
 
             st_coords_new.append(st_coords[:, ind, :])
-            X_new.append(X[:, ind, :])
             eval_mask_new.append(eval_mask[:, ind])
             mask_new.append(mask[:, ind])
 
@@ -254,7 +181,6 @@ class SoilMoisture(PandasDataset, MissingValuesMixin):
         df_new.index = pd.to_datetime(df_new.index)
 
         st_coords_new = np.concatenate(st_coords_new, axis=0)
-        X_new = np.concatenate(X_new, axis=0)
         eval_mask_new = np.concatenate(eval_mask_new, axis=0)
         mask_new = np.concatenate(mask_new, axis=0)
 
@@ -266,6 +192,8 @@ class SoilMoisture(PandasDataset, MissingValuesMixin):
                 dist.append([sorted_x[i], sorted_y[j]])
         dist = np.array(dist)
         dist = cdist(dist, dist)
+
+        X_new = None
 
 
         return df_new, dist, mask_new, st_coords_new, X_new, eval_mask_new
@@ -341,7 +269,7 @@ class SoilMoistureSplitter(Splitter):
 
 if __name__ == '__main__':
     from tsl.ops.imputation import add_missing_values
-    dataset = SoilMoisture()
+    dataset = SoilMoistureHB()
     add_missing_values(dataset, p_fault=0, p_noise=0.25, min_seq=12,
                        max_seq=12 * 4, seed=56789)
 

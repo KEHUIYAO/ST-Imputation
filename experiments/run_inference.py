@@ -19,7 +19,7 @@ from tsl import config, logger
 from tsl.data import SpatioTemporalDataModule, ImputationDataset
 from tsl.data.preprocessing import StandardScaler
 from tsl.datasets import AirQuality, MetrLA, PemsBay
-from data import GaussianProcess, DescriptiveST, DynamicST, SoilMoisture, SoilMoistureSparse, HealingMnist
+from data import GaussianProcess, DescriptiveST, DynamicST, SoilMoistureHB, SoilMoistureSparse, HealingMnist
 
 from tsl.imputers import Imputer
 from tsl.nn.metrics import MaskedMetric, MaskedMAE, MaskedMSE, MaskedMRE
@@ -169,9 +169,8 @@ def get_dataset(dataset_name: str):
         return add_missing_values(PemsBay(), p_fault=p_fault, p_noise=p_noise,
                                   min_seq=12, max_seq=12 * 4, seed=56789)
 
-    if dataset_name == 'soil_moisture':
-        return add_missing_values(SoilMoisture(), p_fault=p_fault, p_noise=p_noise,
-                                  min_seq=12, max_seq=12 * 4, seed=56789)
+    if dataset_name == 'soil_moisture_hb':
+        return SoilMoistureHB(mode='test')
 
     if dataset_name == 'soil_moisture_sparse':
         return SoilMoistureSparse(mode='test')

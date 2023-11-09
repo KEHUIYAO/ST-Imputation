@@ -2,23 +2,13 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 from tsl.utils import numpy_metrics
+import matplotlib.dates as mdates
+from matplotlib.lines import Line2D
 
 
-log_dir = 'log/soil_moisture_sparse_point/interpolation/20230922T105905_4501766/output.npz'
-#
-# log_dir = 'log/soil_moisture_sparse_point/spin_h/20230919T034448_769252367/output.npz'
-#
-# log_dir = 'log/soil_moisture_sparse_point/grin/20230920T200001_144194526/output.npz'
-#
-# log_dir = 'log/soil_moisture_sparse_point/grin/20230930T195129_175358131/output.npz'
-#
-# log_dir = 'log/soil_moisture_sparse_point/spin_h/20230922T041452_741390810/output.npz'
+log_dir = 'log/soil_moisture_sparse_point/st_transformer/20231103T174145_0/in_sample.npz'
 
-log_dir = 'log/soil_moisture_sparse_point/st_transformer/20231005T192936_202512050/output.npz'
-
-log_dir = 'log/soil_moisture_sparse_point/transformer/20231018T022334_829125978/output.npz'
-
-
+log_dir = 'log/soil_moisture_point/st_transformer/20231106T050454_0/in_sample.npz'
 
 output = np.load(log_dir)
 
@@ -26,6 +16,8 @@ y_hat, y_true, observed_mask, eval_mask = output['y_hat'].squeeze(-1), \
                           output['y'].squeeze(-1), \
                           output['observed_mask'].squeeze(-1), \
                           output['eval_mask'].squeeze(-1)
+
+
 
 check_mae = numpy_metrics.masked_mae(y_hat, y_true, eval_mask)
 
@@ -77,39 +69,129 @@ for q in qlist:
     # quantiles_imp.append(tmp)
 
 
-
-
-
-
 L = all_target_np.shape[1]
 K = all_target_np.shape[2]
 
 dataind = 0
 
+# #######################################
+# plt.rcParams["font.size"] = 16
+# fig, axes = plt.subplots(nrows=9, ncols=4,figsize=(36, 24.0))
+#
+# fig.delaxes(axes[-1][-1])
+#
+# offset = 0
+# for k in range(offset, 36+offset):
+#     df = pd.DataFrame({"x":np.arange(0,L), "val":all_target_np[dataind,:,k], "y":all_evalpoint_np[dataind,:,k]})
+#     df = df[df.y != 0]
+#     df2 = pd.DataFrame({"x":np.arange(0,L), "val":all_target_np[dataind,:,k], "y":all_observed_np[dataind,:,k]})
+#     df2 = df2[df2.y != 0]
+#     row = (k-offset) // 4
+#     col = (k-offset) % 4
+#     axes[row][col].plot(range(0,L), quantiles_imp[2][dataind,:,k], color = 'g',linestyle='solid',label='CSDI')
+#     axes[row][col].fill_between(range(0,L), quantiles_imp[0][dataind,:,k],quantiles_imp[4][dataind,:,k],
+#                     color='g', alpha=0.3)
+#     # axes[row][col].plot(df.x,df.val, color = 'b',marker = 'o', linestyle='None')
+#     axes[row][col].plot(df2.x,df2.val, color = 'r',marker = 'x', linestyle='None')
+#     if col == 0:
+#         plt.setp(axes[row, 0], ylabel='value')
+#     if row == -1:
+#         plt.setp(axes[-1, col], xlabel='time')
+#
+#
+# plt.show()
+# #######################################
+
+
+
+
+###############################
 plt.rcParams["font.size"] = 16
-fig, axes = plt.subplots(nrows=9, ncols=4,figsize=(128, 24.0))
+fig, axes = plt.subplots(figsize=(24, 12))
+k = 0
+# date_range is 2016-01-01 to 2020-12-31
+start_date = pd.to_datetime('2016-01-01')
+end_date = pd.to_datetime('2018-12-31')
+date_range = pd.date_range(start=start_date, end=end_date)
+df = pd.DataFrame({"x": date_range, "val":all_target_np[dataind,:,k], "y":all_evalpoint_np[dataind,:,k]})
+df = df[df.y != 0]
+df2 = pd.DataFrame({"x":date_range, "val":all_target_np[dataind,:,k], "y":all_observed_np[dataind,:,k]})
+df2 = df2[df2.y != 0]
 
-fig.delaxes(axes[-1][-1])
+axes.plot(date_range, quantiles_imp[2][dataind,:,k], color = 'g',linestyle='solid')
 
-offset = 0
-for k in range(offset, 36+offset):
-    df = pd.DataFrame({"x":np.arange(0,L), "val":all_target_np[dataind,:,k], "y":all_evalpoint_np[dataind,:,k]})
-    df = df[df.y != 0]
-    df2 = pd.DataFrame({"x":np.arange(0,L), "val":all_target_np[dataind,:,k], "y":all_observed_np[dataind,:,k]})
-    df2 = df2[df2.y != 0]
-    row = (k-offset) // 4
-    col = (k-offset) % 4
-    axes[row][col].plot(range(0,L), quantiles_imp[2][dataind,:,k], color = 'g',linestyle='solid',label='CSDI')
-    axes[row][col].fill_between(range(0,L), quantiles_imp[0][dataind,:,k],quantiles_imp[4][dataind,:,k],
-                    color='g', alpha=0.3)
-    axes[row][col].plot(df.x,df.val, color = 'b',marker = 'o', linestyle='None')
-    axes[row][col].plot(df2.x,df2.val, color = 'r',marker = 'x', linestyle='None')
-    if col == 0:
-        plt.setp(axes[row, 0], ylabel='value')
-    if row == -1:
-        plt.setp(axes[-1, col], xlabel='time')
+axes.plot(df.x,df.val, color = 'b',marker = 'o', linestyle='None', markersize=10)
+axes.plot(df2.x,df2.val, color = 'r',marker = 'x', linestyle='None', markersize=10)
+
+axes.tick_params(axis='both', labelsize=30)
+
+axes.set_ylabel('value', fontsize=30)
+axes.set_xlabel('time', fontsize=30)
+
+# # Set major ticks to show the first day of every month
+# axes.xaxis.set_major_locator(mdates.MonthLocator())
+# # Format major ticks as 'YYYY-MM'
+# axes.xaxis.set_major_formatter(mdates.DateFormatter('%Y-%m'))
+
+
+# Set major ticks to show the year
+axes.xaxis.set_major_locator(mdates.YearLocator())
+axes.xaxis.set_major_formatter(mdates.DateFormatter('%Y'))
+
+
+axes.tick_params(axis='both', labelsize=20)
+
+# Rotate and align the x labels
+fig.autofmt_xdate()
+
+axes.set_xlim(start_date, end_date)
+
+# Create custom legend
+legend_elements = [Line2D([0], [0], color='g', lw=4, label='imputed'),
+                   Line2D([0], [0], color='b', marker='o', lw=0, markersize=10, label='validation'),
+                   Line2D([0], [0], color='r', marker='x', lw=0, markersize=10, label='observed')]
+
+axes.legend(handles=legend_elements, loc='upper right', fontsize=20)
 
 
 plt.show()
 
+fig.savefig('../writings/figure/simulation_imputation_result.png', dpi=300)
+###############################
+
+
+# ###############################
+# y_hat = y_hat.reshape(y_hat.shape[1], 36, 36)
+# y_true = y_true.reshape(y_true.shape[1], 36, 36)
+#
+#
+# # Set the number of time steps
+# time_steps = 14
+#
+# # Create a figure with subplots - 2 rows for y_hat, y_true
+# fig, axes = plt.subplots(2, time_steps, figsize=(20, 6))  # Adjust the figsize as needed
+# cmap = 'YlGn'
+# offset = 202
+# # Plot each time step for y_true
+# for i in range(time_steps):
+#     ax = axes[0, i]
+#     ax.imshow(y_true[i+offset, :, :], cmap=cmap)
+#     ax.axis('off')
+#     ax.set_title(f'Time {i+1}')
+#
+# # Plot each time step for y_hat
+# for i in range(time_steps):
+#     ax = axes[1, i]
+#     ax.imshow(y_hat[i+offset, :, :], cmap=cmap)
+#     ax.axis('off')
+#
+#
+# # Optionally, you can set common titles for each row
+# axes[0, 0].set_ylabel('True')
+# axes[1, 0].set_ylabel('Predicted')
+#
+#
+# plt.tight_layout()
+# plt.show()
+# ###############################
 

@@ -1,0 +1,29 @@
+#### Dataset params ###########################################################
+#dataset_name: [la_point, bay_point, la_bock, bay_bock, air, air36]
+val_len: 0.2
+test_len: 0.2
+
+window: 72  # [24, 36]
+stride: 2
+
+#### Training params ##########################################################
+whiten_prob: [0.2, 0.5, 0.8]
+scale_target: True
+epochs: 200
+batch_size: 16
+batch_inference: 16
+
+loss_fn: l1_loss
+lr_scheduler: magic
+lr: 0.001
+patience: 40
+precision: 16
+batches_epoch: 300
+check_val_every_n_epoch: 1
+l2_reg: 0
+
+### Model params #############################################################
+u_size: 25
+spatial_dim: 144
+dropout: 0
+hidden_size: 64
