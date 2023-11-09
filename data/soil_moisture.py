@@ -86,13 +86,13 @@ class SoilMoisture(PandasDataset, MissingValuesMixin):
         self.original_data['eval_mask'] = eval_mask
 
 
-        p_missing = 0.8
-        ################# missing completely for selected time point ##################
-        time_points_to_eval = self.rng.choice(rows, int(p_missing * rows), replace=False)
-        eval_mask = np.zeros_like(y)
-        eval_mask[time_points_to_eval, :] = 1
-        self.original_data['eval_mask'] = eval_mask
-        ################# missing completely for selected time point ##################
+        # p_missing = 0.8
+        # ################# missing completely for selected time point ##################
+        # time_points_to_eval = self.rng.choice(rows, int(p_missing * rows), replace=False)
+        # eval_mask = np.zeros_like(y)
+        # eval_mask[time_points_to_eval, :] = 1
+        # self.original_data['eval_mask'] = eval_mask
+        # ################# missing completely for selected time point ##################
 
         # ################## missing at random ##################
         # eval_mask = np.zeros_like(y)
