@@ -26,7 +26,7 @@ adj_threshold: 0.1
 
 #### Model params #############################################################
 model_name: 'grin'
-exog_size: 0
+exog_size: 25
 hidden_size: 64
 ff_size: 64
 embedding_size: 8
