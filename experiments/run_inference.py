@@ -73,7 +73,7 @@ def parse_args():
     parser.add_argument('--batch-inference', type=int, default=32)
     # parser.add_argument('--load-from-pretrained', type=str, default='log/soil_moisture_sparse_point/transformer/20231020T041452_872647949/epoch=8-step=1961.ckpt')
     parser.add_argument('--load-from-pretrained', type=str,
-                        default='log/healing_mnist_point/st_transformer/20231108T214115_453346743')
+                        default='log/healing_mnist_point/st_transformer/20231108T214115_453346743/epoch=37-step=91161.ckpt')
 
 
     # parser.add_argument('--load-from-pretrained', type=str,
