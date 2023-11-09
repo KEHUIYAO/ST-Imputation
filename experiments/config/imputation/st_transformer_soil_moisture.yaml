@@ -26,3 +26,4 @@ l2_reg: 0
 u_size: 25
 spatial_dim: 144
 dropout: 0.5
+hidden_size: 32
