@@ -23,7 +23,7 @@ check_val_every_n_epoch: 1
 l2_reg: 0
 
 ### Model params #############################################################
-u_size: 25
+u_size: 12
 spatial_dim: 144
 dropout: 0
 hidden_size: 64
