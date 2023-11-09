@@ -553,13 +553,7 @@ def main(args):
     # model_list = ['interpolation']
     # model_list = ['csdi', 'st_transformer', 'transformer', 'mean', 'interpolation']
     model_list = ['st_transformer']
-
-    model_config = {'st_transformer': 'imputation/st_transformer_soil_moisture.yaml',
-                    'transformer': 'imputation/transformer_soil_moisture.yaml',
-                    'grin': 'imputation/grin_soil_moisture.yaml',
-                    'csdi': 'imputation/csdi_soil_moisture.yaml',
-                    'mean': 'imputation/mean_soil_moisture.yaml',
-                    'interpolation': 'imputation/interpolation_soil_moisture.yaml'}
+    model_config = ['imputation/st_transformer_soil_moisture_hb.yaml']
 
 
 
@@ -579,9 +573,10 @@ def main(args):
     for seed in seed_list:
         args.seed = seed
 
-        for model in model_list:
+        for model_ind in range(len(model_list)):
+            model = model_list[model_ind]
             args.model_name = model
-            args.config = model_config[model]
+            args.config = model_config[model_ind]
             model_cls, imputer_cls = get_model_classes(args.model_name)
             parser = ArgParser()
             parser = model_cls.add_model_specific_args(parser)
