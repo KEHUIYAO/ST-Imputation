@@ -22,7 +22,7 @@ current_dir = os.path.dirname(os.path.abspath(__file__))
 
 
 
-class SoilMoisture(PandasDataset, MissingValuesMixin):
+class SoilMoistureHB(PandasDataset, MissingValuesMixin):
     similarity_options = {'distance'}
 
     def __init__(self, mode='train', seed=42):
@@ -339,7 +339,7 @@ class SoilMoistureSplitter(Splitter):
 
 if __name__ == '__main__':
     from tsl.ops.imputation import add_missing_values
-    dataset = SoilMoisture()
+    dataset = SoilMoistureHB()
     add_missing_values(dataset, p_fault=0, p_noise=0.25, min_seq=12,
                        max_seq=12 * 4, seed=56789)
 
