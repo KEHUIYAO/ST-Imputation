@@ -556,7 +556,7 @@ def main(args):
     # model_config = ['imputation/st_transformer_soil_moisture_hb.yaml']
 
     model_list = ['grin']
-    model_config = ['imputation/grin_soil_moisture.yaml']
+    model_config = ['imputation/grin_soil_moisture_hb.yaml']
 
 
 
