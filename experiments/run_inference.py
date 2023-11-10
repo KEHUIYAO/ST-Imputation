@@ -63,9 +63,9 @@ def parse_args():
     parser.add_argument("--model-name", type=str, default='st_transformer')
     #parser.add_argument("--model-name", type=str, default='interpolation')
     #parser.add_argument("--model-name", type=str, default='spin_h')
-    parser.add_argument("--dataset-name", type=str, default='healing_mnist_point')
+    parser.add_argument("--dataset-name", type=str, default='soil_moisture_hb_point')
     #parser.add_argument("--config", type=str, default=None)
-    parser.add_argument("--config", type=str, default='imputation/st_transformer_healing_mnist.yaml')
+    parser.add_argument("--config", type=str, default='imputation/st_transformer_soil_moisture_hb.yaml')
     # parser.add_argument("--config", type=str, default='imputation/spin_h_soil_moisture.yaml')
     # parser.add_argument("--config", type=str, default='imputation/transformer_soil_moisture.yaml')
     parser.add_argument('--epochs', type=int, default=200)
@@ -73,7 +73,7 @@ def parse_args():
     parser.add_argument('--batch-inference', type=int, default=32)
     # parser.add_argument('--load-from-pretrained', type=str, default='log/soil_moisture_sparse_point/transformer/20231020T041452_872647949/epoch=8-step=1961.ckpt')
     parser.add_argument('--load-from-pretrained', type=str,
-                        default='log/healing_mnist_point/st_transformer/20231108T214115_453346743/epoch=37-step=91161.ckpt')
+                        default='log/soil_moisture_hb_point/st_transformer/20231110T014400_0/epoch=61-step=24365.ckpt')
 
 
     # parser.add_argument('--load-from-pretrained', type=str,
