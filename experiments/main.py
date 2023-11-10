@@ -39,7 +39,7 @@ def parse_args():
     # Argument parser
     ########################################
     parser = ArgParser()
-    parser.add_argument("--dataset-name", type=str, default='soil_moisture_sparse_point')
+    parser.add_argument("--dataset-name", type=str, default='soil_moisture_hb_point')
 
     parser.add_argument('--epochs', type=int, default=200)
     parser.add_argument('--check-val-every-n-epoch', type=int, default=1)
@@ -552,11 +552,11 @@ def main(args):
     # model_list = ['st_transformer', 'grin', 'csdi']
     # model_list = ['interpolation']
     # model_list = ['csdi', 'st_transformer', 'transformer', 'mean', 'interpolation']
-    # model_list = ['st_transformer']
-    # model_config = ['imputation/st_transformer_soil_moisture_hb.yaml']
+    model_list = ['st_transformer']
+    model_config = ['imputation/st_transformer_soil_moisture_hb.yaml']
 
-    model_list = ['grin']
-    model_config = ['imputation/grin_soil_moisture.yaml']
+    # model_list = ['grin']
+    # model_config = ['imputation/grin_soil_moisture.yaml']
 
 
 
