@@ -57,7 +57,7 @@ class SoilMoistureHB(PandasDataset, MissingValuesMixin):
             date_start = '2019-01-01'
             date_end = '2019-12-31'
 
-        df = pd.read_csv(os.path.join(current_dir, 'smap_hb_1km_new.csv'))
+        df = pd.read_csv(os.path.join(current_dir, 'smap_1km_new.csv'))
 
         y = df.iloc[:, 3:]
 
@@ -84,7 +84,7 @@ class SoilMoistureHB(PandasDataset, MissingValuesMixin):
 
 
 
-        p_missing = 0.9
+        p_missing = 0.2
         ################# missing completely for selected time point ##################
         time_points_to_eval = self.rng.choice(rows, int(p_missing * rows), replace=False)
         eval_mask = np.zeros_like(y)
