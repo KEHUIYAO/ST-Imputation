@@ -19,7 +19,7 @@ from tsl import config, logger
 from tsl.data import SpatioTemporalDataModule, ImputationDataset
 from tsl.data.preprocessing import StandardScaler, MinMaxScaler
 from tsl.datasets import AirQuality, MetrLA, PemsBay
-from data import GaussianProcess, DescriptiveST, DynamicST, SoilMoistureSparse, SoilMoistureHB, HealingMnist
+from data import GaussianProcess, DescriptiveST, DynamicST, SoilMoistureSparse, SoilMoistureHB, HealingMnist, Sine
 
 from tsl.imputers import Imputer
 from tsl.nn.metrics import MaskedMetric, MaskedMAE, MaskedMSE, MaskedMRE
@@ -45,7 +45,7 @@ def parse_args():
     parser.add_argument("--dataset-name", type=str, default='healing_mnist_point')
     # parser.add_argument("--dataset-name", type=str, default='air36')
     #parser.add_argument("--config", type=str, default=None)
-    parser.add_argument("--config", type=str, default='imputation/st_transformer_healing_mnist.yaml')
+    parser.add_argument("--config", type=str, default='imputation/st_transformer_sine.yaml')
     parser.add_argument('--epochs', type=int, default=200)
     parser.add_argument('--check-val-every-n-epoch', type=int, default=1)
     parser.add_argument('--batch-inference', type=int, default=32)
@@ -75,7 +75,7 @@ def parse_args():
     parser.add_argument("--adj-threshold", type=float, default=0.1)
 
     parser.add_argument('--p-fault', type=float, default=0.0)
-    parser.add_argument('--p-noise', type=float, default=0.6)
+    parser.add_argument('--p-noise', type=float, default=0.9)
 
     known_args, _ = parser.parse_known_args()
     model_cls, imputer_cls = get_model_classes(known_args.model_name)
@@ -160,6 +160,10 @@ def get_dataset(dataset_name: str):
 
     if dataset_name == 'healing_mnist':
         return HealingMnist(mode='train')
+
+    if dataset_name == 'sine':
+        return add_missing_values(Sine(num_nodes=36, seq_len=4000), p_fault=p_fault, p_noise=p_noise, min_seq=12,
+                                  max_seq=12 * 4, seed=56789)
 
     raise ValueError(f"Invalid dataset name: {dataset_name}.")
 
