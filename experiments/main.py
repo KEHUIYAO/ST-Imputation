@@ -138,7 +138,7 @@ def get_dataset(dataset_name: str, args=None):
     if dataset_name == 'dynamic':
         return add_missing_values(DynamicST(num_nodes=36, seq_len=400), p_fault=p_fault, p_noise=p_noise, min_seq=12, max_seq=12 * 4, seed=56789)
 
-    if dataset_name == 'sine_point':
+    if dataset_name == 'sine':
         return add_missing_values(Sine(num_nodes=144, seq_len=4000), p_fault=p_fault, p_noise=p_noise, min_seq=12, max_seq=12 * 4, seed=56789)
 
     raise ValueError(f"Invalid dataset name: {dataset_name}.")
