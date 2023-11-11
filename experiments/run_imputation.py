@@ -42,7 +42,7 @@ def parse_args():
     parser = ArgParser()
     parser.add_argument("--model-name", type=str, default='st_transformer')
     #parser.add_argument("--model-name", type=str, default='interpolation')
-    parser.add_argument("--dataset-name", type=str, default='healing_mnist_point')
+    parser.add_argument("--dataset-name", type=str, default='sine_point')
     # parser.add_argument("--dataset-name", type=str, default='air36')
     #parser.add_argument("--config", type=str, default=None)
     parser.add_argument("--config", type=str, default='imputation/st_transformer_sine.yaml')
