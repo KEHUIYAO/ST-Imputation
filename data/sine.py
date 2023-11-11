@@ -15,8 +15,8 @@ class Sine(PandasDataset):
     similarity_options = {'distance'}
 
     def __init__(self, num_nodes, seq_len, seed=42):
-        df, dist = self.load(num_nodes, seq_len, seed)
-        super().__init__(dataframe=df, similarity_score="distance", attributes=dict(dist=dist))
+        df, dist, st_coords = self.load(num_nodes, seq_len, seed)
+        super().__init__(dataframe=df, similarity_score="distance", attributes=dict(dist=dist, st_coords=st_coords))
 
 
 
@@ -57,7 +57,10 @@ class Sine(PandasDataset):
         df = pd.DataFrame(y)
         df.index = pd.to_datetime(df.index)
 
-        return df, dist
+        space_coords, time_coords = np.meshgrid(np.arange(df.shape[1]), np.arange(df.shape[0]))
+        st_coords = np.stack([space_coords, time_coords], axis=-1)
+
+        return df, dist, st_coords
 
 
 
