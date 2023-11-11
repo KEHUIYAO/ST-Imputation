@@ -43,6 +43,7 @@ def parse_args():
 
     parser.add_argument('--epochs', type=int, default=200)
     parser.add_argument('--check-val-every-n-epoch', type=int, default=1)
+    parser.add_argument('--batch-size', type=int, default=16)
     parser.add_argument('--batch-inference', type=int, default=32)
     parser.add_argument('--load-from-pretrained', type=str,
                         default=None)
@@ -552,11 +553,17 @@ def main(args):
     # model_list = ['st_transformer', 'grin', 'csdi']
     # model_list = ['interpolation']
     # model_list = ['csdi', 'st_transformer', 'transformer', 'mean', 'interpolation']
-    model_list = ['st_transformer']
-    model_config = ['imputation/st_transformer_soil_moisture_hb.yaml']
+    # model_list = ['st_transformer']
+    # model_config = ['imputation/st_transformer_soil_moisture_hb.yaml']
 
     # model_list = ['grin']
     # model_config = ['imputation/grin_soil_moisture_hb.yaml']
+
+    # model_list = ['mean']
+    # model_config = ['imputation/mean_soil_moisture.yaml']
+
+    model_list = ['interpolation']
+    model_config = ['imputation/interpolation_soil_moisture.yaml']
 
 
 

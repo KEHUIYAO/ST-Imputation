@@ -24,6 +24,6 @@ l2_reg: 0
 
 ### Model params #############################################################
 u_size: 0
-spatial_dim: 36
+spatial_dim: 144
 dropout: 0
 hidden_size: 64
