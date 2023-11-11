@@ -15,6 +15,7 @@ class Sine(PandasDataset):
     similarity_options = {'distance'}
 
     def __init__(self, num_nodes, seq_len, seed=42):
+        self.original_data = {}
         df, dist, st_coords = self.load(num_nodes, seq_len, seed)
         super().__init__(dataframe=df, similarity_score="distance", attributes=dict(dist=dist, st_coords=st_coords))
 
@@ -47,6 +48,8 @@ class Sine(PandasDataset):
 
         for i in range(seq_len):
             y[i, :] = np.sin(i/12 + alpha) + epsilon[i, :]
+
+        self.original_data['y'] = y
 
 
         time_coords = np.arange(0, seq_len)
