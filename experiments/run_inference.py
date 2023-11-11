@@ -102,7 +102,7 @@ def parse_args():
     parser.add_argument("--adj-threshold", type=float, default=0.1)
 
     parser.add_argument('--p-fault', type=float, default=0.0)
-    parser.add_argument('--p-noise', type=float, default=0.0)
+    parser.add_argument('--p-noise', type=float, default=0.9)
 
     known_args, _ = parser.parse_known_args()
     model_cls, imputer_cls = get_model_classes(known_args.model_name)
