@@ -64,7 +64,7 @@ def parse_args():
     parser.add_argument("--adj-threshold", type=float, default=0.1)
 
     parser.add_argument('--p-fault', type=float, default=0.0)
-    parser.add_argument('--p-noise', type=float, default=0.9)
+    parser.add_argument('--p-noise', type=float, default=0.95)
 
     known_args, _ = parser.parse_known_args()
 
