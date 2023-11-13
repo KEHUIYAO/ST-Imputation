@@ -44,7 +44,7 @@ class Sine(PandasDataset):
 
         y = np.zeros((seq_len, num_nodes))
 
-        epsilon = rng.normal(0, 1, size=(seq_len, num_nodes)) * 0.0
+        epsilon = rng.normal(0, 1, size=(seq_len, num_nodes)) * 0.1
 
         for i in range(seq_len):
             y[i, :] = np.sin(i/12 + alpha) + epsilon[i, :]
