@@ -11,7 +11,7 @@ from scipy.linalg import cholesky
 
 
 
-class Sine(PandasDataset):
+class Sine(PandasDataset, MissingValuesMixin):
     similarity_options = {'distance'}
 
     def __init__(self, num_nodes, seq_len, seed=42):
