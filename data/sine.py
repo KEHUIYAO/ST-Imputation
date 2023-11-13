@@ -20,7 +20,8 @@ class Sine(PandasDataset):
         super().__init__(dataframe=df, similarity_score="distance", attributes=dict(dist=dist, st_coords=st_coords))
         eval_mask = np.zeros((seq_len, num_nodes))
         p_missing = 0.95
-        time_points_to_eval = self.rng.choice(seq_len, int(p_missing * seq_len), replace=False)
+        rng = np.random.RandomState(seed)
+        time_points_to_eval = rng.choice(seq_len, int(p_missing * seq_len), replace=False)
         eval_mask[time_points_to_eval, :] = 1
         self.original_data['eval_mask'] = eval_mask
         self.set_eval_mask(eval_mask)
