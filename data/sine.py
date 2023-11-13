@@ -1,5 +1,7 @@
 import pandas as pd
 from tsl.datasets.prototypes import PandasDataset
+from tsl.datasets.prototypes.mixin import MissingValuesMixin
+
 from tsl.ops.similarities import gaussian_kernel
 import matplotlib.pyplot as plt
 import numpy as np
