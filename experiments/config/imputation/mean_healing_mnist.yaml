@@ -1,0 +1,3 @@
+window: 10
+stride: 10
+loss_fn: mse_loss
