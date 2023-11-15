@@ -566,7 +566,7 @@ def main(args):
     # model_config = ['imputation/grin_soil_moisture_hb.yaml']
 
     model_list = ['mean']
-    model_config = ['imputation/mean_soil_moisture.yaml']
+    model_config = ['imputation/mean_healing_mnist.yaml']
 
     # model_list = ['interpolation']
     # model_config = ['imputation/interpolation_soil_moisture.yaml']
