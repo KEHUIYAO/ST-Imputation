@@ -18,7 +18,7 @@ from tsl import config, logger
 from tsl.data import SpatioTemporalDataModule, ImputationDataset
 from tsl.data.preprocessing import StandardScaler, MinMaxScaler
 from tsl.datasets import AirQuality, MetrLA, PemsBay
-from data import GaussianProcess, DescriptiveST, DynamicST, SoilMoistureSparse, SoilMoistureHB, Sine
+from data import GaussianProcess, DescriptiveST, DynamicST, SoilMoistureSparse, SoilMoistureHB, Sine, HealingMnist
 
 from tsl.imputers import Imputer
 from tsl.nn.metrics import MaskedMetric, MaskedMAE, MaskedMSE, MaskedMRE
@@ -39,7 +39,7 @@ def parse_args():
     # Argument parser
     ########################################
     parser = ArgParser()
-    parser.add_argument("--dataset-name", type=str, default='sine_point')
+    parser.add_argument("--dataset-name", type=str, default='healing_mnist_point')
 
     parser.add_argument('--epochs', type=int, default=200)
     parser.add_argument('--check-val-every-n-epoch', type=int, default=1)
@@ -141,6 +141,8 @@ def get_dataset(dataset_name: str, args=None):
     if dataset_name == 'sine':
         return Sine(num_nodes=144, seq_len=40000)
         # return add_missing_values(Sine(num_nodes=144, seq_len=4000), p_fault=p_fault, p_noise=p_noise, min_seq=12, max_seq=12 * 4, seed=56789)
+    if dataset_name == 'healing_mnist':
+        return HealingMnist(mode='train')
 
     raise ValueError(f"Invalid dataset name: {dataset_name}.")
 
@@ -569,8 +571,11 @@ def main(args):
     # model_list = ['interpolation']
     # model_config = ['imputation/interpolation_soil_moisture.yaml']
 
-    model_list = ['st_transformer']
-    model_config = ['imputation/st_transformer_sine.yaml']
+    # model_list = ['st_transformer']
+    # model_config = ['imputation/st_transformer_healing_mnist.yaml']
+
+    model_list = ['grin']
+    model_config = ['imputation/grin_healing_mnist.yaml']
 
 
 
