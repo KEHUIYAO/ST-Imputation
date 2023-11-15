@@ -18,7 +18,7 @@ batch_inference: 16
 loss_fn: mse_loss
 lr_scheduler: cosine
 lr: 0.001
-batches_epoch: 3000
+batches_epoch: 300
 check_val_every_n_epoch: 1
 
 adj_threshold: 0.1
