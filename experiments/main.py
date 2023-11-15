@@ -562,8 +562,8 @@ def main(args):
     # model_list = ['st_transformer']
     # model_config = ['imputation/st_transformer_soil_moisture_hb.yaml']
 
-    model_list = ['grin']
-    model_config = ['imputation/grin_soil_moisture_hb.yaml']
+    # model_list = ['grin']
+    # model_config = ['imputation/grin_soil_moisture_hb.yaml']
 
     # model_list = ['mean']
     # model_config = ['imputation/mean_healing_mnist.yaml']
@@ -574,8 +574,8 @@ def main(args):
     # model_list = ['st_transformer']
     # model_config = ['imputation/st_transformer_healing_mnist.yaml']
 
-    # model_list = ['grin']
-    # model_config = ['imputation/grin_healing_mnist.yaml']
+    model_list = ['grin']
+    model_config = ['imputation/grin_healing_mnist.yaml']
 
 
 
