@@ -9,7 +9,7 @@ from sklearn.preprocessing import StandardScaler
 current_dir = os.path.dirname(os.path.abspath(__file__))
 seed = 42
 rng = np.random.RandomState(seed)
-data_path = os.path.join(current_dir, '../data/SMAP_Climate_In_Situ_TxSON.csv')
+data_path = os.path.join(current_dir, '../../data/SMAP_Climate_In_Situ_TxSON.csv')
 
 
 df = pd.read_csv(data_path)
@@ -67,7 +67,7 @@ print(f'MAE: {mae:.5f}')
 
 
 # in-situ data
-data_path = os.path.join(current_dir, '../data/Insitu_gap_filling_data.csv')
+data_path = os.path.join(current_dir, '../../data/Insitu_gap_filling_data.csv')
 df = pd.read_csv(data_path)
 df['Date'] = pd.to_datetime(df['Date'], format='%Y%m%d')
 
