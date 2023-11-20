@@ -29,10 +29,10 @@ from tsl.utils.parser_utils import ArgParser
 from tsl.ops.imputation import add_missing_values
 from tsl.utils import parser_utils, numpy_metrics
 
-from spin.baselines import SAITS, TransformerModel, BRITS, MeanModel, InterpolationModel
-from spin.imputers import SPINImputer, SAITSImputer, BRITSImputer, MeanImputer, InterpolationImputer, DiffgrinImputer, CsdiImputer, GrinImputer, TransformerImputer
-from spin.models import SPINModel, SPINHierarchicalModel, DiffGrinModel, CsdiModel, GrinModel, SpatioTemporalTransformerModel
-from spin.scheduler import CosineSchedulerWithRestarts
+from src.baselines import SAITS, TransformerModel, BRITS, MeanModel, InterpolationModel
+from src.imputers import SPINImputer, SAITSImputer, BRITSImputer, MeanImputer, InterpolationImputer, DiffgrinImputer, CsdiImputer, GrinImputer, TransformerImputer
+from src.models import SPINModel, SPINHierarchicalModel, DiffGrinModel, CsdiModel, GrinModel, SpatioTemporalTransformerModel
+from src.scheduler import CosineSchedulerWithRestarts
 
 from tqdm import tqdm
 
