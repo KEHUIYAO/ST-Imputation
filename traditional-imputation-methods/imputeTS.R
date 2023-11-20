@@ -21,7 +21,7 @@ impute_column_with_fallback <- function(column_data) {
       imputed_data
     },
     error = function(e) {
-      imputed_data <- na_interpolation(column_data)
+      imputed_data <- na_replace(column_data, 0)
       imputed_data
     }
   )
@@ -30,7 +30,8 @@ impute_column_with_fallback <- function(column_data) {
 
 
 y <- read.csv('../data/smap_1km.csv')
-y <- y[1:nrow(y), 5:ncol(y)]
+# y <- y[1:nrow(y), 5:ncol(y)]
+y <- y[1828:nrow(y), 5:ncol(y)]
 y <- as.matrix(y)
 y <- t(y)
 
@@ -64,8 +65,9 @@ y_val_eval <- y_val[eval_mask == 1]
 mae <- mean(abs(y_imputed_eval - y_val_eval))
 print(mae)
 
+mre <- mean(abs(y_imputed_eval - y_val_eval) / abs(y_val_eval))
 
-
+print(mre)
 
 
 
