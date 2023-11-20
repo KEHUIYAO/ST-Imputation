@@ -40,7 +40,7 @@ def parse_args():
     # Argument parser
     ########################################
     parser = ArgParser()
-    parser.add_argument("--model-name", type=str, default='st_transformer')
+    parser.add_argument("--model-name", type=str, default='grin')
     #parser.add_argument("--model-name", type=str, default='interpolation')
     parser.add_argument("--dataset-name", type=str, default='sine_point')
     # parser.add_argument("--dataset-name", type=str, default='air36')

@@ -251,8 +251,8 @@ class SoilMoistureSparse(PandasDataset, MissingValuesMixin):
 
 
         dist = []
-        for j in range(6):
-            for i in range(6):
+        for j in range(12):
+            for i in range(12):
                 dist.append([sorted_x[i], sorted_y[j]])
         dist = np.array(dist)
         dist = cdist(dist, dist)
