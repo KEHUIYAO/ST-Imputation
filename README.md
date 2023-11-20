@@ -12,4 +12,14 @@ The architecture of the ST-Transformer is depicted in the following figure. The 
 
 ## Experimental Results
 Results on HealingMnist:
+
+| Method            | MSE                |
+|-------------------|--------------------|
+| **ST-Transformer**| 0.054 +/- 0.000    |
+| GP-VAE            | 0.114 +/- 0.002    |
+| Interpolation     | 0.135 +/- 0.002    |
+| Mean              | 0.210 +/- 0.004    |
+
 ![HealingMnist](./writings/figure/healing_mnist.png)
+
+
