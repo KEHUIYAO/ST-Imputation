@@ -35,7 +35,7 @@
 \newtheorem{lemma}{Lemma}
 
 
-\title{Spatiotemporal Transformer for Imputing Sparse Soil Moisture Data: A Deep Learning Approach}
+\title{Spatiotemporal Transformer for Imputing Sparse Data: A Deep Learning Approach}
 
 \author[1]{Kehui Yao}
 
@@ -66,16 +66,16 @@ To address temporal gaps in SMAP/Sentinel-1 data, filling missing values is a co
  In the field of deep learning for time-series imputation, there are two main categories: autoregressive methods that use recurrent neural networks (RNNs), and non-autoregressive methods that utilize attention mechanisms. \citet{cao2018brits} introduced BRITS, an autoregressive method that uses bidirectional RNNs for imputing missing values, which was later improved by \citet{cini2021filling} through the integration of a graph neural network to enhance the understanding of spatial structures. RNN-based methods are known for their strong inductive bias, making them efficient even with smaller datasets. However, the training of RNNs can be slow, as they process data sequentially, and this might lead to the accumulation of errors over time, particularly in datasets with a significant number of missing values. On the other hand, attention-based methods, introduced by \citet{vaswani2017attention}, have demonstrated remarkable performance in numerous natural language processing tasks and offer an alternative to the recurrent structure for time series imputation. For instance, \citet{du2023saits} introduced SAITS, a model using self-attention mechanisms for filling in missing values in multivariate time series. \citet{tashiro2021csdi} proposed the idea of using a unique architecture of 2D attention (temporal attention and feature attention) for multivariate time series imputation. Compared to RNNs, Transformer-based models are better at capturing long-term dependencies and understanding global context, which is crucial for accurate imputation in time series with complex relationships. Also, transformer models avoid error propagation, are easier to optimize, and have a flexible attention scope, offering a more robust framework for handling sparse observations. 
 
 
-One limitation of the existing transformer-based imputation models is that they primarily focus on the data that requires imputation, often neglecting the potential benefits of incorporating additional contextual information. Another limitation is that most models are not tailored for spatiotemporal data. They usually treat spatial information as features and use a full attention layer to learn the patterns, ignoring the common sense that nearby points are likely to be more similar, which limits its effectiveness. Additionally, those models don't scale well when the spatial field is large.
+One limitation of the existing transformer-based imputation models is that they primarily focus on the data that requires imputation, often neglecting the potential benefits of incorporating additional contextual information. This means these models typically concentrate on the directly observed or partially missing spatiotemporal data, but they don't fully leverage other related data that could enhance the imputation process. Another limitation is that most models are not tailored for spatiotemporal data. They usually treat spatial information as features and use a full attention layer to learn the patterns, ignoring the common sense that nearby points are likely to be more similar, which is also known as the ``First Law of Geography" \citep{tobler1970computer}. Additionally, those models don't scale well when the spatial field is large.
 
 
 
-To overcome the limitations of existing models, we introduce a novel transformer-based model that has two key advantages. Firstly, it allows the integration of additional data sources for imputation. In the context of soil moisture, this model utilizes external covariates like daily surface weather data to help imputation. Secondly, our model uses a shifted-window-based self-attention mechanism \citep{liu2021swin} for spatial modeling, which enhances the model's ability to capture local spatial correlations and scalability.
+To overcome the limitations of existing models, we develop a novel transformer-based model that has two key advantages. Firstly, it allows the integration of additional data sources for imputation. In the context of soil moisture, this model utilizes external covariates like daily surface weather data to help imputation. Secondly, our model uses a shifted-window-based self-attention mechanism \citep{liu2021swin} for spatial modeling, which enhances the model's ability to capture local spatial correlations and scalability.
 
 The performance of our model was assessed through comparisons with different imputation methods, utilizing data from Texas soil moisture sites. In addition, we performed imputation tasks on various simulated datasets, such as the Healing Mnist and SMAP-Hydroblock datasets. These simulation studies offer a further understanding of the model's effectiveness in a variety of scenarios.
 
 
-This paper's contributions are twofold. Firstly, it introduces a self-supervised training framework built around a new spatiotemporal transformer model designed for a broad range of spatiotemporal imputation tasks. This model is notable for its ability to include covariates in the imputation process and its scalability to extensive spatial areas. Secondly, to our knowledge, this study is the first to use a transformer-based model for soil moisture gap-filling. In experiments conducted within the Texas region, the model outperformed various time-series imputation methods, achieving the lowest mean absolute error (MAE) and mean relative error (MRE).
+This paper's contributions are twofold. Firstly, it introduces a self-supervised training framework built around a new spatiotemporal transformer model designed for a broad range of spatiotemporal imputation tasks. This model is notable for its ability to include covariates in the imputation process and its scalability to large spatial areas. Secondly, to our knowledge, this study is the first to use a transformer-based model for soil moisture gap-filling. In experiments conducted within the Texas region, the model outperformed various time-series imputation methods, achieving the lowest mean absolute error (MAE) and mean relative error (MRE).
 
 
 \section{Method}\label{sec: method}
@@ -92,9 +92,9 @@ where $l(\cdot, \cdot)$ denotes an element-wise loss function such as mean absol
 
 
 \subsection{Model Overview}
-In this section, we present the Spatiotemporal Transformer model (ST-Transformer). The architecture of the model is depicted in Figure \ref{fig: st_transformer}. The ST-Transformer consists of three main components: an input encoder, a spatiotemporal transformer encoder, and an output layer. 
+In this section, we develop the Spatiotemporal Transformer model (ST-Transformer). The architecture of the model is depicted in Figure \ref{fig: st_transformer}. The ST-Transformer consists of three main components: an input encoder, a spatiotemporal transformer encoder, and an output layer. 
 
-The input encoder functions by integrating covariate data ($\boldsymbol{X}$) and observed values ($\boldsymbol{Y}$) at each time point and location, transforming them into a latent representation. Following this, the spatiotemporal transformer encoder works to process the spatial and temporal dependencies present in the data. Finally, the output layer of the model is responsible for generating the imputed values. The following paragraphs will provide a detailed walkthrough of each of these components.
+The input encoder functions by integrating covariate data ($\boldsymbol{X}$) and observed values ($\boldsymbol{Y}$) at each time point and location, transforming them into a latent representation. Following this, the spatiotemporal transformer encoder works to process the spatial and temporal dependencies present in the data. Finally, the output layer of the model is responsible for generating the imputed values. 
 
 
 
@@ -149,9 +149,9 @@ The Spatiotemporal Transformer Encoder aims to encode valuable information for e
 For the temporal attention layer, the input tensor is initially partitioned along the spatial axis, with each segment then processed through a multi-head self-attention layer (MSA) \citep{vaswani2017attention}. The processed segments are then merged to form the output of the temporal attention layer.
 
 
-For the spatial attention layer, two variants are introduced. The first mirrors the temporal attention layer, differing only in the axis along which the input tensor is split and rejoined. However, for larger spatial dimensions, the conventional MSA encounters scalability issues. To mitigate this, the second variant adopts a stack of shifted-window-based multi-head self-attention (SW-MSA), as proposed in \citet{liu2021swin}, to replace the standard MSA to ensure efficient modeling.
+For the spatial attention layer, two variants are introduced. The first mirrors the temporal attention layer, differing only in the axis along which the input tensor is split and rejoined. However, for larger spatial dimensions, the conventional MSA encounters scalability issues. To mitigate this, the second variant adopts a stack of shifted-window-based multi-head self-attention (SW-MSA) \citep{liu2021swin} to replace the standard MSA to ensure efficient modeling.
 
-Now we briefly discuss the MSA and SW-MSA. MSA allows attention across varying positions within the input sequence by projecting the input data into multiple subspaces and performing self-attention in each of these subspaces simultaneously. Mathematically, the MSA layer is formulated as follows:
+MSA allows attention across varying positions within the input sequence by projecting the input data into multiple subspaces and performing self-attention in each of these subspaces simultaneously. Mathematically, the MSA layer is formulated as follows:
 
 
 
@@ -170,7 +170,7 @@ Here, $W_{Qi}, W_{Ki}, W_{Vi}$ and $W_O$ are learned weight matrices, $h$ is the
 
 One limitation of MSA is its quadratic complexity with respect to the input length. For large spatiotemporal datasets, the spatial dimension often spans a magnitude of $10^2$ (representing a $10\times 10$ grid) to $10^4$ (representing a $100 \times 100$ grid), making MSA unscalable. Additionally, MSA computes global attention over the entire input sequence, neglecting the localized spatial correlations inherent in geospatial data. 
 
-SW-MSA, introduced by \citet{liu2021swin}, addresses the computational challenge by dividing the large spatial field into non-overlapping smaller windows, within which self-attention is computed independently within each window. To enable information exchange between windows, a shifted window strategy is utilized after initial window attention. This strategy re-partitions the data based on a shifted window, creating connections between previously non-overlapping windows, and computes masked attention within each window. It's common to stack multiple SW-MSA layers with different window shift sizes to capture spatial correlations at varying scales. The high-level picture of SW-MSA is illustrated in Figure \ref{fig: sw_msa}. For detailed insights, readers are encouraged to read the original paper by \citet{liu2021swin}. In summary, shifted-window-based MSA balances local and global attention and is more scalable compared to traditional MSA. In certain configurations, the SW-MSA can be adjusted to function as the standard MSA. Unless specified otherwise, we default to using SW-MSA in the spatial attention layer in subsequent text.
+SW-MSA addresses the computational challenge by dividing the large spatial field into non-overlapping smaller windows, within which self-attention is computed independently within each window \citep{liu2021swin}. To enable information exchange between windows, a shifted window strategy is utilized after initial window attention. This strategy re-partitions the data based on a shifted window, creating connections between previously non-overlapping windows, and computes masked attention within each window. It's common to stack multiple SW-MSA layers with different window shift sizes to capture spatial correlations at varying scales. The high-level picture of SW-MSA is illustrated in Figure \ref{fig: sw_msa}. In summary, shifted-window-based MSA balances local and global attention and is more scalable compared to traditional MSA. In certain configurations, the SW-MSA can be adjusted to function as the standard MSA. Unless specified otherwise, we default to using SW-MSA in the spatial attention layer in subsequent text.
 
 
 
@@ -225,7 +225,7 @@ Subsequently, the concatenated representation $\boldsymbol{H}$ is processed thro
 \hat{\boldsymbol{Y}} = \text{MLP}(\boldsymbol{H}).
 \end{equation}
 
-\section{Real Data Analysis}
+\section{Case Study: Soil Moisture Imputation}
 \subsection{Remote-Sensored and Ground-Based Datasets}
 
 \subsubsection*{Region of Interest}
@@ -238,7 +238,7 @@ In the following sections, we will describe the datasets used for our study, all
 Our initial dataset is SMAP/Sentinel-1 L2 Radiometer/Radar 30-Second Scene 3 km EASE-Grid Soil Moisture, Version 3 (SPL2SMAP\_S) \citep{das2019smap}. This Level-2 (L2) product provides soil moisture estimates at a 1km spatial resolution, based on the cylindrical EASE-Grid 2.0 \citep{brodzik2012ease} projection. We will refer to this dataset as SMAP 1km in subsequent text. However, the temporal coverage of this dataset is limited due to the less frequent revisit of the Sentinel-1 satellite, which has a revisit frequency of approximately 12 days. This infrequent revisit rate results in temporal gaps in the dataset, which is exactly what we aim to impute. Due to the low temporal resolution of this product, the resulting data contains around 95\% missing values.
 
 \subsubsection*{SPL3SMP}
-Our second dataset is SMAP L3 Radiometer Global Daily 36 km EASE-Grid Soil Moisture, Version 8 (SPL3SMP) \citep{o2021smap}, accessible at \url{https://nsidc.org/data/spl3smp/versions/8}. Within our study region, this Level-3 (L3) product offers a daily soil moisture estimate at a 36km spatial resolution under the cylindrical EASE-Grid 2.0 \citep{brodzik2012ease} projection. We will refer to this dataset as SMAP 36km in subsequent text.
+Our second dataset is SMAP L3 Radiometer Global Daily 36 km EASE-Grid Soil Moisture, Version 8 (SPL3SMP) \citep{o2021smap}, accessible at \url{https://nsidc.org/data/spl3smp/versions/8}. Within our study region, this Level-3 (L3) product offers a close to daily soil moisture estimate at a 36km spatial resolution under the cylindrical EASE-Grid 2.0 \citep{brodzik2012ease} projection. We will refer to this dataset as SMAP 36km in subsequent text.
 
 
 
@@ -247,14 +247,14 @@ Our third dataset is Daymet Version 4 \citep{thornton1840daymet}. This dataset o
 
 \subsubsection*{Soil, Topography, and Land Cover Type Data}
 The other datasets utilized in our study are listed as follows:
-\begin{enumerate}
-\item \textbf{Soil Texture Data:} We obtain the soil texture data from the OpenLandMap datasets, which provide data at a spatial resolution of 250 meters \citep{hengl2018clay}. These datasets provide information on the fractions of clay and sand, soil organic carbon content, and bulk density. We aggregate this data to a coarser spatial resolution of 1km.
+\begin{description}
+\item \textbf{Soil Texture Data:} We obtain the soil texture data from \citet{poggio2021soilgrids}, which provides data at a spatial resolution of 250 meters \citep{hengl2018clay}. These datasets provide information on the fractions of clay and sand, soil organic carbon content, and bulk density. We aggregate this data to a coarser spatial resolution of 1km.
 
 
 \item \textbf{Elevation Data:}  We obtain elevation data from the U.S. Geological Survey's (USGS) Shuttle Radar Topography Mission (SRTM) Global 1 arc-second dataset \citep{farr2007shuttle}, which has a spatial resolution of about 30 meters. We also aggregate this data to a 1km spatial resolution.
     
-    \item \textbf{Land Cover Type Data:} We obtain land cover type data from NASA's Moderate Resolution Imaging Spectroradiometer (MODIS) instrument, specifically the MCD12Q1 dataset \citep{friedl2022modis}. This dataset provides classifications of land cover into various categories including forest, urban, and water, among others. We specifically select the 'LC\_Type1' band, which represents a particular classification scheme of land cover, to match the 1km spatial resolution of our study grid.
- \end{enumerate}
+    \item \textbf{Land Cover Type Data:} We obtain land cover type data from NASA's Moderate Resolution Imaging Spectroradiometer (MODIS) instrument, specifically the MCD12Q1 dataset \citep{friedl2022modis}. This dataset provides classifications of land cover into various categories including forest, urban, and water, among others. We specifically select the International Geosphere-Biosphere Programme (IGBP) classification band, which represents a particular classification scheme of land cover, to match the 1km spatial resolution of our study grid.
+\end{description}
  
  
 
@@ -267,7 +267,7 @@ Figure \ref{fig: eda_time_varying} displays the SMAP 1km, SMAP 36km, and daily s
 \begin{figure}[H]
 \centering
 \includegraphics[width=\textwidth]{figure/eda_time_varying.png}
-\caption{SMAP 1km, SMAP 36km, and other daily surface weather data at a 1km $\times$ 1km location over the period from January 1, 2016, to December 31, 2020.}
+\caption{SMAP 1km, SMAP 36km, and other daily surface weather data at a 1km × 1km location over the period from January 1, 2016, to December 31, 2020. The weather data include prcp (precipitation), srad (solar radiation), tmax (maximum temperature), tmin (minimum temperature), and vp (vapor pressure).}
 \label{fig: eda_time_varying}
 \end{figure}
 
@@ -373,8 +373,8 @@ After model training, the model's performance is assessed through the imputation
 
 
 \begin{align}
-		\text{MAE}=\frac{\sum_i^N |\hat{y}_i - y_i|}{N}\\
-		\text{MRE}=\frac{\sum_i^N|\hat{y}_i-y_i|}{\sum_i^N|y_i|}
+		\text{MAE}=N^{-1}\sum_{i=1}^N |\hat{y}_i - y_i|\\
+		\text{MRE}=\frac{\sum_{i=1}^N|\hat{y}_i-y_i|}{\sum_{i=1}^N|y_i|}
 \end{align}
 
 
@@ -385,8 +385,7 @@ Next, we apply the same procedure to assess the model's performance on the test 
 \subsection{Comparison with Baseline Methods}
 Our model is benchmarked against various simple and advanced imputation methods. These methods include:
 
-
-\begin{enumerate}
+\begin{description}
 	\item \textbf{Mean}: For each location, missing values are replaced with the monthly mean.
 	\item \textbf{Linear Interpolation}: Missing values are estimated by drawing a straight line between two known values and finding the value at the missing point along this line.
 	\item \textbf{Matrix Factorization}: Matrix Factorization is used to impute missing values by decomposing the original data matrix into two lower-dimensional matrices, capturing underlying patterns and structures. The missing values are then estimated by reconstructing the data matrix from these factorized matrices.
@@ -395,7 +394,7 @@ Our model is benchmarked against various simple and advanced imputation methods.
 	\item \textbf{Random Forest}: Random Forest \citep{breiman2001random} utilizes an ensemble of decision trees to predict missing values, considering each missing entry as a target variable while treating external covariates as features.
 	\item \textbf{GRIN}: GRIN \citep{cini2021filling} uses a Graph-based Bidirectional Recurrent Neural Network to capture spatial and temporal dependencies in data, leveraging these relationships to impute missing values.
 	\item \textbf{CSDI}: CSDI \citep{tashiro2021csdi} introduces a conditional score-based diffusion model for probabilistic imputation.
-\end{enumerate}
+\end{description}
 
 
 Among the discussed methods, Mean, Linear Interpolation, Matrix Factorization, and ImputeTS do not utilize any predictive variables. In contrast, with minor modifications, the GRIN and CSDI models can incorporate covariates to assist in imputation. It's also worth noting that methods such as Mean, Matrix Factorization, MICE, and Random Forest solely rely on predictive variables to impute missing values, disregarding the inherent time series structural information. However, other methods do consider the time series information in the imputation process.
@@ -406,10 +405,11 @@ Additionally, methods such as MF and MICE do not offer a general model form for 
 
 \subsection{Results}
 \subsubsection*{Missing Not at Random}
-Initially, we focus on data imputation where validation points are ``missing not at random". For robustness, each imputation algorithm is independently executed five times. During each run, the selection of validation points is randomized, which may lead to variance in chosen points across runs.
+Initially, we focus on data imputation where validation points are ``missing not at random". For robustness, each imputation algorithm is independently executed five times. During each run, the selection of validation points is randomized, which may lead to variability in chosen points across runs.
 
 The imputation results are presented in Table \ref{tab: missing at time points}. Our ST-Transformer models outperform the baseline models in both validation and testing datasets. Specifically, the model using SW-MSA for spatial modeling is slightly better than the one using global attention. Furthermore, models that incorporate covariate information tend to perform better than those that do not, indicating the informative nature of external covariates in imputing SMAP 1km data. Additionally, the deep learning-based methods outperform traditional methods and show greater robustness (as evidenced by smaller standard errors in five replicates). This enhanced performance is likely due to their ability to model complex, non-linear relationships in the data, which traditional imputation methods might fail to capture. 
 
+In terms of training efficiency, the ST-Transformer model demonstrates a comparative advantage over certain other deep learning methods. For instance, when trained on an NVIDIA T4 GPU, the GRIN model requires approximately 8 hours to complete its training process. In contrast, the ST-Transformer model completes its training in about 2 hours. Additionally, while the CSDI model matches the ST-Transformer in training duration, it necessitates an extra 4 hours for generating imputation results. 
 
 Figure \ref{fig: imputation_result} displays the imputation performance of the ST-Transformer (SW-MSA) at a 1km $\times$ 1km location in the test dataset.  Figure \ref{fig: missing_at_time_points_smap} presents the imputation results across all locations within the study region over a span of 14 days from July 21, 2021, to August 3, 2021.
 
@@ -601,7 +601,71 @@ In our study, we evaluated the imputation accuracy of different land covers by m
      \label{fig: mae_across_space}
 \end{figure}
 
+ 
+ 
 
+
+
+
+
+\section{Conclusion and Discussion}
+In this paper, we introduced the Spatiotemporal Transformer (ST-Transformer) model, designed to address the challenge of imputing missing values in sparse soil moisture datasets. Compared with traditional soil moisture methods, our model has two key advantages. Firstly, it incorporates both time-varying and static covariates to guide imputation in cases of extreme data sparsity, offering a more robust approach to addressing missing soil moisture data. Secondly, it employs a spatiotemporal transformer to effectively model spatial and temporal correlations from the available data. The utilization of SW-MSA layers allows the model to efficiently handle large spatial fields. 
+
+Furthermore, we established a self-supervised training framework and demonstrated its efficacy in imputing SMAP 1km data. The model's ability to generalize to other spatiotemporal imputation tasks was also investigated. In the appendix's simulation study, the model was applied to the Healing Mnist dataset, where it surpassed the performance of the current leading benchmark. In both simulation studies and real data analysis, our ST-Transformer model showed enhanced accuracy and computational efficiency compared to existing imputation methods. 
+
+While the ST-Transformer model demonstrates impressive accuracy and scalability in our analyses, it's important to acknowledge a key limitation is the necessity for large datasets for effective training. Transformers, inherently lack an inductive bias for time series data, a trait seen in RNNs, and therefore depend on extensive data for pattern recognition and learning. This reliance might present challenges in situations where data is limited or expensive to acquire. Furthermore, the complex architecture of the ST-Transformer may not offer the same level of interpretability as simpler models, such as Random Forests \citet{breiman2001random}.
+
+
+In terms of future directions, the ST-Transformer has potential applications in global soil moisture imputation with a resolution of 1km. Furthermore, its adaptability can be explored in a range of environmental datasets that feature diverse scenarios of missing data. From a methodological perspective, while the SW-MSA is tailored for grid data, adapting it to accommodate more general spatial settings with irregularly spaced locations presents an interesting challenge and an area for further investigation.
+
+
+
+
+ 
+ 
+ 
+%\subsubsection*{Descriptive Spatio-Temporal Statistical Models}
+%
+%We assume that the true process can be expressed by spatiotemporal fixed effects attributed to covariates plus a random process varying across space and time. We then simulate the data by specifying the dependence structure in this random process. Let $S=\{1, \ldots, 36\}$ and $T=\{1, \ldots, 400\}$. So $K=36$, $L=400$. Let
+%
+%
+%\begin{align}
+%	    &Y(s;t) = Z(s;t)+\epsilon(s;t)\\
+%        &Z(s;t) = f(s;t) + \eta(s;t), \\
+%        &f(s;t) = X(s;t)\boldsymbol{\beta}, \\
+%        &\epsilon(s;t) \sim N(0,0.1)\\
+%        &\eta(s;t) \sim GP[0, C\{(s_1;t_1), (s_2;t_2)\}]\\
+%        &C\{(s_1;t_1), (s_2;t_2)\} = C_s(s_1,s_2) \times C_t(t_1,t_2)\\
+%        &C_s(s_1, s_2) = \exp[-0.5 \times \{(s_1-s_2)^2 / \sigma_s\}^2]\\
+%        &C_t(t_1, t_2) = \exp[-0.5 \times \{(t_1-t_2) / \sigma_t\}^2]\\
+%        &X(s;t) \sim \mathcal{N}(0, I_d)  
+%\end{align}
+%
+%Here, $Y(s;t)$ is the observed spatiotemporal data, $Z(s;t)$ is the latent spatiotemporal process, and $\epsilon(s;t)$ is the spatiotemporal random error. $f(s,t)$ is the space-time fixed effect parameterized by a $d$-dimensional vector $\beta$, $X(s;t)$ are $d$-dimensional covariates simulated from a standard multivariate normal distribution. $\eta(s,t)$ is a spatiotemporal random effect following a Gaussian process with a separable spatiotemporal covariance matrix.
+%
+%\subsubsection*{Dynamic Spatio-Temporal Model}
+%Next, we use a dynamic model instead of a descriptive model to better understand and predict changes in spatial fields over time. We simulate our data using a linear Markovian spatiotemporal process model. Following the previous definitions, our model is defined as:
+%
+%
+%\begin{align}
+%        Z(s;t) &= \sum_{x=1}^{K}m(x;s;\boldsymbol{\theta})Z(x;t-1) + \eta(s;t), \\
+%        m(x;s;\boldsymbol{\theta}) &= \theta_1 \exp\{-\frac{1}{\theta_2}(x-\theta_3-s)^2\},\\
+%        Y(s;t) &= Z(s;t)+\epsilon(s;t).
+%\end{align}
+%
+%
+%Here, \(Z(s;t)\) is the spatial process we're modeling. The function \(m(x;s;\boldsymbol{\theta})\) calculates how different spatial points from the previous time contribute to the current observation. The terms \(\eta(s;t)\) and \(\epsilon(s;t)\) are consistent with their earlier definitions. We set the parameters as \(\theta_1=0.2\), \(\theta_2=5\), and \(\theta_3=0\).
+%
+%\subsection{Missing Patterns}
+%In our simulation data, we artificially introduce missing values to evaluate the performance of our models. The initial data, $\boldsymbol{Y}$, does not contain any missing values. We employ two strategies for introducing missingness. 
+%
+%First, we randomly mask values in $\boldsymbol{Y}$. Each observation, $Y(s;t)$, has a probability $p$ of being masked. This strategy introduces missing values scattered randomly across the data. Second, we introduce missingness in a more structured way, emulating the patterns seen in our real data. In this strategy, either all values at a specific time point are observed, or none are observed. We assign a probability $p$ to the event of all values at a time point being masked. 
+%
+%For both strategies, we explore different levels of missingness by using masking probabilities $p$ of 0.2, 0.5, and 0.9.
+
+
+
+\appendix
 
 
 \section{Simulation} 
@@ -644,9 +708,6 @@ We evaluated our model’s performance against the GP-VAE model \citep{fortuin20
     \caption{Average imputation performance on the Healing MNIST dataset over 5 independent runs.}
     \label{tab: healing_mnist}
 \end{table}
-
-
-
 
 
 
@@ -697,67 +758,7 @@ The imputation result, presented in Table \ref{tab: smap_hydroblock}, shows that
 \caption{Imputation of SMAP HydroBlocks 1km from 2016-01-01 to 2019-12-31 at a 1km $\times$ 1km location using ST-Transformer. The land cover is grassland. Here, the green line is the imputed soil moisture data, red $\times$ represents the observed data, and blue $\circ$ represents the validation data.}
 \label{fig: smap_hydroblock}
 \end{figure}
- 
- 
 
-
-
-
-
-\section{Conclusion}
-In this paper, we introduced the Spatiotemporal Transformer (ST-Transformer) model, designed to address the challenge of imputing missing values in sparse soil moisture datasets. Compared with traditional soil moisture methods, our model has two key advantages. Firstly, it incorporates both time-varying and static covariates to guide imputation in cases of extreme data sparsity, offering a more robust approach to addressing missing soil moisture data. Secondly, it employs a spatiotemporal transformer to effectively model spatial and temporal correlations from the available data. The utilization of SW-MSA layers allows the model to efficiently handle large spatial fields. 
-
-Furthermore, we established a self-supervised training framework and demonstrated its efficacy in imputing SMAP 1km data. We also explored the model's potential for generalizing to other spatiotemporal imputation tasks, as evidenced by its application to the Healing Mnist dataset in a simulation study.  In both simulation studies and real data analysis, our ST-Transformer model showed enhanced accuracy and computational efficiency compared to existing imputation methods. 
-
-
-
-
-In terms of future directions, there are several things to explore. On the application front, the ST-Transformer can be used for global soil moisture imputation at a 1km resolution. Additionally, its application could be explored across other environmental datasets characterized by various missing data scenarios. On the method front, while the SW-MSA is tailored for grid data, adapting it to accommodate more general spatial settings with irregularly spaced locations presents an interesting challenge and an area for further investigation.
-
-
-
-
- 
- 
- 
-%\subsubsection*{Descriptive Spatio-Temporal Statistical Models}
-%
-%We assume that the true process can be expressed by spatiotemporal fixed effects attributed to covariates plus a random process varying across space and time. We then simulate the data by specifying the dependence structure in this random process. Let $S=\{1, \ldots, 36\}$ and $T=\{1, \ldots, 400\}$. So $K=36$, $L=400$. Let
-%
-%
-%\begin{align}
-%	    &Y(s;t) = Z(s;t)+\epsilon(s;t)\\
-%        &Z(s;t) = f(s;t) + \eta(s;t), \\
-%        &f(s;t) = X(s;t)\boldsymbol{\beta}, \\
-%        &\epsilon(s;t) \sim N(0,0.1)\\
-%        &\eta(s;t) \sim GP[0, C\{(s_1;t_1), (s_2;t_2)\}]\\
-%        &C\{(s_1;t_1), (s_2;t_2)\} = C_s(s_1,s_2) \times C_t(t_1,t_2)\\
-%        &C_s(s_1, s_2) = \exp[-0.5 \times \{(s_1-s_2)^2 / \sigma_s\}^2]\\
-%        &C_t(t_1, t_2) = \exp[-0.5 \times \{(t_1-t_2) / \sigma_t\}^2]\\
-%        &X(s;t) \sim \mathcal{N}(0, I_d)  
-%\end{align}
-%
-%Here, $Y(s;t)$ is the observed spatiotemporal data, $Z(s;t)$ is the latent spatiotemporal process, and $\epsilon(s;t)$ is the spatiotemporal random error. $f(s,t)$ is the space-time fixed effect parameterized by a $d$-dimensional vector $\beta$, $X(s;t)$ are $d$-dimensional covariates simulated from a standard multivariate normal distribution. $\eta(s,t)$ is a spatiotemporal random effect following a Gaussian process with a separable spatiotemporal covariance matrix.
-%
-%\subsubsection*{Dynamic Spatio-Temporal Model}
-%Next, we use a dynamic model instead of a descriptive model to better understand and predict changes in spatial fields over time. We simulate our data using a linear Markovian spatiotemporal process model. Following the previous definitions, our model is defined as:
-%
-%
-%\begin{align}
-%        Z(s;t) &= \sum_{x=1}^{K}m(x;s;\boldsymbol{\theta})Z(x;t-1) + \eta(s;t), \\
-%        m(x;s;\boldsymbol{\theta}) &= \theta_1 \exp\{-\frac{1}{\theta_2}(x-\theta_3-s)^2\},\\
-%        Y(s;t) &= Z(s;t)+\epsilon(s;t).
-%\end{align}
-%
-%
-%Here, \(Z(s;t)\) is the spatial process we're modeling. The function \(m(x;s;\boldsymbol{\theta})\) calculates how different spatial points from the previous time contribute to the current observation. The terms \(\eta(s;t)\) and \(\epsilon(s;t)\) are consistent with their earlier definitions. We set the parameters as \(\theta_1=0.2\), \(\theta_2=5\), and \(\theta_3=0\).
-%
-%\subsection{Missing Patterns}
-%In our simulation data, we artificially introduce missing values to evaluate the performance of our models. The initial data, $\boldsymbol{Y}$, does not contain any missing values. We employ two strategies for introducing missingness. 
-%
-%First, we randomly mask values in $\boldsymbol{Y}$. Each observation, $Y(s;t)$, has a probability $p$ of being masked. This strategy introduces missing values scattered randomly across the data. Second, we introduce missingness in a more structured way, emulating the patterns seen in our real data. In this strategy, either all values at a specific time point are observed, or none are observed. We assign a probability $p$ to the event of all values at a time point being masked. 
-%
-%For both strategies, we explore different levels of missingness by using masking probabilities $p$ of 0.2, 0.5, and 0.9.
 
 
 \bibliographystyle{apalike}
