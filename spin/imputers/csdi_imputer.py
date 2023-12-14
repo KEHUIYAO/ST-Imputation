@@ -10,7 +10,6 @@ from torch import Tensor
 
 
 import numpy as np
-from tsl.nn.metrics import MaskedMAE
 
 
 
@@ -59,10 +58,16 @@ class CsdiImputer(Imputer):
     def on_train_batch_start(self, batch, batch_idx: int,
                              unused: Optional[int] = 0) -> None:
 
-
-
-        B, L, K, C = batch.input.x.shape  # [batch, steps, nodes, channels]
-
+        observed_data = batch.input.x
+        B, L, K, C = observed_data.shape  # [batch, steps, nodes, channels]
+        device = self.device
+        t = torch.randint(0, self.num_steps, [B])
+        current_alpha = self.alpha_torch[t].to(device)  # (B,1,1)
+        noise = torch.randn_like(observed_data)
+        noisy_data = (current_alpha ** 0.5) * observed_data + (1.0 - current_alpha) ** 0.5 * noise
+        batch['noise'] = noise
+        batch.input['noisy_data'] = noisy_data
+        batch.input['diffusion_step'] = t.to(device)
 
         # randomly mask out value with probability p = whiten_prob
         batch.original_mask = mask = batch.input.mask
@@ -71,24 +76,23 @@ class CsdiImputer(Imputer):
             p_size = [mask.size(0)] + [1] * (mask.ndim - 1)
             p = p[torch.randint(len(p), p_size)].to(device=mask.device)
 
-        ####################### missing completely for each time point #######################
-        # whiten_mask = torch.zeros(mask.size(), device=mask.device).bool()
-        # time_points_observed = torch.rand(mask.size(0), mask.size(1), 1, 1, device=mask.device) > p
-        #
-        # # repeat along the spatial dimensions
-        # time_points_observed = time_points_observed.repeat(1, 1, mask.size(2), mask.size(3))
-        # whiten_mask[time_points_observed] = True
-        ####################### missing completely for each time point #######################
+        whiten_mask = torch.zeros(mask.size(), device=mask.device).bool()
+        time_points_observed = torch.rand(mask.size(0), mask.size(1), 1, 1, device=mask.device) > p
 
-        ####################### missing at random #######################
-        # randomly set p percent of the time points to be missing
-        whiten_mask = torch.rand(mask.size(), device=mask.device) < p
-        ####################### missing at random #######################
+        # repeat along the spatial dimensions
+        time_points_observed = time_points_observed.repeat(1, 1, mask.size(2), mask.size(3))
+
+        whiten_mask[time_points_observed] = True
 
         batch.input.mask = mask & whiten_mask
+        # whiten missing values
+        if 'x' in batch.input:
+            batch.input.x = batch.input.x * batch.input.mask
 
 
-
+    def on_validation_batch_start(self, batch, batch_idx: int,
+                             unused: Optional[int] = 0) -> None:
+        self.on_train_batch_start(batch, batch_idx, unused)
 
 
 
@@ -107,24 +111,8 @@ class CsdiImputer(Imputer):
         # batch.input.x = torch.zeros_like(batch.input.x)
         # batch.input.mask = torch.zeros_like(batch.input.mask)
         # ########################################################
-        B, L, K, C = batch.input.x.shape
-        injected_missing = (batch.original_mask - batch.input.mask)
 
-        observed_data = batch.input.x
-        observed_data[injected_missing == 0] = 0
-
-        batch.input.x = batch.input.x * batch.input.mask
-
-        device = self.device
-        t = torch.randint(0, self.num_steps, [B])
-        current_alpha = self.alpha_torch[t].to(device)  # (B,1,1)
-        noise = torch.randn_like(observed_data)
-        noisy_data = (current_alpha ** 0.5) * observed_data + (1.0 - current_alpha) ** 0.5 * noise
-        batch['noise'] = noise
-        batch.input['noisy_data'] = noisy_data
-        batch.input['diffusion_step'] = t.to(device)
-
-
+        injected_missing = (batch.original_mask - batch.mask)
         epsilon_hat, epsilon, loss = self.shared_step(batch, mask=injected_missing)
         # epsilon_hat, epsilon, loss = self.shared_step(batch, mask=batch.original_mask)
         # Logging
@@ -146,8 +134,6 @@ class CsdiImputer(Imputer):
         # scale target
         if not self.scale_target:
             observed_data = batch.transform['y'].transform(observed_data)
-
-        observed_data[batch.eval_mask==0] = 0
         B, L, K, C = observed_data.shape  # [batch, steps, nodes, channels]
         device = self.device
         val_loss_sum = 0
@@ -171,43 +157,6 @@ class CsdiImputer(Imputer):
         return val_loss_sum
 
     def test_step(self, batch, batch_idx):
-
-        observed_data = batch.y
-
-        # scale target
-        if not self.scale_target:
-            observed_data = batch.transform['y'].transform(observed_data)
-
-        observed_data[batch.eval_mask==0] = 0
-        B, L, K, C = observed_data.shape  # [batch, steps, nodes, channels]
-        device = self.device
-        val_loss_sum = 0
-        for t in range(self.num_steps):
-            t = torch.tensor([t] * B)
-            current_alpha = self.alpha_torch[t].to(device)  # (B,1,1)
-            noise = torch.randn_like(observed_data)
-            noisy_data = (current_alpha ** 0.5) * observed_data + (1.0 - current_alpha) ** 0.5 * noise
-            batch['noise'] = noise
-            batch.input['noisy_data'] = noisy_data
-            batch.input['diffusion_step'] = t.to(device)
-            epsilon_hat, epsilon, val_loss = self.shared_step(batch, batch.eval_mask)
-            val_loss_sum += val_loss.detach()
-
-        val_loss_sum /= self.num_steps
-        # Logging
-        # self.val_metrics.update(epsilon_hat, epsilon, batch.eval_mask)
-        # self.log_metrics(self.val_metrics, batch_size=batch.batch_size)
-        # self.log_loss('val', val_loss, batch_size=batch.batch_size)
-
-
-        print((batch.input.mask==1).sum())
-        print(batch.eval_mask.sum())
-
-        print(val_loss_sum)
-        self.log('test_loss', val_loss_sum, on_step=True, on_epoch=True, prog_bar=True)
-
-
-
 
         # ########################################################
         # batch.input.x = torch.zeros_like(batch.input.x)
@@ -253,19 +202,13 @@ class CsdiImputer(Imputer):
         y, eval_mask = batch.y, batch.eval_mask
         y_hat = imputed_samples.median(dim=0).values
 
-        eval_points = (eval_mask==1).sum()
-        if eval_points == 0:
-            test_loss = 0
-        else:
-            test_loss = torch.sum(torch.abs((y_hat - y)[eval_mask==1])) / eval_points
 
-        print(test_loss)
-
-
+        test_loss = self.loss_fn(y_hat, y, eval_mask)
 
         # Logging
         self.test_metrics.update(y_hat.detach(), y, eval_mask)
         self.log_metrics(self.test_metrics, batch_size=batch.batch_size)
+        self.log_loss('test', test_loss, batch_size=batch.batch_size)
         return test_loss
 
     def predict_step(self, batch, batch_idx, dataloader_idx=None):
