@@ -90,9 +90,9 @@ class CsdiImputer(Imputer):
             batch.input.x = batch.input.x * batch.input.mask
 
 
-    # def on_validation_batch_start(self, batch, batch_idx: int,
-    #                          unused: Optional[int] = 0) -> None:
-    #     self.on_train_batch_start(batch, batch_idx, unused)
+    def on_validation_batch_start(self, batch, batch_idx: int,
+                             unused: Optional[int] = 0) -> None:
+        self.on_train_batch_start(batch, batch_idx, unused)
 
 
 
@@ -203,7 +203,11 @@ class CsdiImputer(Imputer):
         y_hat = imputed_samples.median(dim=0).values
 
 
+
+
+
         test_loss = self.loss_fn(y_hat, y, eval_mask)
+        print(test_loss)
 
         # Logging
         self.test_metrics.update(y_hat.detach(), y, eval_mask)
