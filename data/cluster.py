@@ -8,6 +8,7 @@ import numpy as np
 from scipy.special import kv, gamma
 from scipy.spatial.distance import cdist
 from scipy.linalg import cholesky
+from sklearn.preprocessing import OneHotEncoder
 
 
 
@@ -18,8 +19,8 @@ class Cluster(PandasDataset, MissingValuesMixin):
 
     def __init__(self, num_nodes, seq_len, seed=42):
         self.original_data = {}
-        df, dist, st_coords = self.load(num_nodes, seq_len, seed)
-        super().__init__(dataframe=df, similarity_score="distance", attributes=dict(dist=dist, st_coords=st_coords))
+        df, dist, st_coords, X = self.load(num_nodes, seq_len, seed)
+        super().__init__(dataframe=df, similarity_score="distance", attributes=dict(dist=dist, st_coords=st_coords, covariates=X))
         eval_mask = np.zeros((seq_len, num_nodes))
         p_missing = 0.2
         rng = np.random.RandomState(seed)
@@ -38,14 +39,15 @@ class Cluster(PandasDataset, MissingValuesMixin):
         space_coords = np.random.rand(num_nodes, 2)
         dist = cdist(space_coords, space_coords)
         y = np.zeros((seq_len, num_nodes))
+        X = np.zeros((seq_len, num_nodes))
         rng = np.random.RandomState(seed)
 
         for i in range(num_nodes):
-              # For reproducibility
-            noise_level = 0.2  # Noise level
+            # Assuming seq_len and rng are defined
+            noise_level = 0.2
 
             # Randomly determine the number of segments and their lengths
-            num_segments = np.random.randint(50, 100) # Random number of segments between 10 and 20
+            num_segments = np.random.randint(50, 100)  # Random number of segments between 50 and 100
             segment_lengths = np.random.choice(range(20, 50), num_segments)  # Random segment lengths between 20 and 50
             segment_lengths = np.round(segment_lengths / sum(segment_lengths) * seq_len).astype(
                 int)  # Adjust to match seq_len
@@ -54,7 +56,9 @@ class Cluster(PandasDataset, MissingValuesMixin):
             segment_lengths[-1] = seq_len - sum(segment_lengths[:-1])
 
             segments = []
+            segment_types = []  # List to store segment types
             last_value = 0
+
             for length in segment_lengths:
                 pattern_type = np.random.choice(['upward', 'downward', 'stable'])
 
@@ -68,15 +72,35 @@ class Cluster(PandasDataset, MissingValuesMixin):
                 noise = rng.normal(0, noise_level, length)
                 segment = trend + noise
                 segments.append(segment)
+                segment_types.extend([pattern_type] * length)  # Extend the list with the segment type
                 last_value = segment[-1]  # Update last value for the next segment
 
             # Combine segments
             time_series = np.concatenate(segments)
+
             y[:, i] = time_series
+            # convert segment types to numeric values
+            segment_types = [0 if x == 'upward' else 1 if x == 'downward' else 2 for x in segment_types]
+            X[:, i] = np.array(segment_types)  # Convert segment types list to a numpy array
 
 
 
         self.original_data['y'] = y
+        # Flatten X to a 1D array
+        X_flattened = X.reshape(-1, 1)
+
+        # Apply OneHotEncoder
+        encoder = OneHotEncoder(sparse=False)
+        X_encoded = encoder.fit_transform(X_flattened)
+
+        # Reshape to 3D format (L, K, C)
+        L, K = X.shape
+        C = X_encoded.shape[1]  # Number of unique categories
+        X = X_encoded.reshape(L, K, C)
+
+
+
+        self.original_data['X'] = X
 
 
         time_coords = np.arange(0, seq_len)
@@ -90,7 +114,7 @@ class Cluster(PandasDataset, MissingValuesMixin):
         space_coords, time_coords = np.meshgrid(np.arange(df.shape[1]), np.arange(df.shape[0]))
         st_coords = np.stack([space_coords, time_coords], axis=-1)
 
-        return df, dist, st_coords
+        return df, dist, st_coords, X
 
 
 
