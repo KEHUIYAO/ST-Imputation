@@ -38,8 +38,12 @@ class Cluster(PandasDataset, MissingValuesMixin):
         space_coords = np.random.rand(num_nodes, 2)
         dist = cdist(space_coords, space_coords)
         y = np.zeros((seq_len, num_nodes))
+        rng = np.random.RandomState(seed)
 
         for i in range(num_nodes):
+              # For reproducibility
+            noise_level = 0.2  # Noise level
+
             # Randomly determine the number of segments and their lengths
             num_segments = np.random.randint(10, 20) # Random number of segments between 10 and 20
             segment_lengths = np.random.choice(range(20, 50), num_segments)  # Random segment lengths between 20 and 50
@@ -50,20 +54,21 @@ class Cluster(PandasDataset, MissingValuesMixin):
             segment_lengths[-1] = seq_len - sum(segment_lengths[:-1])
 
             segments = []
+            last_value = 0
             for length in segment_lengths:
                 pattern_type = np.random.choice(['upward', 'downward', 'stable'])
 
                 if pattern_type == 'upward':
-                    trend = np.linspace(1, 5, length)
+                    trend = np.linspace(last_value, last_value + 4, length)
                 elif pattern_type == 'downward':
-                    trend = np.linspace(5, 1, length)
+                    trend = np.linspace(last_value, last_value - 4, length)
                 else:  # stable
-                    trend = np.full(length, 3)
+                    trend = np.full(length, last_value)
 
-                noise_level = 0.2
                 noise = rng.normal(0, noise_level, length)
                 segment = trend + noise
                 segments.append(segment)
+                last_value = segment[-1]  # Update last value for the next segment
 
             # Combine segments
             time_series = np.concatenate(segments)
@@ -107,7 +112,7 @@ class Cluster(PandasDataset, MissingValuesMixin):
 if __name__ == '__main__':
     from tsl.ops.imputation import add_missing_values
 
-    num_nodes, seq_len = 1, 1000
+    num_nodes, seq_len = 5, 1000
     dataset = Cluster(num_nodes, seq_len)
     add_missing_values(dataset, p_fault=0, p_noise=0.25, min_seq=12,
                        max_seq=12 * 4, seed=56789)
