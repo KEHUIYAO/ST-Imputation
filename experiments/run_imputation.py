@@ -19,7 +19,7 @@ from tsl import config, logger
 from tsl.data import SpatioTemporalDataModule, ImputationDataset
 from tsl.data.preprocessing import StandardScaler, MinMaxScaler
 from tsl.datasets import AirQuality, MetrLA, PemsBay
-from data import GaussianProcess, DescriptiveST, DynamicST, SoilMoistureSparse, SoilMoistureHB, HealingMnist, Sine
+from data import GaussianProcess, DescriptiveST, DynamicST, SoilMoistureSparse, SoilMoistureHB, HealingMnist, Sine, Cluster
 
 from tsl.imputers import Imputer
 from tsl.nn.metrics import MaskedMetric, MaskedMAE, MaskedMSE, MaskedMRE
@@ -40,12 +40,12 @@ def parse_args():
     # Argument parser
     ########################################
     parser = ArgParser()
-    parser.add_argument("--model-name", type=str, default='grin')
+    parser.add_argument("--model-name", type=str, default='st_transformer')
     #parser.add_argument("--model-name", type=str, default='interpolation')
-    parser.add_argument("--dataset-name", type=str, default='sine_point')
+    parser.add_argument("--dataset-name", type=str, default='cluster_point')
     # parser.add_argument("--dataset-name", type=str, default='air36')
     #parser.add_argument("--config", type=str, default=None)
-    parser.add_argument("--config", type=str, default='imputation/st_transformer_sine.yaml')
+    parser.add_argument("--config", type=str, default='imputation/st_transformer_cluster.yaml')
     parser.add_argument('--epochs', type=int, default=200)
     parser.add_argument('--check-val-every-n-epoch', type=int, default=1)
     parser.add_argument('--batch-inference', type=int, default=32)
@@ -163,6 +163,10 @@ def get_dataset(dataset_name: str):
 
     if dataset_name == 'sine':
         return add_missing_values(Sine(num_nodes=144, seq_len=4000), p_fault=p_fault, p_noise=p_noise, min_seq=12,
+                                  max_seq=12 * 4, seed=56789)
+
+    if dataset_name == 'cluster':
+        return add_missing_values(Cluster(num_nodes=36, seq_len=1000), p_fault=p_fault, p_noise=p_noise, min_seq=12,
                                   max_seq=12 * 4, seed=56789)
 
     raise ValueError(f"Invalid dataset name: {dataset_name}.")

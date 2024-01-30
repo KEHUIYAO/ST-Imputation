@@ -39,7 +39,7 @@ def parse_args():
     # Argument parser
     ########################################
     parser = ArgParser()
-    parser.add_argument("--dataset-name", type=str, default='healing_mnist_point')
+    parser.add_argument("--dataset-name", type=str, default='sine_point')
 
     parser.add_argument('--epochs', type=int, default=200)
     parser.add_argument('--check-val-every-n-epoch', type=int, default=1)
@@ -565,14 +565,14 @@ def main(args):
     # model_list = ['grin']
     # model_config = ['imputation/grin_soil_moisture_hb.yaml']
 
-    model_list = ['mean']
-    model_config = ['imputation/mean_healing_mnist.yaml']
+    # model_list = ['mean']
+    # model_config = ['imputation/mean_healing_mnist.yaml']
 
     # model_list = ['interpolation']
     # model_config = ['imputation/interpolation_soil_moisture.yaml']
 
-    # model_list = ['st_transformer']
-    # model_config = ['imputation/st_transformer_healing_mnist.yaml']
+    model_list = ['st_transformer']
+    model_config = ['imputation/st_transformer_sine.yaml']
 
     # model_list = ['grin']
     # model_config = ['imputation/grin_healing_mnist.yaml']
