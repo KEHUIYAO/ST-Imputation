@@ -45,7 +45,7 @@ class Cluster(PandasDataset, MissingValuesMixin):
             noise_level = 0.2  # Noise level
 
             # Randomly determine the number of segments and their lengths
-            num_segments = np.random.randint(10, 20) # Random number of segments between 10 and 20
+            num_segments = np.random.randint(50, 100) # Random number of segments between 10 and 20
             segment_lengths = np.random.choice(range(20, 50), num_segments)  # Random segment lengths between 20 and 50
             segment_lengths = np.round(segment_lengths / sum(segment_lengths) * seq_len).astype(
                 int)  # Adjust to match seq_len
@@ -112,7 +112,7 @@ class Cluster(PandasDataset, MissingValuesMixin):
 if __name__ == '__main__':
     from tsl.ops.imputation import add_missing_values
 
-    num_nodes, seq_len = 5, 1000
+    num_nodes, seq_len = 5, 4000
     dataset = Cluster(num_nodes, seq_len)
     add_missing_values(dataset, p_fault=0, p_noise=0.25, min_seq=12,
                        max_seq=12 * 4, seed=56789)
