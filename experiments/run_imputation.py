@@ -40,7 +40,7 @@ def parse_args():
     # Argument parser
     ########################################
     parser = ArgParser()
-    parser.add_argument("--model-name", type=str, default='st_transformer')
+    parser.add_argument("--model-name", type=str, default='interpolation')
     #parser.add_argument("--model-name", type=str, default='interpolation')
     parser.add_argument("--dataset-name", type=str, default='cluster_point')
     # parser.add_argument("--dataset-name", type=str, default='air36')
@@ -166,7 +166,7 @@ def get_dataset(dataset_name: str):
                                   max_seq=12 * 4, seed=56789)
 
     if dataset_name == 'cluster':
-        return add_missing_values(Cluster(num_nodes=36, seq_len=1000), p_fault=p_fault, p_noise=p_noise, min_seq=12,
+        return add_missing_values(Cluster(num_nodes=36, seq_len=5000), p_fault=p_fault, p_noise=p_noise, min_seq=12,
                                   max_seq=12 * 4, seed=56789)
 
     raise ValueError(f"Invalid dataset name: {dataset_name}.")
