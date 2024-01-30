@@ -21,7 +21,7 @@ class Cluster(PandasDataset, MissingValuesMixin):
         df, dist, st_coords = self.load(num_nodes, seq_len, seed)
         super().__init__(dataframe=df, similarity_score="distance", attributes=dict(dist=dist, st_coords=st_coords))
         eval_mask = np.zeros((seq_len, num_nodes))
-        p_missing = 0.2
+        p_missing = 0.9
         rng = np.random.RandomState(seed)
         time_points_to_eval = rng.choice(seq_len, int(p_missing * seq_len), replace=False)
         eval_mask[time_points_to_eval, :] = 1
