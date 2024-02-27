@@ -2,7 +2,7 @@ epochs: 200
 window: 36  # [24, 36]
 stride: 1
 lr_scheduler: multi_step
-loss_fn: mse_loss
+loss_fn: l1_loss
 n_samples: 10
 hidden_dim: 64
 whiten_prob: [0.2, 0.5, 0.8]
